@@ -196,7 +196,7 @@ const ClientCard = memo(function ClientCard({
     <article className={`campaign-client-row${focus ? ' campaign-client-row-focus' : ''}`}>
       <div className="campaign-person-cell">
         <div className="campaign-person-title-line">
-          <Link prefetch={false} href={`/clients/${row.client_id}`} className="campaign-client-name">{clientName(row.client)}</Link>
+          <a href={`/clients/${row.client_id}`} className="campaign-client-name">{clientName(row.client)}</a>
           {overdue ? <span className="campaign-due overdue">Overdue</span> : dueToday ? <span className="campaign-due today">Due today</span> : null}
         </div>
         <div className="campaign-client-phone">{row.client?.phone || 'No phone number'}</div>
@@ -224,7 +224,7 @@ const ClientCard = memo(function ClientCard({
           <button type="button" disabled={isBusy} onClick={() => onRecord(row, 'busy')}>Busy</button>
         </div>
         <div className="campaign-record-actions">
-          <Link prefetch={false} href={`/clients/${row.client_id}`}>Open client</Link>
+          <a href={`/clients/${row.client_id}`}>Open client</a>
           {Number(row.attempt_count || 0) > 0 ? <button type="button" disabled={isBusy} onClick={() => onUndo(row)}>Undo last</button> : null}
           <button type="button" disabled={isBusy} onClick={() => onAppointment(row)}>Appointment</button>
           <button type="button" disabled={isBusy} onClick={() => onRemove(row)}>Remove</button>
