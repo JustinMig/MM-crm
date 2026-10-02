@@ -3,7 +3,6 @@
 import dynamic from 'next/dynamic'
 import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
-import { ClientRecordBootstrapProvider } from './ClientRecordBootstrapContext'
 
 const CLIENT_ID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
@@ -17,8 +16,6 @@ const NewClientRingCentralPrefill = dynamic(() => import('./NewClientRingCentral
 const ManualWorkspaceDates = dynamic(() => import('./ManualWorkspaceDates'), { ssr: false })
 const AppointmentFormStyler = dynamic(() => import('./AppointmentFormStyler'), { ssr: false })
 const LeadInfoBridge = dynamic(() => import('../clients/components/LeadInfoBridge'), { ssr: false })
-const MedicareGovCredentialsBridge = dynamic(() => import('../clients/components/MedicareGovCredentialsBridge'), { ssr: false })
-const MedicareCoveragePlainBridge = dynamic(() => import('../clients/components/MedicareCoveragePlainBridge'), { ssr: false })
 const DeceasedStatusBridge = dynamic(() => import('../clients/components/DeceasedStatusBridge'), { ssr: false })
 const ClientCallHistoryBridge = dynamic(() => import('../clients/components/ClientCallHistoryBridge'), { ssr: false })
 const ClientOutreachHistoryBridge = dynamic(() => import('../clients/components/ClientOutreachHistoryBridge'), { ssr: false })
@@ -130,7 +127,6 @@ export default function RouteScopedEnhancers() {
   const { sections, deferredReady } = useClientRecordActivation(isClientRecord)
 
   const needsClientHelpers = isNewClient || sections.client
-  const needsMedicareHelpers = isNewClient || sections.medicare
 
   useEffect(() => {
     const applyBrand = () => {
@@ -156,19 +152,12 @@ export default function RouteScopedEnhancers() {
       {isClientForm ? <DeceasedStatusBridge key={`deceased-${pathname}`} /> : null}
       {needsClientHelpers ? <AddressAutoFill key={`address-${pathname}`} /> : null}
       {needsClientHelpers ? <ClientPhoneAutoFormat key={`phone-${pathname}`} /> : null}
-      {needsMedicareHelpers ? <MedicareCoveragePlainBridge key={`medicare-plain-${pathname}`} /> : null}
       {usesWorkspaceDates ? <ManualWorkspaceDates key={`dates-${pathname}`} /> : null}
       {usesCalendarAppointmentStyler ? <AppointmentFormStyler key={`appointment-style-${pathname}`} /> : null}
       {usesLeadBridge && (!isClientRecord || sections.client) ? <LeadInfoBridge key={`lead-${pathname}`} /> : null}
       {usesOutreachAppointmentBlocking ? <OutreachAppointmentTimeBlocker key={`outreach-appointment-${pathname}`} /> : null}
 
       {isNewClient ? <NewClientRingCentralPrefill key={`ringcentral-prefill-${pathname}`} /> : null}
-      {isNewClient ? <MedicareGovCredentialsBridge key={`medicare-gov-${pathname}`} /> : null}
-      {isClientRecord ? (
-        <ClientRecordBootstrapProvider clientId={clientId}>
-          <MedicareGovCredentialsBridge key={`medicare-gov-${clientId}`} />
-        </ClientRecordBootstrapProvider>
-      ) : null}
 
       {isClientRecord ? <RingCentralOutboundCallBridge key={`ringcentral-call-${pathname}`} /> : null}
       {isClientRecord ? <ClientTextingDock key={`texting-${pathname}`} /> : null}
