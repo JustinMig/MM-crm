@@ -16,6 +16,8 @@ const NewClientRingCentralPrefill = dynamic(() => import('./NewClientRingCentral
 const ManualWorkspaceDates = dynamic(() => import('./ManualWorkspaceDates'), { ssr: false })
 const AppointmentFormStyler = dynamic(() => import('./AppointmentFormStyler'), { ssr: false })
 const LeadInfoBridge = dynamic(() => import('../clients/components/LeadInfoBridge'), { ssr: false })
+const MedicareGovCredentialsBridge = dynamic(() => import('../clients/components/MedicareGovCredentialsBridge'), { ssr: false })
+const MedicareCoveragePlainBridge = dynamic(() => import('../clients/components/MedicareCoveragePlainBridge'), { ssr: false })
 const DeceasedStatusBridge = dynamic(() => import('../clients/components/DeceasedStatusBridge'), { ssr: false })
 const ClientCallHistoryBridge = dynamic(() => import('../clients/components/ClientCallHistoryBridge'), { ssr: false })
 const ClientOutreachHistoryBridge = dynamic(() => import('../clients/components/ClientOutreachHistoryBridge'), { ssr: false })
@@ -152,12 +154,14 @@ export default function RouteScopedEnhancers() {
       {isClientForm ? <DeceasedStatusBridge key={`deceased-${pathname}`} /> : null}
       {needsClientHelpers ? <AddressAutoFill key={`address-${pathname}`} /> : null}
       {needsClientHelpers ? <ClientPhoneAutoFormat key={`phone-${pathname}`} /> : null}
+      {isNewClient ? <MedicareCoveragePlainBridge key={`medicare-plain-${pathname}`} /> : null}
       {usesWorkspaceDates ? <ManualWorkspaceDates key={`dates-${pathname}`} /> : null}
       {usesCalendarAppointmentStyler ? <AppointmentFormStyler key={`appointment-style-${pathname}`} /> : null}
       {usesLeadBridge && (!isClientRecord || sections.client) ? <LeadInfoBridge key={`lead-${pathname}`} /> : null}
       {usesOutreachAppointmentBlocking ? <OutreachAppointmentTimeBlocker key={`outreach-appointment-${pathname}`} /> : null}
 
       {isNewClient ? <NewClientRingCentralPrefill key={`ringcentral-prefill-${pathname}`} /> : null}
+      {isNewClient ? <MedicareGovCredentialsBridge key={`medicare-gov-${pathname}`} /> : null}
 
       {isClientRecord ? <RingCentralOutboundCallBridge key={`ringcentral-call-${pathname}`} /> : null}
       {isClientRecord ? <ClientTextingDock key={`texting-${pathname}`} /> : null}
