@@ -17,6 +17,7 @@ import OtherCoverageDocuments from './OtherCoverageDocuments'
 import DeleteClientButton from './DeleteClientButton'
 import DateOfBirthInput from '../DateOfBirthInput'
 import ManualDateInput from '../ManualDateInput'
+import ClientMedicareEnhancers from '../components/ClientMedicareEnhancers'
 
 type Params = Promise<{ id: string }>
 type SearchParams = Promise<{ created?: string; updated?: string; upload_warning?: string }>
@@ -91,6 +92,7 @@ export default async function ClientProfilePage({ params, searchParams }: { para
 
   return (
     <>
+      <ClientMedicareEnhancers clientId={client.id} />
       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 14, alignItems: 'end', flexWrap: 'wrap' }}>
         <div>
           <h1>{client.first_name} {client.last_name}</h1>
