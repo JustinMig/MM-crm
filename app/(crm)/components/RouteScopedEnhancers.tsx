@@ -164,9 +164,9 @@ export default function RouteScopedEnhancers() {
 
       {isNewClient ? <NewClientRingCentralPrefill key={`ringcentral-prefill-${pathname}`} /> : null}
       {isNewClient ? <MedicareGovCredentialsBridge key={`medicare-gov-${pathname}`} /> : null}
-      {isClientRecord && sections.medicare ? (
+      {isClientRecord ? (
         <ClientRecordBootstrapProvider clientId={clientId}>
-          <MedicareGovCredentialsBridge key={`medicare-gov-${pathname}`} />
+          <MedicareGovCredentialsBridge key={`medicare-gov-${clientId}`} />
         </ClientRecordBootstrapProvider>
       ) : null}
 
