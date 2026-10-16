@@ -426,7 +426,7 @@ export default function NewClientForm(props: Props) {
             <div className="form-grid">
               <label className="label">Medicare number<input className="input" name="medicare_number" type="text" autoComplete="off" placeholder="Encrypted before storage" /></label>
               <label className="label">Medicaid number<input className="input" name="medicaid_number" type="text" autoComplete="off" placeholder="Encrypted before storage" /></label>
-              <label className="label">Medicaid level<select className="select" name="medicaid_level" defaultValue=""><option value="">Select</option><option>QMB</option><option>SLMB</option><option>QI</option><option>FBDE</option><option>Other</option></select></label>
+              <label className="label">Medicaid level<select className="select" name="medicaid_level" defaultValue=""><option value="">Select</option><option>QMB</option><option>QMB+</option><option>SLMB</option><option>SLMB+</option><option>QI</option><option>FBDE</option><option>Other</option></select></label>
             </div>
           </div>
 
