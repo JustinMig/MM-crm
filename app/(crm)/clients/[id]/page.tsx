@@ -224,7 +224,7 @@ export default async function ClientProfilePage({ params, searchParams }: { para
                   <input className="input" name="medicaid_number" type="text" autoComplete="off" placeholder="Enter a new Medicaid number only to replace the saved value" />
                   <span className="clear-sensitive"><input type="checkbox" name="clear_medicaid_number" /> Clear saved Medicaid number</span>
                 </div>
-                <label className="label">Medicaid level<select className="select" name="medicaid_level" defaultValue={medicare?.medicaid_level || ''}><option value="">Select</option><option>QMB</option><option>SLMB</option><option>QI</option><option>FBDE</option><option>Other</option></select></label>
+                <label className="label">Medicaid level<select className="select" name="medicaid_level" defaultValue={medicare?.medicaid_level || ''}><option value="">Select</option><option>QMB</option><option>QMB+</option><option>SLMB</option><option>SLMB+</option><option>QI</option><option>FBDE</option><option>Other</option></select></label>
               </div>
             </div>
 
