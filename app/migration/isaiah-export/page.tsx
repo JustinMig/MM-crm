@@ -10,18 +10,18 @@ export default function ExportPage(){
    // @ts-expect-error modern File System Access API
    const handle=await window.showSaveFilePicker({suggestedName:'Isaiah_MandM_Encrypted_Backup.ndjson',types:[{description:'Encrypted CRM backup',accept:{'application/x-ndjson':['.ndjson']}}]})
    writer=await handle.createWritable()
-   await writer.write(JSON.stringify({format:'platinum-encrypted-isaiah-import-stream-v1',source:'mm_crm',source_agent:'Isaiah Hernandez'})+'\n')
+   await writer!.write(JSON.stringify({format:'platinum-encrypted-isaiah-import-stream-v1',source:'mm_crm',source_agent:'Isaiah Hernandez'})+'\n')
    for(;offset<2000;offset+=5){
     setProgress('Writing encrypted backup to disk: '+total+' clients exported…')
     const res=await fetch('/api/migration/isaiah-export',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({offset,passphrase:password}),cache:'no-store'})
     const data=await res.json()
     if(!res.ok)throw Error((data.error||'Server error')+(data.detail?' — '+data.detail:''))
-    await writer.write(JSON.stringify({type:'batch',offset,client_count:data.client_count,manifest:data.manifest,encrypted_batch:data.package})+'\n')
+    await writer!.write(JSON.stringify({type:'batch',offset,client_count:data.client_count,manifest:data.manifest,encrypted_batch:data.package})+'\n')
     total+=data.client_count;failures+=data.manifest?.failures||0
     if(data.done)break
    }
-   await writer.write(JSON.stringify({type:'complete',clients:total,file_exceptions:failures})+'\n')
-   await writer.close();writer=null
+   await writer!.write(JSON.stringify({type:'complete',clients:total,file_exceptions:failures})+'\n')
+   await writer!.close();writer=null
    setProgress('Export finished: '+total+' clients saved to disk. File exceptions: '+failures+'. Use this .ndjson file with Platinum importer. Do not share your password.')
   }catch(e){
    if(writer){try{await writer.abort()}catch{}}
