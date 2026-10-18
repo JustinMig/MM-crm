@@ -35,7 +35,7 @@ export async function POST(req:NextRequest){
   if(user.id!==ISAIAH && !['owner','admin'].includes(requestor?.role||'')) return NextResponse.json({error:'Administrator or Isaiah only'},{status:403});
   const {offset,passphrase}=await req.json();
   if(!Number.isSafeInteger(offset)||offset<0||offset>2000||typeof passphrase!=='string'||passphrase.length<16) return NextResponse.json({error:'Use a password of at least 16 characters and a valid batch offset'},{status:400});
-  const {data:clients,error:clientError}=await admin.from('clients').select('*').eq('assigned_agent_id',ISAIAH).order('id').range(offset,offset+4);
+  const {data:clients,error:clientError}=await admin.from('clients').select('*').eq('assigned_agent_id',ISAIAH).order('id').range(offset,offset);
   if(clientError) throw clientError;
   const ids=(clients||[]).map(x=>x.id);
   const exportData:Record<string,unknown>={format:'mm-crm-isaiah-backup-v1',batch_offset:offset,client_count:ids.length,clients:decryptRows(clients||[]),related:{},files:[]};
@@ -49,6 +49,6 @@ export async function POST(req:NextRequest){
   // Never embed binary files in the encrypted import payload: Vercel rejects oversized requests.
   const docs=(exportData.related as Record<string,any>).documents;
   const packed=encrypted(Buffer.from(JSON.stringify(exportData),'utf8'),passphrase);
-  return NextResponse.json({offset,done:ids.length<5,client_count:ids.length,package:packed,manifest:{documents:Array.isArray(docs)?docs.length:0,files:0,failures:0,attachments_separate:true}},{headers:{'Cache-Control':'no-store'}});
+  return NextResponse.json({offset,done:ids.length<1,client_count:ids.length,package:packed,manifest:{documents:Array.isArray(docs)?docs.length:0,files:0,failures:0,attachments_separate:true}},{headers:{'Cache-Control':'no-store'}});
  }catch(error){return NextResponse.json({error:'Export failed. Review server logs.',detail:String((error as Error).message).slice(0,140)},{status:500});}
 }
