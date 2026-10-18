@@ -45,15 +45,10 @@ export async function POST(req:NextRequest){
     if(error) { (exportData.related as Record<string,unknown>)[table]={error:error.message}; continue; }
     (exportData.related as Record<string,unknown>)[table]=decryptRows(data||[]);
   }
+  // Attachments are migrated separately through Platinum's copy-documents tool.
+  // Never embed binary files in the encrypted import payload: Vercel rejects oversized requests.
   const docs=(exportData.related as Record<string,any>).documents;
-  if(Array.isArray(docs))for(const doc of docs){
-   const {data,error}=await admin.storage.from('client-documents').download(doc.storage_path);
-   if(error||!data){(exportData.files as any[]).push({document_id:doc.id,error:'Unable to download'});continue;}
-   const bytes=Buffer.from(await data.arrayBuffer());
-   if(bytes.length>8*1024*1024){(exportData.files as any[]).push({document_id:doc.id,error:'File larger than 8MB; requires separate transfer'});continue;}
-   (exportData.files as any[]).push({document_id:doc.id,client_id:doc.client_id,storage_path:doc.storage_path,mime_type:doc.mime_type,sha256:crypto.createHash('sha256').update(bytes).digest('hex'),data:bytes.toString('base64')});
-  }
   const packed=encrypted(Buffer.from(JSON.stringify(exportData),'utf8'),passphrase);
-  return NextResponse.json({offset,done:ids.length<5,client_count:ids.length,package:packed,manifest:{documents:Array.isArray(docs)?docs.length:0,files:(exportData.files as any[]).length,failures:(exportData.files as any[]).filter(x=>x.error).length}},{headers:{'Cache-Control':'no-store'}});
+  return NextResponse.json({offset,done:ids.length<5,client_count:ids.length,package:packed,manifest:{documents:Array.isArray(docs)?docs.length:0,files:0,failures:0,attachments_separate:true}},{headers:{'Cache-Control':'no-store'}});
  }catch(error){return NextResponse.json({error:'Export failed. Review server logs.',detail:String((error as Error).message).slice(0,140)},{status:500});}
 }
