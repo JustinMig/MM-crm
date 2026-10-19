@@ -49,7 +49,7 @@ async function fetchRelated(admin:ReturnType<typeof createAdminClient>,table:str
  let page=0
  while(true){
   const {data,error}=await admin.from(table).select('*').in('client_id',ids)
-   .order('client_id').range(page*500,page*500+499)
+   .order('client_id').order('id').range(page*500,page*500+499)
   if(error)throw Error('Related-table export failed: '+table)
   rows.push(...(data||[]))
   if(!data||data.length<500)break
@@ -69,26 +69,37 @@ export async function POST(req:NextRequest){
   const params=await req.json(),action=String(params?.action||'')
   const agency=p.data.agency_id
   if(action==='manifest'){
-   const c=await admin.from('clients').select('id',{head:true,count:'exact'}).eq('agency_id',agency)
+   // A stable UUID inventory prevents inserts during export from shifting offsets.
+   const ids:string[]=[]
+   for(let offset=0;offset<100000;offset+=500){
+    const page=await admin.from('clients').select('id').eq('agency_id',agency)
+      .order('id').range(offset,offset+499)
+    if(page.error)throw Error('Could not enumerate agency clients')
+    ids.push(...(page.data||[]).map(x=>String(x.id)))
+    if(!page.data||page.data.length<500)break
+   }
    const d=await admin.from('documents').select('id',{head:true,count:'exact'}).eq('agency_id',agency)
-   if(c.error||d.error)throw Error('Could not count original records')
-   return reply({format:'mig-portable-v1',clients:c.count||0,documents:d.count||0,
+   if(d.error)throw Error('Could not count agency documents')
+   return reply({format:'mig-portable-v1',clients:ids.length,client_ids:ids,documents:d.count||0,
      tables:['clients',...RELATED],created_at:new Date().toISOString()})
   }
   if(action==='batch'){
-   const offset=Number(params?.offset),passphrase=params?.passphrase
+   const offset=Number(params?.offset),passphrase=params?.passphrase,requested=params?.client_ids
    if(!Number.isSafeInteger(offset)||offset<0||offset>100000||
+      !Array.isArray(requested)||requested.length<1||requested.length>5||
+      requested.some(x=>!isUuid(x))||new Set(requested).size!==requested.length||
      typeof passphrase!=='string'||passphrase.length<16||passphrase.length>512)
-    return reply({error:'Invalid offset or backup passphrase (16–512 characters required)'},400)
+    return reply({error:'Invalid client inventory or backup passphrase (16–512 characters required)'},400)
    const result=await admin.from('clients').select('*').eq('agency_id',agency)
-     .order('id').range(offset,offset+4)
-   if(result.error)throw Error('Client export failed')
+     .in('id',requested).order('id')
+   if(result.error||result.data?.length!==requested.length)
+    throw Error('A source client has changed or disappeared during backup')
    const clients=restoreValues(result.data||[])
    const ids=clients.map(x=>String(x.id))
    const related:Record<string,unknown>={}
    if(ids.length)for(const table of RELATED)related[table]=await fetchRelated(admin,table,ids)
    const bundle={format:'mig-portable-data-v1',offset,clients,related}
-   return reply({offset,count:clients.length,done:clients.length<5,encrypted_batch:lock(bundle,passphrase),
+   return reply({offset,count:clients.length,done:false,encrypted_batch:lock(bundle,passphrase),
       document_ids:(related.documents as Array<{id:string}>||[]).map(x=>x.id)})
   }
   if(action==='file-url'){
