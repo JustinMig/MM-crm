@@ -47,7 +47,7 @@ export default function PortableBackupPage(){
    const seen=new Set<string>()
    for(let offset=0;offset<manifest.clients;offset+=5){
     setStatus('Securing client records: '+Math.min(offset,manifest.clients)+' of '+manifest.clients)
-    const batch=await api({action:'batch',offset,passphrase:pass})
+    const batch=await api({action:'batch',offset,client_ids:manifest.client_ids.slice(offset,offset+5),passphrase:pass})
     await line({type:'batch',offset,count:batch.count,encrypted_batch:batch.encrypted_batch})
     savedClients+=batch.count
     if(!batch.count&&offset<manifest.clients)throw Error('Source records changed while backup was being created. Start a new backup.')
