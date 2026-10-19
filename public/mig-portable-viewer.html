@@ -1,0 +1,124 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="referrer" content="no-referrer"><title>M&amp;M Secure Offline Client Archive</title>
+<style>
+:root{font:16px system-ui,Arial;color:#1a2e40;background:#edf2f4}
+*{box-sizing:border-box}main{max-width:1100px;margin:24px auto;padding:22px}
+h1{color:#183b50}section{background:white;border:1px solid #c9d6df;border-radius:12px;padding:18px;margin:12px 0}
+label{display:block;font-weight:700}input,button{font:inherit;padding:10px 12px;border:1px solid #9aafbd;border-radius:7px;margin:7px 0;max-width:100%}
+input[type=search],input[type=password]{width:100%}button{cursor:pointer;background:#e8eff4;color:#163a51;font-weight:700}
+button:disabled{opacity:.55;cursor:default}.grid{display:grid;grid-template-columns:300px 1fr;gap:16px}
+#matches{max-height:540px;overflow:auto}#matches button{display:block;width:100%;text-align:left;background:white}
+#matches button:hover{background:#e9f3f7}pre{overflow:auto;max-height:650px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px}
+.info{color:#536979}#detail h3{margin:14px 0 5px}#detail dl{display:grid;grid-template-columns:220px 1fr;gap:5px 10px;font-size:13px}
+#detail dt{color:#567185}#detail dd{margin:0;overflow-wrap:anywhere}#detail article{border-top:1px solid #dce7eb;padding:10px 0}
+@media(max-width:690px){.grid{grid-template-columns:1fr}#detail dl{grid-template-columns:1fr}#detail dt{font-weight:bold}}
+</style></head><body><main>
+<h1>M&amp;M — Offline Client Archive</h1><p class="info">Runs entirely on your computer. No network access or uploads. Client SSNs, Medicare/Medicaid numbers and documents remain encrypted on the external drive until you unlock them.</p>
+<section><label>Open <strong>backup.ndjson</strong> from your saved backup folder <input id="backup" type="file" accept=".ndjson"></label>
+<label>Backup passphrase <input id="password" type="password" autocomplete="off" placeholder="16+ characters"></label>
+<button id="unlock">Unlock and verify archive</button><button id="lock">Lock / clear client information</button>
+<p id="status" role="status">Choose your encrypted backup to begin.</p></section>
+<section id="browser" hidden><label>Search first name, last name, phone or ID <input id="search" type="search"></label>
+<div class="grid"><div><h2>Clients <span id="count"></span></h2><div id="matches"></div></div>
+<div id="detail"><p>Select a client to see their complete imported source record.</p></div></div></section>
+<section id="attachments" hidden><h2>View an encrypted attachment</h2><p class="info">Select an encrypted <code>.migdoc</code> from the backup's <code>documents</code> folder. Select the matching client first. A decrypted temporary preview opens in your browser and is never written to your drive.</p>
+<input id="file" type="file" accept=".migdoc"><button id="openDoc">Open selected document</button><p id="fileStatus"></p>
+</section><p class="info">Protect this drive and never share your backup passphrase. Close the browser to discard decrypted data from memory.</p>
+</main>
+<script>
+(()=>{
+ const e=id=>document.getElementById(id), decoder=new TextDecoder(), encoder=new TextEncoder()
+ let clients=[],recordById=new Map(),selected=null,docKey=null,docSalt=null,objects=[]
+ const bytes=b64=>Uint8Array.from(atob(b64),x=>x.charCodeAt(0))
+ const clean=()=>{clients=[];recordById.clear();selected=null;docKey=null;docSalt=null;e('password').value='';e('backup').value='';e('search').value='';e('file').value='';e('browser').hidden=true;e('attachments').hidden=true;e('detail').replaceChildren();e('matches').replaceChildren();for(const u of objects)URL.revokeObjectURL(u);objects=[]}
+ const key=async(password,salt,uses)=>{const material=await crypto.subtle.importKey('raw',encoder.encode(password),'PBKDF2',false,['deriveKey']);return crypto.subtle.deriveKey({name:'PBKDF2',salt:bytes(salt),iterations:310000,hash:'SHA-256'},material,{name:'AES-GCM',length:256},false,uses)}
+ const unlock=async(box,password)=>{
+  if(box?.format!=='mig-portable-box-v1'||box.iterations!==310000||box.kdf!=='pbkdf2-sha256')throw Error('Unsupported archive encryption.')
+  const k=await key(password,box.salt,['decrypt'])
+  const plain=await crypto.subtle.decrypt({name:'AES-GCM',iv:bytes(box.iv)},k,bytes(box.data))
+  return JSON.parse(decoder.decode(plain))
+ }
+ const stringify=value=>value==null?'—':typeof value==='object'?JSON.stringify(value):String(value)
+ function display(id){
+  selected=id;const bundle=recordById.get(id);if(!bundle)return
+  const pane=e('detail');pane.replaceChildren()
+  const title=document.createElement('h2');title.textContent=[bundle.client.first_name,bundle.client.last_name].filter(Boolean).join(' ')||'Client';pane.append(title)
+  const sections=[['Client details',[bundle.client]],...Object.entries(bundle.related).filter(([,v])=>Array.isArray(v)&&v.length)]
+  for(const [name,rows] of sections){
+   const h=document.createElement('h3');h.textContent=name.replaceAll('_',' ')+' ('+rows.length+')';pane.append(h)
+   for(const row of rows){
+    const article=document.createElement('article'),dl=document.createElement('dl')
+    for(const [field,value] of Object.entries(row)){
+      const dt=document.createElement('dt'),dd=document.createElement('dd')
+      dt.textContent=field.replaceAll('_',' ');dd.textContent=stringify(value);dl.append(dt,dd)
+    }
+    article.append(dl);pane.append(article)
+   }
+  }
+ }
+ function filter(){
+  const term=e('search').value.toLowerCase().trim();const found=clients.filter(x=>[x.first_name,x.last_name,x.phone,x.id].some(y=>String(y||'').toLowerCase().includes(term)))
+  e('count').textContent='('+found.length+')'
+  const area=e('matches');area.replaceChildren()
+  for(const c of found.slice(0,250)){
+   const b=document.createElement('button');b.type='button';b.textContent=[c.first_name,c.last_name,'—',c.date_of_birth||''].join(' ')
+   b.addEventListener('click',()=>display(c.id));area.append(b)
+  }
+  if(found.length>250){const p=document.createElement('p');p.textContent='Showing first 250 matches; refine search.';area.append(p)}
+ }
+ e('lock').onclick=()=>{clean();e('status').textContent='Locked. Archive has been cleared from this viewer.'}
+ e('unlock').onclick=async()=>{
+  const password=e('password').value,file=e('backup').files[0]
+  if(!file||password.length<16){e('status').textContent='Choose backup.ndjson and enter its passphrase.';return}
+  try{
+   e('unlock').disabled=true;e('status').textContent='Verifying encrypted backup locally…'
+   const lines=(await file.text()).split(/\r?\n/).filter(Boolean)
+   if(lines.length<3)throw Error('Backup file is incomplete.')
+   const header=JSON.parse(lines[0]),footer=JSON.parse(lines[lines.length-1])
+   if(header.format!=='mig-portable-v1'||footer.type!=='complete'||!footer.complete||footer.errors||
+     footer.clients!==header.client_count||footer.documents!==header.document_count)
+     throw Error('Incomplete backup or missing files. Do not trust it as a full copy.')
+   const incoming=[],map=new Map(),seenFiles=new Set()
+   for(let i=1;i<lines.length-1;i++){
+    const row=JSON.parse(lines[i]);if(row.type==='file')seenFiles.add(row.id)
+    if(row.type!=='batch')continue
+    const item=await unlock(row.encrypted_batch,password)
+    if(item.format!=='mig-portable-data-v1')throw Error('Unexpected client format')
+    for(const c of item.clients){
+      incoming.push(c);const related={}
+      for(const [name,rows] of Object.entries(item.related||{}))related[name]=Array.isArray(rows)?rows.filter(v=>v.client_id===c.id):[]
+      map.set(c.id,{client:c,related})
+    }
+    if(i%15===0)e('status').textContent='Decrypting client records: '+incoming.length+'/'+header.client_count
+   }
+   if(incoming.length!==header.client_count||seenFiles.size!==header.document_count)
+    throw Error('Manifest counts do not match file inventory.')
+   clients=incoming;recordById=map;docSalt=header.document_salt
+   docKey=await key(password,docSalt,['decrypt']);e('browser').hidden=false;e('attachments').hidden=false
+   e('status').textContent='Verified: '+clients.length+' clients and '+seenFiles.size+' encrypted document entries. Select a client below.'
+   filter()
+  }catch(err){clients=[];recordById.clear();e('browser').hidden=true;e('attachments').hidden=true;e('status').textContent='Unable to unlock: '+(err.message||'Invalid password or damaged archive')}
+  finally{e('unlock').disabled=false}
+ }
+ e('search').oninput=filter
+ e('openDoc').onclick=async()=>{
+  const file=e('file').files[0]
+  try{
+   if(!selected||!docKey)throw Error('Unlock the backup and select the client first.')
+   if(!file||!file.name.endsWith('.migdoc'))throw Error('Select a .migdoc attachment.')
+   const id=file.name.slice(0,-7)
+   const b=recordById.get(selected)
+   const doc=(b?.related?.documents||[]).find(x=>x.id===id)
+   if(!doc)throw Error('This document is not in the selected client’s archive.')
+   const data=new Uint8Array(await file.arrayBuffer())
+   if(decoder.decode(data.slice(0,7))!=='MIGDOC1')throw Error('Invalid encrypted document.')
+   const iv=data.slice(7,19),ciphertext=data.slice(19)
+   const plain=await crypto.subtle.decrypt({name:'AES-GCM',iv,additionalData:encoder.encode(id)},docKey,ciphertext)
+   const url=URL.createObjectURL(new Blob([plain],{type:doc.mime_type||'application/octet-stream'}))
+   objects.push(url);window.open(url,'_blank','noopener,noreferrer')
+   e('fileStatus').textContent='Opened '+(doc.file_name||'attachment')+' in a temporary browser preview.'
+  }catch(err){e('fileStatus').textContent=err.message||'Unable to open document'}
+ }
+ window.addEventListener('pagehide',()=>{for(const u of objects)URL.revokeObjectURL(u)})
+})()
+</script></body></html>
