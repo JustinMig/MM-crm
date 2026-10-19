@@ -7,9 +7,9 @@ const MAGIC=new TextEncoder().encode('MIGDOC1')
 const b64=(buf:ArrayBuffer|Uint8Array)=>btoa(Array.from(new Uint8Array(buf instanceof ArrayBuffer?buf:buf.buffer.slice(buf.byteOffset,buf.byteOffset+buf.byteLength)),b=>String.fromCharCode(b)).join(''))
 async function makeDocumentKey(password:string,salt:Uint8Array){
  const material=await crypto.subtle.importKey('raw',new TextEncoder().encode(password),'PBKDF2',false,['deriveKey'])
- return crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:310000,hash:'SHA-256'},material,{name:'AES-GCM',length:256},false,['encrypt'])
+ return crypto.subtle.deriveKey({name:'PBKDF2',salt:salt as BufferSource,iterations:310000,hash:'SHA-256'},material,{name:'AES-GCM',length:256},false,['encrypt'])
 }
-async function sha(input:Uint8Array){return b64(await crypto.subtle.digest('SHA-256',input))}
+async function sha(input:Uint8Array){return b64(await crypto.subtle.digest('SHA-256',input as BufferSource))}
 async function api(body:unknown){
  const res=await fetch('/api/migration/portable-backup',{method:'POST',
   headers:{'Content-Type':'application/json'},body:JSON.stringify(body),cache:'no-store'})
@@ -61,8 +61,8 @@ export default function PortableBackupPage(){
       if(!response.ok)throw Error('Source storage rejected download')
       const original=new Uint8Array(await response.arrayBuffer())
       const iv=crypto.getRandomValues(new Uint8Array(12))
-      const encrypted=await crypto.subtle.encrypt({name:'AES-GCM',iv,
-        additionalData:new TextEncoder().encode(documentId)},docKey,original)
+      const encrypted=await crypto.subtle.encrypt({name:'AES-GCM',iv:iv as BufferSource,
+        additionalData:new TextEncoder().encode(documentId)},docKey,original as BufferSource)
       const bytes=new Uint8Array(MAGIC.length+iv.length+encrypted.byteLength)
       bytes.set(MAGIC);bytes.set(iv,MAGIC.length)
       bytes.set(new Uint8Array(encrypted),MAGIC.length+iv.length)
