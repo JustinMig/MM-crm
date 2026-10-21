@@ -281,6 +281,10 @@ export default async function DashboardPage({ searchParams }: { searchParams?: P
             <span>SYSTEM HEALTH</span>
             <span className="dashboard-home-nav-meta">Performance, jobs &amp; maintenance <b>→</b></span>
           </Link>
+          <Link prefetch={false} href="/backup" className="dashboard-home-nav-tab dashboard-crm-to-crm-home-tab">
+            <span>CRM TO CRM</span>
+            <span className="dashboard-home-nav-meta">Open protected client backup and migration tools <b>→</b></span>
+          </Link>
           <Link prefetch={false} href="/backup" className="dashboard-home-nav-tab dashboard-backup-home-tab">
             <span>CRM BACKUP</span>
             <span className="dashboard-home-nav-meta">Open Google Drive backup screen <b>→</b></span>
@@ -304,6 +308,7 @@ export default async function DashboardPage({ searchParams }: { searchParams?: P
         .dashboard-home-nav-meta{display:flex;align-items:center;gap:10px;font-size:.76rem;letter-spacing:0;color:#dbe7f1;font-weight:800}
         .dashboard-home-nav-meta b{display:grid;place-items:center;min-width:24px;height:24px;padding:0 6px;border-radius:999px;background:rgba(255,255,255,.16);font-size:.9rem;color:#fff}
         .dashboard-health-home-tab{margin-top:22px;background:#294b43;border-color:#355e54;color:#eef8f4}
+        .dashboard-crm-to-crm-home-tab{background:#245b54;border-color:#245b54;color:#fff}
         .dashboard-backup-home-tab{margin-top:10px;background:#05070a;border-color:#101827;color:#5aa9ff;box-shadow:0 3px 12px rgba(2,6,23,.22)}
         .dashboard-backup-home-tab:hover{background:#000;color:#76b9ff}
         .dashboard-backup-home-tab .dashboard-home-nav-meta{color:#5aa9ff}
