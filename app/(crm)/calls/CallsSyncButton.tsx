@@ -1,12 +1,25 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 export default function CallsSyncButton({ configured }: { configured: boolean }) {
   const router = useRouter()
   const [syncing, setSyncing] = useState(false)
   const [message, setMessage] = useState('')
+
+  // Keep Office Call Data current without requiring staff to press Sync.
+  // Prevent repetitive rescans when switching sections or refreshing the page.
+  useEffect(() => {
+    if (!configured) return
+    const key='office-ringcentral-last-sync'
+    const last=Number(window.sessionStorage.getItem(key)||0)
+    if(Date.now()-last<5*60*1000)return
+    window.sessionStorage.setItem(key,String(Date.now()))
+    void syncCalls()
+    // syncCalls is intentionally started once per mounted configured panel.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [configured])
 
   async function syncCalls() {
     if (syncing) return
