@@ -23,7 +23,7 @@ export async function GET(request: Request) {
    if (!clientByPhone.size) return NextResponse.json({voicemails:[]},{headers:{'Cache-Control':'private, no-store'}})
    if (!isRingCentralConfigured()) return NextResponse.json({error:'RingCentral voicemail connection is not configured.'},{status:409})
    const token=await getRingCentralAccessToken()
-   const after=new Date(Date.now()-90*24*60*60*1000).toISOString()
+   const after=new Date(Date.now()-365*24*60*60*1000).toISOString()
    const messages:VoicemailMessage[]=[]
    // Bound history scans to avoid rate limits; subsequent syncs are idempotent.
    for(let page=1;page<=5;page++){
