@@ -3,35 +3,105 @@ const currentDialog=()=>document.getElementById('dialog');
 const mk=(tag,cls='',html='')=>{const n=document.createElement(tag);n.className=cls;n.innerHTML=html;return n};
 const addGroup=(title,type)=>{const s=mk('section','intake-section-box intake-section-'+type+' span-all',
 '<div class="intake-section-title span-all"><strong>'+title+'</strong></div>');return s};
+// Protected information is loaded automatically for an already-authorized Office
+// staff account. The ordinary agency bridge still performs per-client checks and
+// audit logs. Nothing is copied to local storage or sent to third-party services.
 const secure=(parent,modal,kind,field,title)=>{
- const box=mk('div','field span-all parity-secure','<span>'+title+'</span><input type="password" disabled value="" placeholder="Protected information">'+
- '<button type="button" class="outline">Reveal</button><div class="parity-secure-value" role="status">Requires authorized access.</div>');
- parent.append(box);const button=box.querySelector('button'),value=box.querySelector('.parity-secure-value');
- let timer=0;
- button.onclick=()=>{
-  if(button.dataset.visible==='true'){value.textContent='Protected — select Reveal';button.textContent='Reveal';button.dataset.visible='false';clearTimeout(timer);return}
-  const original=modal.querySelector('[data-parity-stash] [data-protected="'+kind+'"]');
-  const oldPane=modal.querySelector('[data-parity-stash] [data-secure-result="'+kind+'"]');
-  if(!original||original.disabled||!oldPane){value.textContent='Not authorized or record not saved.';return}
-  value.textContent='Checking permissions…';button.disabled=true;original.click();
-  let count=0;
+ const box=mk('div','field span-all parity-secure parity-auto-sensitive');
+ box.dataset.parityKind=kind;box.dataset.parityField=field;
+ box.append(mk('span','parity-sensitive-label'),mk('div','parity-secure-value'));
+ box.querySelector('.parity-sensitive-label').textContent=title;
+ box.querySelector('.parity-secure-value').textContent='Checking authorized agency information…';
+ parent.append(box);return box;
+};
+function loadProtected(modal){
+ const vault=modal.querySelector('[data-parity-stash]');
+ const nodes=[...modal.querySelectorAll('.parity-auto-sensitive')];
+ if(!nodes.length)return;
+ const filtered=nodes.filter(node=>node.isConnected);
+ if(!vault){
+  filtered.forEach(node=>node.querySelector('.parity-secure-value').textContent=
+   'Save the client to access protected information, or request agency permission.');
+  return;
+ }
+ const kinds=[...new Set(filtered.map(node=>node.dataset.parityKind))];
+ const match=(name,key)=>{
+  const n=String(name||'').toLowerCase();
+  if(!key)return true;
+  if(key==='ssn')return /social security|\bssn\b/.test(n);
+  if(key==='license')return /driver|license/.test(n);
+  if(key==='medicare')return /medicare/.test(n)&&!/medicaid|medicare\.gov/.test(n);
+  if(key==='medicaid')return /medicaid/.test(n);
+  return false;
+ };
+ const restore=()=>{
+  for(const node of filtered){
+   const value=node.querySelector('.parity-secure-value');
+   if(value){value.replaceChildren();value.textContent='Reopen the record to view protected information.';}
+  }
+ };
+ // Sensitive field values exist only while this client record stays in view.
+ const dialog=document.getElementById('dialog');
+ const focusHandler=()=>{
+  if(document.visibilityState==='hidden')restore();
+ };
+ document.addEventListener('visibilitychange',focusHandler);
+ const disconnector=new MutationObserver(()=>{
+  if(!modal.isConnected){
+   document.removeEventListener('visibilitychange',focusHandler);
+   disconnector.disconnect();
+  }
+ });
+ disconnector.observe(document.body,{childList:true,subtree:true});
+ for(const kind of kinds){
+  const button=vault.querySelector('[data-protected="'+kind+'"]');
+  const pane=vault.querySelector('[data-secure-result="'+kind+'"]');
+  const targets=filtered.filter(node=>node.dataset.parityKind===kind);
+  if(!button||!pane||button.disabled){
+   for(const node of targets)node.querySelector('.parity-secure-value').textContent=
+    'Protected information is restricted for this account.';
+   continue;
+  }
+  const display=()=>{
+   if(!modal.isConnected)return;
+   const rows=[...pane.querySelectorAll('.oc-protected-field')];
+   if(rows.length){
+    for(const node of targets){
+     const target=node.querySelector('.parity-secure-value');
+     if(!target)continue;
+     target.replaceChildren();
+     const shown=rows.filter(row=>match(row.querySelector('strong')?.textContent,node.dataset.parityField));
+     if(!shown.length){target.textContent='No saved information in this field.';continue;}
+     for(const row of shown)target.append(row.cloneNode(true));
+    }
+    return true;
+   }
+   if(pane.querySelector('.oc-protected-error')){
+    for(const node of targets)node.querySelector('.parity-secure-value').textContent=
+     'Agency access denied or protected information unavailable.';
+    return true;
+   }
+   if(/No saved information/i.test(pane.textContent||'')){
+    for(const node of targets)node.querySelector('.parity-secure-value').textContent=
+     'No saved information in this section.';
+    return true;
+   }
+   return false;
+  };
+  // The audited agency reveal already verifies Office can_view_sensitive.
+  button.click();
+  let retries=0;
   const poll=()=>{
-   if(!box.isConnected)return;
-   const entries=[...oldPane.querySelectorAll('.oc-protected-field')];
-   if(!entries.length && count++<40){setTimeout(poll,150);return}
-   value.replaceChildren();
-   const test=field==='ssn'?/social security|\bssn\b/i:field==='license'?/driver|license/i:
-    field==='medicare'?/medicare(?!\.gov)/i:field==='medicaid'?/medicaid/i:null;
-   const keep=entries.filter(e=>!test||test.test(e.querySelector('strong')?.textContent||''));
-   if(keep.length)for(const e of keep)value.append(e.cloneNode(true));
-   else value.textContent=entries.length?'No saved '+title+' found.':oldPane.textContent||'No data available.';
-   button.disabled=false;button.textContent='Hide';button.dataset.visible='true';
-   timer=setTimeout(()=>{value.textContent='Protected — select Reveal';button.textContent='Reveal';button.dataset.visible='false'},57000);
+   if(!modal.isConnected)return;
+   if(display())return;
+   if(retries++<70)setTimeout(poll,120);
+   else targets.forEach(node=>node.querySelector('.parity-secure-value').textContent=
+    'Information is unavailable from the agency.');
   };
   setTimeout(poll,160);
- };
- return box;
-};
+ }
+}
+
 function accordion(parent,title,cls){
  const d=mk('details','field-group parity-subsection '+cls);d.append(mk('summary','',title),mk('div','form-grid'));
  parent.append(d);return d.querySelector('.form-grid');
