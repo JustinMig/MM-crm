@@ -66,3 +66,23 @@ test('Arctos personal intake boxes are full width and do not split into mismatch
  assert.match(css,/intake-section-address/)
  assert.match(css,/client-glance-activity/)
 })
+
+test('Arctos Additional Client Information lives inside Personal & Contact, never in a second card',()=>{
+ assert.match(js,/Additional Client Information/)
+ assert.match(js,/const extraFields=extra\?\.querySelector\('\.oc-client-form-grid'\)/)
+ assert.match(js,/if\(gender&&demographics\)demographics\.insertBefore\(gender/)
+ assert.match(js,/if\(spouse&&household\)household\.append\(spouse\)/)
+ assert.match(js,/\['height_feet','height_inches','weight_lbs','smoker','veteran'\]/)
+ assert.match(js,/personal-underwriting-fields intake-section-underwriting/)
+ assert.match(js,/Height, Weight & Status/)
+ assert.match(js,/if\(address\)address\.insertAdjacentElement\('afterend',underwriting\)/)
+ assert.match(js,/if\(!remaining\?\.length\)extra\.remove\(\)/)
+ assert.match(js,/agencyGrid\.classList\.add\('oc-arctos-assignment-grid'\)/)
+})
+test('Overview personal cards span full width; underwriting matches Arctos five columns on desktop',()=>{
+ assert.match(css,/\.arctos-personal-group\s*> \.oc-client-category-body > \.oc-client-form-grid/)
+ assert.match(css,/grid-template-columns:minmax\(0,1fr\)!important/)
+ assert.match(css,/\.personal-underwriting-fields/)
+ assert.match(css,/grid-template-columns:repeat\(5,minmax\(0,1fr\)\)!important/)
+ assert.match(css,/\.oc-arctos-assignment-grid/)
+})
