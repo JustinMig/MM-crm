@@ -5,6 +5,7 @@ import {
   getRingCentralAccessToken,
   isRingCentralConfigured,
   listRecentRingCentralCalls,
+  listRecentRingCentralVoicemails,
   normalizePhone
 } from '@/lib/ringcentral'
 
@@ -34,7 +35,9 @@ export async function GET() {
 async function runOfficeSync(agencyId: string) {
   try {
     const accessToken = await getRingCentralAccessToken()
-    const records = await listRecentRingCentralCalls(accessToken, 7)
+    // Includes inbound answered, outbound, missed and all available call results.
+    // RingCentral retention determines historical reach; retain saved older rows.
+    const records = await listRecentRingCentralCalls(accessToken, 90, 10)
     const admin = createAdminClient()
 
     const { data: clients, error: clientError } = await admin
@@ -46,11 +49,17 @@ async function runOfficeSync(agencyId: string) {
 
     if (clientError) throw new Error(`Unable to load client phone numbers: ${clientError.message}`)
 
-    const clientByPhone = new Map<string, string>()
+    // A phone only identifies a client when it belongs to exactly one client.
+    // Every call is retained even if there is no unique matching client.
+    const clientIdsByPhone = new Map<string,string[]>()
     for (const client of clients || []) {
       const phone = normalizePhone(client.phone)
-      if (phone && !clientByPhone.has(phone)) clientByPhone.set(phone, client.id)
+      if (!phone) continue
+      clientIdsByPhone.set(phone,[...(clientIdsByPhone.get(phone)||[]),client.id])
     }
+    const clientByPhone = new Map<string,string>()
+    for(const [phone,ids] of clientIdsByPhone)
+      if(ids.length===1)clientByPhone.set(phone,ids[0])
 
     const nowIso = new Date().toISOString()
     const rows = records.map((record) => {
@@ -88,6 +97,35 @@ async function runOfficeSync(agencyId: string) {
     const matched = rows.filter((row) => row.client_id).length
     const recordings = rows.filter((row) => row.recording_id).length
 
+    let voicemailSaved = 0
+    let voicemailWarning = ''
+    try {
+      const messages = await listRecentRingCentralVoicemails(accessToken,90,10)
+      const voicemails = messages.map(message=>{
+        const phone=normalizePhone(message.from?.phoneNumber)
+        const audio=message.attachments?.find(item=>item.type==='AudioRecording')
+        return {
+          agency_id:agencyId,source_message_id:String(message.id),
+          client_id:phone?clientByPhone.get(phone)||null:null,
+          received_at:message.creationTime,from_phone:message.from?.phoneNumber||null,
+          duration_seconds:Math.max(0,Math.round(Number(audio?.vmDuration||0))),
+          audio_attachment_id:audio?.id?String(audio.id):null,
+          read_status:message.readStatus||null,updated_at:nowIso
+        }
+      })
+      // Keep staff_note/hidden_at untouched by the upsert, so previously
+      // deleted voicemail messages cannot reappear on future syncs.
+      for(let i=0;i<voicemails.length;i+=150){
+        const chunk=voicemails.slice(i,i+150)
+        const {error}=await admin.from('ringcentral_office_voicemails')
+          .upsert(chunk,{onConflict:'agency_id,source_message_id'})
+        if(error)throw new Error(error.message)
+        voicemailSaved+=chunk.length
+      }
+    } catch(error) {
+      voicemailWarning=error instanceof Error?error.message:'Unable to sync voicemail inbox.'
+    }
+
     return NextResponse.json({
       configured: true,
       office: true,
@@ -95,7 +133,9 @@ async function runOfficeSync(agencyId: string) {
       saved,
       matched,
       unmatched: rows.length - matched,
-      recordings
+      recordings,
+      voicemails:voicemailSaved,
+      voicemail_warning:voicemailWarning
     }, { headers: { 'Cache-Control': 'private, no-store' } })
   } catch (error) {
     const message = error instanceof Error ? error.message : 'RingCentral sync failed.'
