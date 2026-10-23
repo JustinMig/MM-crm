@@ -345,3 +345,124 @@
  #dialog .oc-arctos-client-dialog .intake-section-box{grid-template-columns:1fr}
  #dialog .oc-arctos-client-dialog .intake-section-address{grid-template-columns:1fr}
 }
+
+/* Fidelity corrections: Office selectors previously overrode the Arctos
+ * personal-intake grid, causing five source boxes to share a single row. */
+#dialog .oc-arctos-client-dialog #editClient>.arctos-personal-group>.oc-client-category-body,
+#dialog .oc-arctos-client-dialog #officeNewClientForm>.arctos-personal-group>.oc-client-category-body{
+ display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:12px!important;
+ padding:14px!important;min-width:0!important;background:#fff!important
+}
+#dialog .oc-arctos-client-dialog .arctos-personal-group .intake-section-box{
+ display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;
+ gap:12px;padding:14px;border:1px solid #c7c2b8;border-radius:12px;
+ background:#f7f5f1;align-items:start;margin:0;
+}
+#dialog .oc-arctos-client-dialog .arctos-personal-group .intake-section-title{
+ grid-column:1/-1;margin-bottom:2px;padding-bottom:7px;border-bottom:1px solid #ddd8cf;
+}
+#dialog .oc-arctos-client-dialog .arctos-personal-group .intake-section-address{
+ grid-template-columns:repeat(4,minmax(0,1fr))!important
+}
+#dialog .oc-arctos-client-dialog .arctos-personal-group .intake-section-address .oc-client-field:first-of-type{
+ grid-column:1/-1
+}
+#dialog .oc-arctos-client-dialog .arctos-personal-group .intake-section-box>.oc-client-field{
+ min-width:0;margin:0;display:grid;gap:6px
+}
+#dialog .oc-arctos-client-dialog .arctos-personal-group .intake-section-box .oc-client-form-grid{
+ grid-column:1/-1;margin:0;max-width:100%;gap:12px
+}
+#dialog .oc-arctos-client-dialog .arctos-personal-group .intake-section-demographics .parity-secure{
+ grid-column:1/-1;min-height:55px;background:#fff;border-color:#c7c2b8
+}
+#dialog .oc-arctos-client-dialog .parity-auto-sensitive{
+ min-width:0;padding:10px 12px;border:1px solid #c7c2b8;
+ background:#fff;border-radius:9px;display:grid;gap:5px
+}
+#dialog .oc-arctos-client-dialog .parity-auto-sensitive .parity-sensitive-label{
+ font-size:12px;font-weight:850;color:#33404a
+}
+#dialog .oc-arctos-client-dialog .parity-auto-sensitive .oc-protected-field{
+ display:grid;grid-template-columns:minmax(120px,40%) 1fr;gap:10px;
+ align-items:start;padding:6px 0;border-bottom:1px solid #e3e8ec
+}
+#dialog .oc-arctos-client-dialog .parity-auto-sensitive .oc-protected-field strong{
+ font-size:11px;color:#4e697a;font-weight:750
+}
+#dialog .oc-arctos-client-dialog .parity-auto-sensitive .oc-protected-field span{
+ font-size:12px;color:#1e3b4e;font-weight:650;overflow-wrap:anywhere
+}
+#dialog .oc-arctos-client-dialog .parity-auto-sensitive .parity-secure-value{color:#476479}
+#dialog .oc-arctos-client-dialog .arctos-top-note{
+ display:block!important;margin:0;border:1px solid #d6e1e7;border-radius:12px;background:#fff
+}
+#dialog .oc-arctos-client-dialog .arctos-top-note>summary{
+ background:#eef4f7;padding:10px 13px;font-weight:850;color:#23485e
+}
+#dialog .oc-arctos-client-dialog .arctos-top-note .oc-client-category-body{padding:12px}
+#dialog .oc-arctos-client-dialog .client-glance-activity{
+ grid-template-columns:minmax(0,1fr) minmax(0,1.35fr);align-items:stretch;margin-bottom:14px
+}
+#dialog .oc-arctos-client-dialog .arctos-coverage-card{
+ border:2px solid #25313b!important;border-radius:13px;background:#fff;
+ overflow:hidden;margin-bottom:11px
+}
+#dialog .oc-arctos-client-dialog .arctos-coverage-card[data-client-category="medicare"]>summary{background:#dae8ef!important}
+#dialog .oc-arctos-client-dialog .arctos-coverage-card[data-client-category="life"]>summary{background:#dce9df!important}
+#dialog .oc-arctos-client-dialog .arctos-coverage-card[data-client-category="hospital_indemnity"]>summary{background:#e8e0ef!important}
+#dialog .oc-arctos-client-dialog .arctos-coverage-card[data-client-category="retirement"]>summary{background:#eee4d8!important}
+#dialog .oc-arctos-client-dialog .arctos-coverage-card .oc-client-category-body{
+ padding:14px;background:#fff!important
+}
+#dialog .oc-arctos-client-dialog .arctos-coverage-card .field-group.parity-subsection{
+ border:1px solid #c1d2db;border-radius:10px;margin:0 0 10px;overflow:hidden
+}
+#dialog .oc-arctos-client-dialog .arctos-coverage-card .parity-subsection>summary{
+ background:#dae8ef;padding:12px 14px;color:#244556;font-size:13px
+}
+#dialog .oc-arctos-client-dialog .arctos-coverage-card .parity-subsection.medicaid>summary{background:#e5dfec}
+#dialog .oc-arctos-client-dialog .arctos-coverage-card .parity-subsection.medicare-gov>summary{background:#e7e8df}
+#dialog .oc-arctos-client-dialog .arctos-coverage-card .parity-subsection.sunfire>summary{background:#eee6d8}
+#dialog .oc-arctos-client-dialog .arctos-coverage-card .parity-subsection.health>summary{background:#e0ebef}
+#dialog .oc-arctos-client-dialog .arctos-hip-label{
+ background:#eee8f2;border:1px solid #d6c9de;border-radius:9px;
+ padding:11px 13px;margin-bottom:10px;color:#403f5b
+}
+#dialog .oc-arctos-client-dialog .arctos-hip-label strong{font-size:13px}
+#dialog .oc-arctos-client-dialog .arctos-hip-label p{font-size:11px;margin:5px 0 0;line-height:1.5}
+#dialog .oc-arctos-client-dialog .arctos-files-status{
+ background:#eff5f8;border:1px solid #cddce6;border-radius:9px;
+ padding:11px 13px;font-size:12px;color:#36566b;font-weight:750;margin-bottom:11px
+}
+#dialog .oc-arctos-client-dialog .arctos-files-section{border:2px solid #25313b;background:#fff}
+#dialog .oc-arctos-client-dialog .arctos-files-section>summary{background:#dce8f0}
+#dialog .oc-arctos-client-dialog .arctos-notes-section>summary{background:#eee6d8}
+#dialog .oc-arctos-client-dialog .arctos-files-section .oc-client-doc{
+ display:flex!important;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #dae6ec
+}
+#dialog .oc-arctos-client-dialog .arctos-files-section .oc-client-doc button{
+ display:inline-block!important;min-height:35px;white-space:normal
+}
+#dialog .oc-arctos-client-dialog .oc-client-main-tabs.client-main-tabs button[data-client-group-tab="overview"]{background:#d6e4ec!important}
+#dialog .oc-arctos-client-dialog .oc-client-main-tabs.client-main-tabs button[data-client-group-tab="coverage"]{background:#dbe6dc!important}
+#dialog .oc-arctos-client-dialog .oc-client-main-tabs.client-main-tabs button[data-client-group-tab="medical"]{background:#e6dfed!important}
+#dialog .oc-arctos-client-dialog .oc-client-main-tabs.client-main-tabs button[data-client-group-tab="files"]{background:#eee4d8!important}
+#dialog .oc-arctos-client-dialog .oc-client-main-tabs.client-main-tabs button[aria-selected="true"]{
+ box-shadow:inset 0 0 0 2px #ffffff88!important;border:2px solid #324957!important;
+ color:#142b3a!important
+}
+@media(max-width:750px){
+ #dialog .oc-arctos-client-dialog .client-glance-activity{grid-template-columns:1fr}
+ #dialog .oc-arctos-client-dialog .oc-client-main-tabs.client-main-tabs{grid-template-columns:repeat(2,minmax(0,1fr))}
+ #dialog .oc-arctos-client-dialog .arctos-personal-group .intake-section-address{
+  grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}
+@media(max-width:390px){
+ #dialog .oc-arctos-client-dialog .arctos-personal-group .intake-section-box{
+ grid-template-columns:1fr!important}
+ #dialog .oc-arctos-client-dialog .arctos-personal-group .intake-section-address{
+ grid-template-columns:1fr!important}
+ #dialog .oc-arctos-client-dialog .parity-auto-sensitive .oc-protected-field{
+ grid-template-columns:1fr}
+}
