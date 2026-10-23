@@ -20,7 +20,7 @@ export default function CallsSyncButton({ configured }: { configured: boolean })
         setMessage(result.message || 'RingCentral sync is already running. Please wait a moment.')
         return
       }
-      setMessage(`Synced ${result.synced || 0} calls · ${result.matched || 0} matched · ${result.unmatched || 0} unknown · ${result.recordings || 0} recordings`)
+      setMessage(`Synced ${result.synced || 0} calls · ${result.matched || 0} matched · ${result.unmatched || 0} unknown · ${result.recordings || 0} recordings · ${result.voicemails || 0} voicemails${result.voicemail_warning ? ' · Voicemail warning: '+result.voicemail_warning : ''}`)
       router.refresh()
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'RingCentral sync failed.')
