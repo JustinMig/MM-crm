@@ -83,20 +83,49 @@ async function ringCentralJson<T>(pathOrUrl: string, accessToken: string): Promi
   return payload as T
 }
 
-export async function listRecentRingCentralCalls(accessToken: string, days = 7) {
+// Page through the actual office extension call log rather than silently
+// dropping everything after the first 100 calls. RingCentral account history
+// and permissions determine how many past calls are available.
+export async function listRecentRingCentralCalls(accessToken: string, days = 7, maxPages = 10) {
   const from = new Date(Date.now() - Math.max(1, days) * 24 * 60 * 60 * 1000).toISOString()
-  const params = new URLSearchParams({
-    view: 'Simple',
-    dateFrom: from,
-    perPage: '100'
-  })
+  const records: RingCentralCallRecord[] = []
+  for (let page = 1; page <= maxPages; page++) {
+    const params = new URLSearchParams({
+      view: 'Simple', dateFrom: from, perPage: '100', page: String(page)
+    })
+    const payload = await ringCentralJson<{ records?: RingCentralCallRecord[], paging?: { totalPages?: number } }>(
+      `/restapi/v1.0/account/~/extension/~/call-log?${params.toString()}`, accessToken
+    )
+    const next = (payload.records || []).filter(record => record.type === 'Voice' && record.id && record.startTime)
+    records.push(...next)
+    if (!payload.records?.length || page >= Number(payload.paging?.totalPages || 1)) break
+  }
+  return [...new Map(records.map(record => [record.id,record])).values()]
+}
 
-  const payload = await ringCentralJson<{ records?: RingCentralCallRecord[] }>(
-    `/restapi/v1.0/account/~/extension/~/call-log?${params.toString()}`,
-    accessToken
-  )
+export type RingCentralVoicemailRecord = {
+  id: string | number
+  type?: string
+  creationTime?: string
+  readStatus?: string
+  from?: {phoneNumber?:string}
+  attachments?: {id?:string|number; type?:string; vmDuration?:number; uri?:string}[]
+}
 
-  return (payload.records || []).filter((record) => record.type === 'Voice' && record.id && record.startTime)
+export async function listRecentRingCentralVoicemails(accessToken: string, days = 90, maxPages = 10) {
+  const from = new Date(Date.now() - Math.max(1, days) * 86400000).toISOString()
+  const records: RingCentralVoicemailRecord[] = []
+  for (let page = 1; page <= maxPages; page++) {
+    const params = new URLSearchParams({
+      messageType:'VoiceMail', dateFrom:from, perPage:'100', page:String(page)
+    })
+    const payload = await ringCentralJson<{records?:RingCentralVoicemailRecord[],paging?:{totalPages?:number}}>(
+      `/restapi/v1.0/account/~/extension/~/message-store?${params.toString()}`,accessToken
+    )
+    records.push(...(payload.records||[]).filter(record=>record.type==='VoiceMail'&&record.id&&record.creationTime))
+    if (!payload.records?.length || page >= Number(payload.paging?.totalPages || 1)) break
+  }
+  return [...new Map(records.map(record=>[String(record.id),record])).values()]
 }
 
 export async function fetchRingCentralRecording(recordingId: string, accessToken: string) {
