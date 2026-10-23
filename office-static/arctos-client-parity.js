@@ -254,6 +254,65 @@ function enhance(modal){
   }
   const household=grid.querySelector('.intake-section-household');
   fields.filter(n=>n.parentElement===grid).forEach(n=>household?.append(n));
+  // Arctos: Additional Client Information is NOT a separate Overview
+  // accordion. Gender goes with DOB, spouse with household, and the remaining
+  // height/weight/smoker/veteran fields sit in a Height, Weight & Status card
+  // inside Personal & Contact Information immediately after Address.
+  const demographics=grid.querySelector('[data-intake-section="demographics"]');
+  const address=grid.querySelector('[data-intake-section="address"]');
+  const agencyGrid=form.querySelector('.oc-client-agency-grid');
+  if(agencyGrid&&household){
+   agencyGrid.classList.add('oc-arctos-assignment-grid');
+   household.prepend(agencyGrid);
+  }
+  const extra=[...form.querySelectorAll(':scope > .oc-client-category.tone-identity')]
+   .find(el=>/Additional Client Information/i.test(el.querySelector(':scope > summary')?.textContent||''));
+  const extraFields=extra?.querySelector('.oc-client-form-grid');
+  const takeField=name=>extraFields?.querySelector('[name="'+name+'"]')?.closest('label.oc-client-field');
+  const gender=takeField('gender');
+  const spouse=takeField('spouse');
+  if(gender&&demographics)demographics.insertBefore(gender,demographics.querySelector('.parity-secure')||null);
+  if(spouse&&household)household.append(spouse);
+  // Arctos keeps this underwriting information in the personal details box,
+  // in the order: Feet, Inches, Weight, Smoker, Veteran.
+  const underwriting=mk('section','personal-underwriting-fields intake-section-underwriting span-all');
+  underwriting.dataset.personalUnderwriting='true';
+  underwriting.dataset.intakeSection='underwriting';
+  underwriting.append(mk('div','personal-underwriting-title span-all','<strong>Height, Weight & Status</strong>'));
+  let hasEditable=false;
+  for(const name of ['height_feet','height_inches','weight_lbs','smoker','veteran']){
+   const field=takeField(name);
+   if(field){field.classList.add('field');underwriting.append(field);hasEditable=true;}
+  }
+  if(!hasEditable){
+   // New-client Office bridge does not currently save underwriting fields at
+   // creation time. Show their location without accepting unsaved inputs.
+   for(const [name,label] of [
+    ['height_feet','Height (Feet)'],['height_inches','Height (Inches)'],
+    ['weight_lbs','Weight (lbs)'],['smoker','Smoker'],['veteran','Veteran']]){
+    const field=mk('label','field oc-client-field');
+    const title=mk('span');title.textContent=label;
+    const input=document.createElement('input');input.type='text';input.disabled=true;
+    input.placeholder='Available after saving';input.setAttribute('aria-label',label);
+    field.append(title,input);underwriting.append(field);
+   }
+  }
+  if(address)address.insertAdjacentElement('afterend',underwriting);
+  else if(household)grid.insertBefore(underwriting,household);
+  else grid.append(underwriting);
+  if(extra){
+   // Do not remove an extra panel while any unrecognized input is inside it.
+   // Keeping unmapped fields visible avoids silently dropping saved data.
+   const remaining=extraFields?.querySelectorAll('input[name],select[name],textarea[name]');
+   if(!remaining?.length)extra.remove();
+   else {
+    const more=mk('section','intake-section-box intake-section-other span-all');
+    more.dataset.intakeSection='other';
+    more.append(mk('div','intake-section-title span-all','<strong>Additional Client Details</strong>'));
+    if(extraFields)more.append(...[...extraFields.children]);
+    grid.append(more);extra.remove();
+   }
+  }
  }
  // Keep original audited reveal controls connected, but remove the consolidated
  // Office grouping. Individual displays below invoke those same controls.
