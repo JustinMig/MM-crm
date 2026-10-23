@@ -16,7 +16,7 @@ test('Overview preserves editable note on top, and matches Arctos client intake 
  for(const name of ['Client Name','Date of Birth & Gender','Email & Phone','Address','Client Assignment & Household'])
   assert.ok(js.includes(name),'missing '+name)
 })
-test('Sensitive data lives in relevant locations instead of consolidated Office grouping',()=>{
+test('Sensitive data lives in relevant locations and is editable through the audited bridge',()=>{
  assert.match(js,/Identification & Protected/)
  assert.match(js,/dataset\.parityStash/)
  assert.match(js,/Driver’s License Identification/)
@@ -28,8 +28,12 @@ test('Sensitive data lives in relevant locations instead of consolidated Office 
  assert.match(js,/vault\.querySelector\('\[data-protected=/)
  assert.match(js,/loadProtected\(modal\)/)
  assert.match(js,/button\.click\(\)/)
+ assert.match(js,/data\.saveSensitive|save_sensitive/)
+ assert.match(js,/data-protected-input/)
+ assert.match(js,/data-protected-clear/)
+ assert.match(js,/Save Protected Information/)
  assert.match(js,/document\.visibilityState==='hidden'/)
- assert.doesNotMatch(js,/Reveal.*button\.onclick=.*original\.click\(\)/)
+ assert.match(js,/office:protected/)
 })
 test('Existing note, client, and appointment handlers stay attached to original DOM',()=>{
  assert.match(js,/form\.prepend\(glance\)/)
@@ -52,6 +56,16 @@ test('Coverage uses Arctos main categories and preserves the health plan and HIP
  assert.match(js,/Sunfire/)
  assert.match(js,/Hospital Indemnity Plan Information/)
  assert.match(js,/Annual Medicare Reviews/)
+})
+test('Medical sections keep Arctos categories while supporting editable doctors, pharmacies, and medications',()=>{
+ const office=readFileSync(new URL('../office-static/office-live.js',import.meta.url),'utf8')
+ assert.match(office,/data-health-editor/)
+ assert.match(office,/ocDoctorEditorCard/)
+ assert.match(office,/ocMedicationEditorCard/)
+ assert.match(office,/ocPharmacyEditor/)
+ assert.match(office,/save_health_records/)
+ assert.match(office,/\+ Add /)
+ assert.match(office,/kind==="doctors"\?'Doctor':'Medication'/)
 })
 test('Notes & Files shows document list and original secure open control',()=>{
  assert.match(js,/Documents & Files/)

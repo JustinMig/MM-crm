@@ -3,110 +3,116 @@ const currentDialog=()=>document.getElementById('dialog');
 const mk=(tag,cls='',html='')=>{const n=document.createElement(tag);n.className=cls;n.innerHTML=html;return n};
 const addGroup=(title,type)=>{const s=mk('section','intake-section-box intake-section-'+type+' span-all',
 '<div class="intake-section-title span-all"><strong>'+title+'</strong></div>');return s};
-// Protected information is loaded automatically for an already-authorized Office
-// staff account. The ordinary agency bridge still performs per-client checks and
-// audit logs. Nothing is copied to local storage or sent to third-party services.
+// Protected information is editable for Office staff who have both agency edit
+// and sensitive-data permissions. Reads and writes still go through the audited
+// agency bridge, and values are cleared whenever the record leaves the screen.
+const identifierKey=field=>({ssn:'ssn',license:'drivers_license_number',medicare:'medicare_number',medicaid:'medicaid_number'}[field]||field);
+const protectedFields=(kind,field,title)=>{
+ if(kind==='identifiers')return [[identifierKey(field),title]];
+ if(kind==='banking')return [
+  ['payment_method','Payment Method'],['bank_name','Bank Name'],['account_name','Account Holder'],
+  ['routing_number','Routing Number'],['account_number','Account Number'],['payment_notes','Payment Notes'],
+  ['card_number','Card Number / Last Four'],['card_expiration','Card Expiration'],['card_notes','Card Notes']
+ ];
+ if(kind==='medicare_gov')return [
+  ['username','Medicare.gov Username'],['password','Medicare.gov Password'],
+  ['verification_type','Verification Method'],['verification_destination','Verification Phone / Email'],
+  ['security_answer','Verification Answer']
+ ];
+ return [];
+};
 const secure=(parent,modal,kind,field,title)=>{
- const box=mk('div','field span-all parity-secure parity-auto-sensitive');
+ const box=mk('div','field span-all parity-secure parity-auto-sensitive parity-sensitive-editor');
  box.dataset.parityKind=kind;box.dataset.parityField=field;
- box.append(mk('span','parity-sensitive-label'),mk('div','parity-secure-value'));
- box.querySelector('.parity-sensitive-label').textContent=title;
- box.querySelector('.parity-secure-value').textContent='Checking authorized agency information…';
- parent.append(box);return box;
+ const heading=mk('div','parity-sensitive-editor-heading');
+ heading.append(mk('strong','parity-sensitive-label'),mk('span','parity-sensitive-status'));
+ heading.querySelector('strong').textContent=title;
+ heading.querySelector('span').textContent='Checking authorized agency information…';
+ const grid=mk('div','parity-protected-form-grid');
+ for(const [key,label] of protectedFields(kind,field,title)){
+  const wrap=mk('label','field parity-protected-field');
+  const caption=mk('span');caption.textContent=label;
+  const input=document.createElement(key==='payment_notes'||key==='card_notes'?'textarea':'input');
+  input.dataset.protectedInput=key;input.name='office_protected_'+key;input.autocomplete='off';
+  if(input instanceof HTMLInputElement)input.type=key==='password'?'password':'text';
+  if(input instanceof HTMLTextAreaElement)input.rows=3;
+  const clear=mk('label','parity-protected-clear');
+  const clearBox=document.createElement('input');clearBox.type='checkbox';clearBox.dataset.protectedClear=key;
+  clear.append(clearBox,document.createTextNode(' Clear saved value'));
+  wrap.append(caption,input,clear);grid.append(wrap);
+ }
+ const actions=mk('div','parity-sensitive-actions');
+ const save=document.createElement('button');save.type='button';save.className='primary';save.dataset.saveProtected=kind;save.textContent='Save Protected Information';
+ actions.append(save);box.append(heading,grid,actions);parent.append(box);
+ save.addEventListener('click',async()=>{
+  const api=window.officeCrmClientBridge,current=api?.current?.(),status=box.querySelector('.parity-sensitive-status');
+  if(!api||!current){status.textContent='Save the client before editing protected information.';return;}
+  const values={};
+  for(const input of box.querySelectorAll('[data-protected-input]')){
+   const key=input.dataset.protectedInput,clear=box.querySelector('[data-protected-clear="'+key+'"]');
+   if(clear?.checked)values[key]='';
+   else if(input.value!==input.dataset.initial)values[key]=input.value;
+  }
+  if(!Object.keys(values).length){status.textContent='No protected changes to save.';return;}
+  save.disabled=true;status.textContent='Saving securely…';
+  try{
+   await api.request(current.agency,'save_sensitive',{client_id:current.id,kind,values});
+   status.textContent='Saved securely.';
+   const source=modal.querySelector('[data-parity-stash] [data-protected="'+kind+'"]');
+   if(source&&!source.disabled)source.click();
+  }catch(error){status.textContent='Save failed: '+(error?.message||'Unable to save protected information.');}
+  finally{save.disabled=false;}
+ });
+ return box;
 };
 function loadProtected(modal){
  const vault=modal.querySelector('[data-parity-stash]');
- const nodes=[...modal.querySelectorAll('.parity-auto-sensitive')];
+ const nodes=[...modal.querySelectorAll('.parity-auto-sensitive')].filter(node=>node.isConnected);
  if(!nodes.length)return;
- const filtered=nodes.filter(node=>node.isConnected);
  if(!vault){
-  filtered.forEach(node=>node.querySelector('.parity-secure-value').textContent=
-   'Save the client to access protected information, or request agency permission.');
+  nodes.forEach(node=>node.querySelector('.parity-sensitive-status').textContent=
+   'Save the client to edit protected information, or request agency permission.');
   return;
  }
- const kinds=[...new Set(filtered.map(node=>node.dataset.parityKind))];
- const match=(name,key)=>{
-  const n=String(name||'').toLowerCase();
-  if(!key)return true;
-  if(key==='ssn')return /social security|\bssn\b/.test(n);
-  if(key==='license')return /driver|license/.test(n);
-  if(key==='medicare')return /medicare/.test(n)&&!/medicaid|medicare\.gov/.test(n);
-  if(key==='medicaid')return /medicaid/.test(n);
-  return false;
- };
- const restore=()=>{
-  for(const node of filtered){
-   const value=node.querySelector('.parity-secure-value');
-   if(value){value.replaceChildren();value.textContent='Reopen the record to view protected information.';}
+ const fill=(kind,data={})=>{
+  for(const node of nodes.filter(item=>item.dataset.parityKind===kind)){
+   for(const input of node.querySelectorAll('[data-protected-input]')){
+    const key=input.dataset.protectedInput;
+    const value=key==='card_number'?'':String(data[key]??'');
+    input.value=value;input.dataset.initial=value;
+    const clear=node.querySelector('[data-protected-clear="'+key+'"]');if(clear)clear.checked=false;
+    if(key==='card_number'&&data.card_last4)input.placeholder='Saved ending in '+String(data.card_last4)+' — enter a new value to replace';
+   }
+   node.querySelector('.parity-sensitive-status').textContent='Editable secure fields loaded.';
   }
  };
- // Sensitive field values exist only while this client record stays in view.
- const dialog=document.getElementById('dialog');
+ const protectedHandler=event=>{
+  const detail=event.detail||{};if(!modal.isConnected)return;
+  fill(detail.kind,detail.data);
+ };
+ modal.addEventListener('office:protected',protectedHandler);
+ const clearVisible=()=>nodes.forEach(node=>{
+  node.querySelectorAll('[data-protected-input]').forEach(input=>{input.value='';input.dataset.initial='';});
+  node.querySelector('.parity-sensitive-status').textContent='Hidden while Office CRM is not visible.';
+ });
  const focusHandler=()=>{
-  if(document.visibilityState==='hidden')restore();
+  if(document.visibilityState==='hidden')clearVisible();
   else if(modal.isConnected){
-   // Returning to the record automatically revalidates agency access.
-   document.removeEventListener('visibilitychange',focusHandler);
-   disconnector.disconnect();
-   for(const node of filtered)node.querySelector('.parity-secure-value').textContent=
-    'Refreshing authorized agency information…';
-   loadProtected(modal);
+   nodes.forEach(node=>node.querySelector('.parity-sensitive-status').textContent='Refreshing authorized agency information…');
+   for(const kind of new Set(nodes.map(node=>node.dataset.parityKind))){
+    const button=vault.querySelector('[data-protected="'+kind+'"]');if(button&&!button.disabled)button.click();
+   }
   }
  };
  document.addEventListener('visibilitychange',focusHandler);
- const disconnector=new MutationObserver(()=>{
-  if(!modal.isConnected){
-   document.removeEventListener('visibilitychange',focusHandler);
-   disconnector.disconnect();
-  }
- });
+ const disconnector=new MutationObserver(()=>{if(!modal.isConnected){
+  document.removeEventListener('visibilitychange',focusHandler);modal.removeEventListener('office:protected',protectedHandler);disconnector.disconnect();
+ }});
  disconnector.observe(document.body,{childList:true,subtree:true});
- for(const kind of kinds){
+ for(const kind of new Set(nodes.map(node=>node.dataset.parityKind))){
   const button=vault.querySelector('[data-protected="'+kind+'"]');
-  const pane=vault.querySelector('[data-secure-result="'+kind+'"]');
-  const targets=filtered.filter(node=>node.dataset.parityKind===kind);
-  if(!button||!pane||button.disabled){
-   for(const node of targets)node.querySelector('.parity-secure-value').textContent=
-    'Protected information is restricted for this account.';
-   continue;
-  }
-  const display=()=>{
-   if(!modal.isConnected)return;
-   const rows=[...pane.querySelectorAll('.oc-protected-field')];
-   if(rows.length){
-    for(const node of targets){
-     const target=node.querySelector('.parity-secure-value');
-     if(!target)continue;
-     target.replaceChildren();
-     const shown=rows.filter(row=>match(row.querySelector('strong')?.textContent,node.dataset.parityField));
-     if(!shown.length){target.textContent='No saved information in this field.';continue;}
-     for(const row of shown)target.append(row.cloneNode(true));
-    }
-    return true;
-   }
-   if(pane.querySelector('.oc-protected-error')){
-    for(const node of targets)node.querySelector('.parity-secure-value').textContent=
-     'Agency access denied or protected information unavailable.';
-    return true;
-   }
-   if(/No saved information/i.test(pane.textContent||'')){
-    for(const node of targets)node.querySelector('.parity-secure-value').textContent=
-     'No saved information in this section.';
-    return true;
-   }
-   return false;
-  };
-  // The audited agency reveal already verifies Office can_view_sensitive.
-  button.click();
-  let retries=0;
-  const poll=()=>{
-   if(!modal.isConnected)return;
-   if(display())return;
-   if(retries++<70)setTimeout(poll,120);
-   else targets.forEach(node=>node.querySelector('.parity-secure-value').textContent=
-    'Information is unavailable from the agency.');
-  };
-  setTimeout(poll,160);
+  if(button&&!button.disabled)button.click();
+  else nodes.filter(node=>node.dataset.parityKind===kind).forEach(node=>node.querySelector('.parity-sensitive-status').textContent='Protected information is restricted for this account.');
  }
 }
 

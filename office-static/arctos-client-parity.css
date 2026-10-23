@@ -532,3 +532,49 @@
  #dialog .oc-arctos-client-dialog .arctos-personal-group .personal-underwriting-fields{
  grid-template-columns:1fr!important}
 }
+
+/* Editable protected and medical records in Office CRM. */
+#dialog .oc-arctos-client-dialog .parity-sensitive-editor{gap:11px}
+#dialog .oc-arctos-client-dialog .parity-sensitive-editor-heading{
+ display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+#dialog .oc-arctos-client-dialog .parity-sensitive-status{
+ font-size:11px;color:#5c7180;font-weight:650}
+#dialog .oc-arctos-client-dialog .parity-protected-form-grid{
+ display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+#dialog .oc-arctos-client-dialog .parity-protected-field{
+ display:grid;gap:6px;min-width:0;margin:0}
+#dialog .oc-arctos-client-dialog .parity-protected-field>span{
+ font-size:11px;font-weight:800;color:#385568}
+#dialog .oc-arctos-client-dialog .parity-protected-field input,
+#dialog .oc-arctos-client-dialog .parity-protected-field textarea{
+ box-sizing:border-box;max-width:none;width:100%;min-height:40px;border:1px solid #b5c8d5;
+ border-radius:8px;background:#fff;color:#193447;padding:8px 10px;resize:vertical}
+#dialog .oc-arctos-client-dialog .parity-protected-clear{
+ display:flex;align-items:center;gap:6px;font-size:10px;color:#6e4550;font-weight:700}
+#dialog .oc-arctos-client-dialog .parity-protected-clear input{width:15px;min-height:15px;margin:0}
+#dialog .oc-arctos-client-dialog .parity-sensitive-actions{display:flex;justify-content:flex-end}
+#dialog .oc-arctos-client-dialog .parity-sensitive-actions .primary{
+ background:#1f5d78;color:#fff;border-color:#1f5d78}
+#dialog .oc-arctos-client-dialog .oc-health-editor{display:grid;gap:12px}
+#dialog .oc-arctos-client-dialog [data-health-edit-list]{display:grid;gap:12px}
+#dialog .oc-arctos-client-dialog .oc-health-edit-card{
+ border:1px solid #c8d6df;border-radius:12px;background:#f7fafc;padding:13px;display:grid;gap:12px}
+#dialog .oc-arctos-client-dialog .oc-health-card-heading{
+ display:flex;justify-content:space-between;align-items:center;gap:12px}
+#dialog .oc-arctos-client-dialog .oc-health-card-heading strong{font-size:14px;color:#203e52}
+#dialog .oc-arctos-client-dialog .oc-health-edit-card .oc-client-form-grid{
+ display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
+#dialog .oc-arctos-client-dialog .oc-health-edit-card .oc-client-field{display:grid;gap:6px;min-width:0}
+#dialog .oc-arctos-client-dialog .oc-health-edit-card .oc-client-field>span{
+ font-size:11px;font-weight:800;color:#3c5768}
+#dialog .oc-arctos-client-dialog .oc-health-edit-card input,
+#dialog .oc-arctos-client-dialog .oc-health-edit-card textarea{
+ box-sizing:border-box;width:100%;min-height:40px;border:1px solid #bccbd5;border-radius:8px;background:#fff;padding:8px 10px}
+#dialog .oc-arctos-client-dialog .oc-health-edit-card textarea{resize:vertical}
+#dialog .oc-arctos-client-dialog .oc-health-edit-actions{
+ display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center}
+#dialog .oc-arctos-client-dialog .oc-health-edit-status{margin:0;font-size:11px;color:#607786}
+@media(max-width:620px){
+ #dialog .oc-arctos-client-dialog .parity-protected-form-grid,
+ #dialog .oc-arctos-client-dialog .oc-health-edit-card .oc-client-form-grid{grid-template-columns:1fr}
+}
