@@ -29,7 +29,7 @@ type CalendarAgent = {
   full_name: string
 }
 
-type SearchParams = Promise<{ calendar_agent?: string }>
+type SearchParams = Promise<{ calendar_agent?: string; from_call?: string; call_phone?: string; call_client?: string; call_kind?: string; call_label?: string }>
 
 export default async function CalendarPage({ searchParams }: { searchParams?: SearchParams }) {
   const { supabase, userId, profile } = await getCrmSession()
@@ -61,7 +61,17 @@ export default async function CalendarPage({ searchParams }: { searchParams?: Se
     const selected = availableAgents.find((agent) => agent.id === requestedAgent) || availableAgents[0]
     activeAgentId = selected.id
     agents = [selected]
-    if (requestedAgent !== selected.id) redirect(`/calendar?calendar_agent=${encodeURIComponent(selected.id)}`)
+    if (requestedAgent !== selected.id) {
+      // Preserve an appointment launched from Call Data when choosing which
+      // coordinator-managed calendar to display.
+      const next=new URLSearchParams({calendar_agent:selected.id})
+      if(params.from_call==='1'){
+        next.set('from_call','1')
+        for(const field of ['call_phone','call_client','call_kind','call_label'] as const)
+          if(params[field])next.set(field,params[field]!)
+      }
+      redirect('/calendar?'+next.toString())
+    }
   }
 
   return (
