@@ -58,18 +58,17 @@ const secure=(parent,modal,kind,field,title)=>{
   try{
    await api.request(current.agency,'save_sensitive',{client_id:current.id,kind,values});
    status.textContent='Saved securely.';
-   const source=modal.querySelector('[data-parity-stash] [data-protected="'+kind+'"]');
-   if(source&&!source.disabled)source.click();
+   await modal.officeReloadProtected?.(kind);
   }catch(error){status.textContent='Save failed: '+(error?.message||'Unable to save protected information.');}
   finally{save.disabled=false;}
  });
  return box;
 };
 function loadProtected(modal){
- const vault=modal.querySelector('[data-parity-stash]');
  const nodes=[...modal.querySelectorAll('.parity-auto-sensitive')].filter(node=>node.isConnected);
  if(!nodes.length)return;
- if(!vault){
+ const api=window.officeCrmClientBridge,current=api?.current?.();
+ if(!api||!current){
   nodes.forEach(node=>node.querySelector('.parity-sensitive-status').textContent=
    'Save the client to edit protected information, or request agency permission.');
   return;
@@ -91,6 +90,22 @@ function loadProtected(modal){
   fill(detail.kind,detail.data);
  };
  modal.addEventListener('office:protected',protectedHandler);
+ const loadKind=async kind=>{
+  const targets=nodes.filter(node=>node.dataset.parityKind===kind);
+  targets.forEach(node=>node.querySelector('.parity-sensitive-status').textContent='Retrieving saved secure values…');
+  try{
+   const result=await api.request(current.agency,'secure_client',{client_id:current.id,kind});
+   if(!modal.isConnected)return;
+   const data=result?.data&&typeof result.data==='object'?result.data:{};
+   fill(kind,data);
+   if(!Object.values(data).some(value=>value!==null&&value!==''&&value!==undefined))
+    targets.forEach(node=>node.querySelector('.parity-sensitive-status').textContent='No saved information in this section yet.');
+  }catch(error){
+   targets.forEach(node=>node.querySelector('.parity-sensitive-status').textContent=
+    'Unable to load saved values: '+(error?.message||'secure agency request failed.'));
+  }
+ };
+ modal.officeReloadProtected=loadKind;
  const clearVisible=()=>nodes.forEach(node=>{
   node.querySelectorAll('[data-protected-input]').forEach(input=>{input.value='';input.dataset.initial='';});
   node.querySelector('.parity-sensitive-status').textContent='Hidden while Office CRM is not visible.';
@@ -99,21 +114,16 @@ function loadProtected(modal){
   if(document.visibilityState==='hidden')clearVisible();
   else if(modal.isConnected){
    nodes.forEach(node=>node.querySelector('.parity-sensitive-status').textContent='Refreshing authorized agency information…');
-   for(const kind of new Set(nodes.map(node=>node.dataset.parityKind))){
-    const button=vault.querySelector('[data-protected="'+kind+'"]');if(button&&!button.disabled)button.click();
-   }
+   for(const kind of new Set(nodes.map(node=>node.dataset.parityKind)))void loadKind(kind);
   }
  };
  document.addEventListener('visibilitychange',focusHandler);
  const disconnector=new MutationObserver(()=>{if(!modal.isConnected){
-  document.removeEventListener('visibilitychange',focusHandler);modal.removeEventListener('office:protected',protectedHandler);disconnector.disconnect();
+  document.removeEventListener('visibilitychange',focusHandler);modal.removeEventListener('office:protected',protectedHandler);
+  delete modal.officeReloadProtected;disconnector.disconnect();
  }});
  disconnector.observe(document.body,{childList:true,subtree:true});
- for(const kind of new Set(nodes.map(node=>node.dataset.parityKind))){
-  const button=vault.querySelector('[data-protected="'+kind+'"]');
-  if(button&&!button.disabled)button.click();
-  else nodes.filter(node=>node.dataset.parityKind===kind).forEach(node=>node.querySelector('.parity-sensitive-status').textContent='Protected information is restricted for this account.');
- }
+ for(const kind of new Set(nodes.map(node=>node.dataset.parityKind)))void loadKind(kind);
 }
 
 function accordion(parent,title,cls){

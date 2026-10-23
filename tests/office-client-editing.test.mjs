@@ -18,6 +18,8 @@ test('Office client protected fields are editable and save through the agency br
     assert.ok(parity.includes(field), `missing editable protected field ${field}`)
   }
   assert.match(parity, /save_sensitive/)
+  assert.match(parity, /api\.request\(current\.agency,'secure_client'/)
+  assert.match(parity, /officeReloadProtected/)
   assert.match(parity, /Save Protected Information/)
 })
 
