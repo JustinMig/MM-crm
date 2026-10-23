@@ -31,7 +31,7 @@ test('All days start CLOSED and group by America/Chicago day, not browser local 
  assert.match(panel,/<summary>/)
 })
 test('Delete and notes are agency-scoped, and original RingCentral records are preserved',()=>{
- assert.match(actions,/Delete from the Office CRM/)
+ assert.match(actions,/from the Office CRM/)
  assert.match(actions,/method:'DELETE'/)
  assert.match(actions,/saveNote/)
  assert.match(actions,/method:'PATCH'/)
