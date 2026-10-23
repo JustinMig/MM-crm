@@ -25,7 +25,7 @@ test('Sensitive data lives in relevant locations instead of consolidated Office 
  assert.match(js,/Medicare Number/)
  assert.match(js,/Medicaid Number/)
  assert.match(js,/Medicare\.gov Login Credentials/)
- assert.match(js,/\[data-parity-stash\] \[data-protected=/)
+ assert.match(js,/vault\.querySelector\('\[data-protected=/)
  assert.match(js,/loadProtected\(modal\)/)
  assert.match(js,/button\.click\(\)/)
  assert.match(js,/document\.visibilityState==='hidden'/)
@@ -43,13 +43,12 @@ test('Official Arctos four-tabs and client record colors remain included',()=>{
 })
 
 test('Coverage uses Arctos main categories and preserves the health plan and HIP sections',()=>{
- for(const key of ['medicare','life','hospital_indemnity','retirement']){
-   assert.match(js,new RegExp('\\\\['+JSON.stringify(key)+','))
- }
+ for(const key of ['medicare','life','hospital_indemnity','retirement'])
+   assert.ok(js.includes("['"+key+"'"),'Missing coverage category '+key)
  assert.match(js,/Health Plan Information/)
  assert.match(js,/Medicare Information/)
  assert.match(js,/Medicaid Information/)
- assert.match(js,/Medicare\\.gov Login Credentials/)
+ assert.match(js,/Medicare\.gov Login Credentials/)
  assert.match(js,/Sunfire/)
  assert.match(js,/Hospital Indemnity Plan Information/)
  assert.match(js,/Annual Medicare Reviews/)
@@ -63,7 +62,7 @@ test('Notes & Files shows document list and original secure open control',()=>{
 })
 test('Arctos personal intake boxes are full width and do not split into mismatched columns',()=>{
  assert.match(css,/arctos-personal-group/)
- assert.match(css,/grid-template-columns:minmax\\(0,1fr\\)!important/)
+ assert.match(css,/grid-template-columns:minmax\(0,1fr\)!important/)
  assert.match(css,/intake-section-address/)
  assert.match(css,/client-glance-activity/)
 })
