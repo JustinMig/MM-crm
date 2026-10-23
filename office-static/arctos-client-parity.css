@@ -466,3 +466,69 @@
  #dialog .oc-arctos-client-dialog .parity-auto-sensitive .oc-protected-field{
  grid-template-columns:1fr}
 }
+
+/* Exact Arctos Overview hierarchy. The Office legacy form uses a second
+ * .oc-client-form-grid inside the Personal card; that inner grid was still
+ * splitting whole cards into two columns. */
+#dialog .oc-arctos-client-dialog .arctos-personal-group
+ > .oc-client-category-body > .oc-client-form-grid{
+ display:grid!important;
+ grid-template-columns:minmax(0,1fr)!important;
+ width:100%!important;min-width:0!important;
+ gap:12px!important;align-items:start!important;
+}
+#dialog .oc-arctos-client-dialog .arctos-personal-group
+ > .oc-client-category-body > .oc-client-form-grid > .intake-section-box,
+#dialog .oc-arctos-client-dialog .arctos-personal-group
+ > .oc-client-category-body > .oc-client-form-grid > .personal-underwriting-fields{
+ grid-column:1/-1!important;
+ width:100%;box-sizing:border-box;margin:0;
+}
+#dialog .oc-arctos-client-dialog .arctos-personal-group
+ .personal-underwriting-fields{
+ display:grid!important;
+ grid-template-columns:repeat(2,minmax(0,1fr))!important;
+ align-items:start;gap:12px;
+ border:1px solid #c7c2b8;border-radius:12px;
+ background:#f7f5f1;padding:14px;
+}
+#dialog .oc-arctos-client-dialog .arctos-personal-group
+ .personal-underwriting-title{
+ grid-column:1/-1;
+ padding-bottom:7px;margin:0 0 2px;
+ border-bottom:1px solid #ddd8cf;
+}
+#dialog .oc-arctos-client-dialog .arctos-personal-group
+ .personal-underwriting-title strong{
+ font-size:14px;color:#33404a;font-weight:850;
+}
+#dialog .oc-arctos-client-dialog .arctos-personal-group
+ .personal-underwriting-fields>.field{
+ min-width:0;margin:0;
+}
+#dialog .oc-arctos-client-dialog .arctos-personal-group
+ .intake-section-household .oc-arctos-assignment-grid{
+ grid-column:1/-1;
+ display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+ gap:12px;margin:0;padding:0;border:0;
+}
+#dialog .oc-arctos-client-dialog .arctos-personal-group
+ .intake-section-household .oc-arctos-assignment-grid>.oc-client-field{min-width:0}
+#dialog .oc-arctos-client-dialog .arctos-personal-group
+ .intake-section-demographics>.field{grid-column:auto}
+#dialog .oc-arctos-client-dialog .arctos-personal-group
+ .intake-section-demographics>.parity-secure{grid-column:1/-1}
+@media(min-width:900px){
+ #dialog .oc-arctos-client-dialog .arctos-personal-group .personal-underwriting-fields{
+ grid-template-columns:repeat(5,minmax(0,1fr))!important}
+}
+@media(max-width:560px){
+ #dialog .oc-arctos-client-dialog .arctos-personal-group .personal-underwriting-fields{
+ grid-template-columns:repeat(2,minmax(0,1fr))!important;padding:12px}
+ #dialog .oc-arctos-client-dialog .arctos-personal-group .intake-section-household
+ .oc-arctos-assignment-grid{grid-template-columns:1fr}
+}
+@media(max-width:390px){
+ #dialog .oc-arctos-client-dialog .arctos-personal-group .personal-underwriting-fields{
+ grid-template-columns:1fr!important}
+}
