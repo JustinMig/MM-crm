@@ -59,7 +59,7 @@ function name(person?:Person){
  return [person.first_name,person.last_name].filter(Boolean).join(' ')||'Client'
 }
 const byNewest=(a:Item,b:Item)=>new Date(b.occurred).getTime()-new Date(a.occurred).getTime()
-export default async function NotificationsCallsPanel({filter='all',q=''}:{filter?:string;q?:string}){
+export default async function NotificationsCallsPanel({filter='all',q='',location='notifications'}:{filter?:string;q?:string;location?:'notifications'|'phone'}){
  const {profile}=await getCrmSession()
  if(!profile?.agency_id)return null
  const active=(SECTIONS.map(item=>item[0]) as string[]).includes(filter)?filter as Section:'all'
@@ -119,7 +119,12 @@ export default async function NotificationsCallsPanel({filter='all',q=''}:{filte
   const key=dateKey(item.occurred)
   groups.set(key,[...(groups.get(key)||[]),item])
  }
- const href=(tab:Section)=>'/notifications?tab=calls&filter='+tab+(q?'&q='+encodeURIComponent(q):'')
+ const href=(tab:Section)=>{
+  const base=location==='phone'
+   ? '/phone?tab='+(tab==='voicemail'?'voicemails':'calls')+'&filter='+tab
+   : '/notifications?tab=calls&filter='+tab
+  return base+(q?'&q='+encodeURIComponent(q):'')
+ }
  return <div className="office-ringcentral">
   <div className="office-ring-head">
    <div><h2>Office RingCentral Call Data</h2>
@@ -138,8 +143,8 @@ export default async function NotificationsCallsPanel({filter='all',q=''}:{filte
     aria-current={active===key?'page':undefined}
     className={'office-ring-tab'+(active===key?' selected':'')}>{label}<b>{totals[key]}</b></Link>)}
   </div>
-  <form className="office-ring-search" action="/notifications" method="get">
-   <input type="hidden" name="tab" value="calls"/>
+  <form className="office-ring-search" action={location==='phone'?'/phone':'/notifications'} method="get">
+   <input type="hidden" name="tab" value={location==='phone' && active==='voicemail'?'voicemails':'calls'}/>
    <input type="hidden" name="filter" value={active}/>
    <input type="search" name="q" defaultValue={q} placeholder="Search by number or client name" aria-label="Search office calls"/>
    <button type="submit" className="btn btn-secondary">Search</button>
