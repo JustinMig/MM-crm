@@ -44,6 +44,14 @@ function loadProtected(modal){
  const dialog=document.getElementById('dialog');
  const focusHandler=()=>{
   if(document.visibilityState==='hidden')restore();
+  else if(modal.isConnected){
+   // Returning to the record automatically revalidates agency access.
+   document.removeEventListener('visibilitychange',focusHandler);
+   disconnector.disconnect();
+   for(const node of filtered)node.querySelector('.parity-secure-value').textContent=
+    'Refreshing authorized agency information…';
+   loadProtected(modal);
+  }
  };
  document.addEventListener('visibilitychange',focusHandler);
  const disconnector=new MutationObserver(()=>{
