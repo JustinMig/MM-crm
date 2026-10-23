@@ -1,0 +1,347 @@
+/* Source: Arctos client-four-tabs.css */
+/* Arctos client-record simplification: four visible sections; original fields preserved. */
+.client-four-tabs{min-width:0;color:#253a4a}
+.client-four-tabs .client-legacy-tabs[hidden]{display:none!important}
+.client-four-tabs .client-main-tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;overflow:visible;padding:2px 0 15px;margin-bottom:4px}
+.client-four-tabs .client-main-tabs button{min-width:0;min-height:48px;white-space:normal;text-align:center;padding:10px 8px;border-radius:11px;border:1px solid #d7e0e8;background:#f4f7fa;color:#53677a;font-size:13px;font-weight:750}
+.client-four-tabs .client-main-tabs button:hover{background:#e9f0f5;color:#234358}
+.client-four-tabs .client-main-tabs button[aria-selected="true"]{background:#19374d;border-color:#19374d;color:#fff;box-shadow:0 2px 7px rgba(25,55,77,.13)}
+.client-four-tabs [data-client-group-panel][hidden]{display:none!important}
+.client-four-tabs [data-client-group-panel]{min-width:0}
+.client-four-tabs .client-overview-card{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;border:1px solid #d9e3eb;border-radius:14px;background:linear-gradient(115deg,#f6f9fb,#eef5f7);padding:17px 19px;margin-bottom:17px}
+.client-four-tabs .client-overview-kicker{display:block;font-size:10px;letter-spacing:.095em;font-weight:850;color:#687d8f;margin-bottom:5px}
+.client-four-tabs [data-client-summary-name]{display:block;font-size:19px;font-weight:800;color:#17364b;line-height:1.35}
+.client-four-tabs [data-client-summary-meta]{margin:5px 0 0;font-size:12px;color:#5b6d7c;line-height:1.6}
+.client-four-tabs .client-overview-shortcuts{display:flex;gap:7px;flex-wrap:wrap}
+.client-four-tabs .client-overview-shortcuts button{border-radius:9px;background:#fff;border:1px solid #ccdce6;color:#234e65;font-size:12px;font-weight:750;min-height:39px;padding:8px 11px}
+.client-four-tabs .client-overview-shortcuts button:hover{background:#e1edf4}
+.client-four-tabs .client-group-heading{margin:1px 0 16px}
+.client-four-tabs .client-group-heading>strong{font-weight:850;font-size:16px;color:#213d50}
+.client-four-tabs .client-group-heading>p{font-size:13px;color:#617687;margin:5px 0 0}
+.client-four-tabs .client-category{border:1px solid #d7e1e9;background:#fff;border-radius:13px;margin:0 0 11px;min-width:0;overflow:clip}
+.client-four-tabs .client-category>summary{display:flex;align-items:center;justify-content:space-between;cursor:pointer;gap:12px;padding:16px 17px;list-style:none;background:#f7fafc}
+.client-four-tabs .client-category>summary::-webkit-details-marker{display:none}
+.client-four-tabs .client-category>summary>span:first-child{display:grid;gap:4px}
+.client-four-tabs .client-category>summary strong{font-size:14px;color:#243f52}
+.client-four-tabs .client-category>summary small{font-size:12px;color:#74899a;line-height:1.3}
+.client-four-tabs .client-category>summary .client-category-chevron{color:#607c91;font-size:22px;font-weight:500;transition:transform .17s ease}
+.client-four-tabs .client-category[open]>summary .client-category-chevron{transform:rotate(180deg)}
+.client-four-tabs .client-category>summary:hover{background:#eff5f8}
+.client-four-tabs .client-category[open]>summary{border-bottom:1px solid #dce5ec}
+.client-four-tabs .client-category-body{padding:14px;min-width:0}
+.client-four-tabs .client-category-body>.field-group:last-child{margin-bottom:0}
+.client-four-tabs .client-category-body>.panel-card:last-child{margin-bottom:0}
+.client-four-tabs [data-client-group-panel="files"]>[data-panel="notes"]{min-width:0}
+@media(max-width:720px){
+  .client-four-tabs .client-main-tabs{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+  .client-four-tabs .client-main-tabs button{font-size:12px;min-height:46px;padding:9px 5px}
+  .client-four-tabs .client-overview-card{padding:13px 12px}
+  .client-four-tabs [data-client-summary-name]{font-size:17px}
+  .client-four-tabs .client-overview-shortcuts{width:100%;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
+  .client-four-tabs .client-overview-shortcuts button{min-width:0;font-size:11px;padding:8px 4px}
+  .client-four-tabs .client-category>summary{padding:14px 12px}
+  .client-four-tabs .client-category-body{padding:10px}
+}
+@media(max-width:380px){.client-four-tabs .client-overview-shortcuts{grid-template-columns:1fr 1fr}.client-four-tabs .client-overview-shortcuts button:last-child{grid-column:1/-1}}
+
+/* Override legacy per-tab colors, without changing the individual insurance form colors. */
+.client-four-tabs .client-main-tabs button{color:#53677a!important;border-color:#d7e0e8!important;background:#f4f7fa!important;box-shadow:none!important;transform:none!important;border-width:1px!important}
+.client-four-tabs .client-main-tabs button[aria-selected="true"]{color:#fff!important;background:#19374d!important;border-color:#19374d!important;box-shadow:0 2px 7px rgba(25,55,77,.13)!important;transform:none!important}
+.client-four-tabs .client-main-tabs button:hover:not([aria-selected="true"]){background:#e9f0f5!important;color:#234358!important}
+
+
+/* Coverage cards: dark outlines and distinct soft shades, matching Athena. */
+.client-four-tabs [data-client-group-panel="coverage"] .client-category{
+  border:2px solid #25313b;
+  border-radius:13px;
+}
+.client-four-tabs [data-client-group-panel="coverage"] .client-category>summary strong{
+  display:inline-block;
+  justify-self:start;
+  border:1.5px solid #25313b;
+  border-radius:6px;
+  padding:6px 11px;
+  background:rgba(255,255,255,.78);
+  color:#172330;
+  line-height:1.35;
+}
+.client-four-tabs [data-client-group-panel="coverage"] .client-category[data-client-category="medicare"],
+.client-four-tabs [data-client-group-panel="coverage"] .client-category[data-client-category="medicare"]>summary,
+.client-four-tabs [data-client-group-panel="coverage"] .client-category[data-client-category="medicare"]>summary:hover{background:#eaf3fa}
+.client-four-tabs [data-client-group-panel="coverage"] .client-category[data-client-category="life"],
+.client-four-tabs [data-client-group-panel="coverage"] .client-category[data-client-category="life"]>summary,
+.client-four-tabs [data-client-group-panel="coverage"] .client-category[data-client-category="life"]>summary:hover{background:#edf6ef}
+.client-four-tabs [data-client-group-panel="coverage"] .client-category[data-client-category="hospital_indemnity"],
+.client-four-tabs [data-client-group-panel="coverage"] .client-category[data-client-category="hospital_indemnity"]>summary,
+.client-four-tabs [data-client-group-panel="coverage"] .client-category[data-client-category="hospital_indemnity"]>summary:hover{background:#f5eff9}
+.client-four-tabs [data-client-group-panel="coverage"] .client-category[data-client-category="retirement"],
+.client-four-tabs [data-client-group-panel="coverage"] .client-category[data-client-category="retirement"]>summary,
+.client-four-tabs [data-client-group-panel="coverage"] .client-category[data-client-category="retirement"]>summary:hover{background:#f9f3e8}
+
+/* Clearly differentiated Medicare accordion headings, with high-contrast colors. */
+.client-four-tabs [data-panel="medicare"]>details.field-group:nth-of-type(1){background:#d4e4ee!important;border:2px solid #273440!important}
+.client-four-tabs [data-panel="medicare"]>details.field-group:nth-of-type(1)>summary{background:#d4e4ee!important;color:#16222e!important;font-weight:850!important}
+.client-four-tabs [data-panel="medicare"]>details.field-group:nth-of-type(1)[open]>summary{background:#c0d7e6!important}
+.client-four-tabs [data-panel="medicare"]>details.field-group:nth-of-type(2){background:#d7e7d9!important;border:2px solid #273440!important}
+.client-four-tabs [data-panel="medicare"]>details.field-group:nth-of-type(2)>summary{background:#d7e7d9!important;color:#16222e!important;font-weight:850!important}
+.client-four-tabs [data-panel="medicare"]>details.field-group:nth-of-type(2)[open]>summary{background:#c5dcc9!important}
+.client-four-tabs [data-panel="medicare"]>details.field-group:nth-of-type(3){background:#e3d9ee!important;border:2px solid #273440!important}
+.client-four-tabs [data-panel="medicare"]>details.field-group:nth-of-type(3)>summary{background:#e3d9ee!important;color:#16222e!important;font-weight:850!important}
+.client-four-tabs [data-panel="medicare"]>details.field-group:nth-of-type(3)[open]>summary{background:#d5c7e6!important}
+.client-four-tabs [data-panel="medicare"]>details.field-group:nth-of-type(4){background:#eee1cb!important;border:2px solid #273440!important}
+.client-four-tabs [data-panel="medicare"]>details.field-group:nth-of-type(4)>summary{background:#eee1cb!important;color:#16222e!important;font-weight:850!important}
+.client-four-tabs [data-panel="medicare"]>details.field-group:nth-of-type(4)[open]>summary{background:#e4d1b3!important}
+.client-four-tabs [data-panel="medicare"]>details.field-group:nth-of-type(5){background:#d0e5e5!important;border:2px solid #273440!important}
+.client-four-tabs [data-panel="medicare"]>details.field-group:nth-of-type(5)>summary{background:#d0e5e5!important;color:#16222e!important;font-weight:850!important}
+.client-four-tabs [data-panel="medicare"]>details.field-group:nth-of-type(5)[open]>summary{background:#bad8d9!important}
+.client-four-tabs [data-panel="medicare"]>details.field-group:nth-of-type(6){background:#eddae2!important;border:2px solid #273440!important}
+.client-four-tabs [data-panel="medicare"]>details.field-group:nth-of-type(6)>summary{background:#eddae2!important;color:#16222e!important;font-weight:850!important}
+.client-four-tabs [data-panel="medicare"]>details.field-group:nth-of-type(6)[open]>summary{background:#e2c7d3!important}
+.client-four-tabs [data-panel="medicare"]>details.field-group>summary{padding:14px 16px!important;border-radius:8px!important}
+
+/* Client Overview: compact annual review completion, expansive synced notes. */
+.client-glance-reviews-layout{display:flex!important;flex-direction:column!important;gap:9px!important;grid-template-columns:minmax(0,1fr)!important}
+.client-glance-reviews-layout>section{width:100%;min-width:0}
+.client-glance-reviews-layout .client-review-checkoff{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:9px 13px;background:#edf5f1;border:1px solid #c2d9cd;border-radius:10px;min-height:44px}
+.client-review-checkoff>strong{font-size:13px;color:#26513c;white-space:nowrap}
+.client-review-checkoff>label{display:inline-flex;gap:7px;align-items:center;font-size:12px;color:#2d4b3b}
+.client-review-checkoff input{width:17px;height:17px;accent-color:#487b60}
+.client-review-checkoff [data-client-review-status]{font-size:11px}
+.client-glance-notes-wide textarea{width:100%;min-height:170px;box-sizing:border-box}
+
+/* Client at a Glance: action buttons replace redundant section navigation. */
+.client-four-tabs .client-overview-shortcuts button[data-client-add-campaign],
+.client-four-tabs .client-overview-shortcuts button[data-client-add-appointment]{
+  background:#e9f2f6;
+  border:1px solid #a9c3d1;
+  color:#1b445b;
+  font-weight:800;
+  cursor:pointer;
+}
+.client-four-tabs .client-overview-shortcuts button[data-client-add-campaign]:hover:not(:disabled),
+.client-four-tabs .client-overview-shortcuts button[data-client-add-appointment]:hover:not(:disabled){
+  background:#d9eaf2;
+  border-color:#668ea4;
+}
+.client-four-tabs .client-overview-shortcuts button:disabled{
+  cursor:not-allowed;
+  opacity:.55;
+}
+/* Overview note is a closed native accordion on every newly opened record. */
+.client-four-tabs .client-glance-reviews-layout>details.client-glance-notes-wide{
+  box-sizing:border-box;
+  width:100%;
+  min-width:0;
+  border:1.5px solid #bccbd5;
+  border-radius:11px;
+  background:#fff;
+  overflow:hidden;
+}
+.client-four-tabs .client-glance-notes-wide>summary{
+  display:flex;
+  gap:12px;
+  justify-content:space-between;
+  align-items:center;
+  cursor:pointer;
+  list-style:none;
+  background:#f4f8fa;
+  padding:12px 15px;
+  color:#1a394b;
+}
+.client-four-tabs .client-glance-notes-wide>summary::-webkit-details-marker{display:none}
+.client-four-tabs .client-glance-notes-wide>summary>strong{font-size:14px;font-weight:850}
+.client-four-tabs .client-glance-notes-wide>summary::after{
+  content:'⌄';
+  font-size:22px;
+  color:#4d6c7f;
+  line-height:1;
+  transition:transform .15s ease;
+}
+.client-four-tabs .client-glance-notes-wide[open]>summary::after{transform:rotate(180deg)}
+.client-four-tabs .client-glance-notes-wide[open]>summary{border-bottom:1px solid #d8e3e9}
+.client-four-tabs .client-glance-notes-wide>summary:focus-visible{outline:2px solid #467993;outline-offset:-3px}
+.client-four-tabs .client-glance-note-hint{font-size:12px;color:#547187;margin-left:auto}
+.client-four-tabs .client-glance-notes-body{padding:13px 15px 15px;display:grid;gap:9px}
+.client-four-tabs .client-glance-notes-body textarea{background:#fff;color:#1b2f3c}
+/* Keep shortcuts compact when 2 actions, or 3 with the Medicare Review link. */
+@media(max-width:630px){
+ .client-four-tabs .client-overview-shortcuts{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .client-four-tabs .client-overview-shortcuts:has([data-client-athena]) button[data-client-add-appointment]{grid-column:1/-1}
+}
+@media(max-width:380px){
+ .client-four-tabs .client-overview-shortcuts:not(:has([data-client-athena])) button:last-child{grid-column:auto}
+}
+
+/* Inline confirmation for the reliable Client at a Glance campaign action. */
+.client-four-tabs .client-overview-shortcuts .client-campaign-action-status{
+  flex-basis:100%;grid-column:1/-1;display:block;width:100%;
+  font-size:12px;line-height:1.4;font-weight:750;
+  color:#2b6651;overflow-wrap:anywhere;
+}
+.client-four-tabs .client-overview-shortcuts .client-campaign-action-status:empty{display:none}
+
+/* Source: Arctos client-record-page-colors.css */
+/* Client records coordinated soft shades. */
+.client-form.client-four-tabs .client-main-tabs button[data-client-group-tab="overview"]{background:#d6e4ec!important;color:#1c3040!important;border:1px solid #60717d!important}
+.client-form.client-four-tabs .client-main-tabs button[data-client-group-tab="coverage"]{background:#dbe6dc!important;color:#1c3040!important;border:1px solid #60717d!important}
+.client-form.client-four-tabs .client-main-tabs button[data-client-group-tab="medical"]{background:#e6dfed!important;color:#1c3040!important;border:1px solid #60717d!important}
+.client-form.client-four-tabs .client-main-tabs button[data-client-group-tab="files"]{background:#eee4d8!important;color:#1c3040!important;border:1px solid #60717d!important}
+.client-form.client-four-tabs .client-main-tabs button[aria-selected="true"]{box-shadow:inset 0 0 0 2px #ffffff88!important;border:2px solid #324957!important;color:#142b3a!important}
+.client-form.client-four-tabs [data-client-category="medicare"],.client-form.client-four-tabs [data-client-category="medicare"]>summary{background:#dae8ef!important}
+.client-form.client-four-tabs [data-client-category="medicare"]>summary strong{display:inline-block;border:1.5px solid #344753;border-radius:6px;padding:6px 10px;background:#ffffffb9;color:#172d3b!important}
+.client-form.client-four-tabs [data-client-category="life"],.client-form.client-four-tabs [data-client-category="life"]>summary{background:#dce9df!important}
+.client-form.client-four-tabs [data-client-category="life"]>summary strong{display:inline-block;border:1.5px solid #344753;border-radius:6px;padding:6px 10px;background:#ffffffb9;color:#172d3b!important}
+.client-form.client-four-tabs [data-client-category="hospital_indemnity"],.client-form.client-four-tabs [data-client-category="hospital_indemnity"]>summary{background:#e8e0ef!important}
+.client-form.client-four-tabs [data-client-category="hospital_indemnity"]>summary strong{display:inline-block;border:1.5px solid #344753;border-radius:6px;padding:6px 10px;background:#ffffffb9;color:#172d3b!important}
+.client-form.client-four-tabs [data-client-category="retirement"],.client-form.client-four-tabs [data-client-category="retirement"]>summary{background:#f0e5d8!important}
+.client-form.client-four-tabs [data-client-category="retirement"]>summary strong{display:inline-block;border:1.5px solid #344753;border-radius:6px;padding:6px 10px;background:#ffffffb9;color:#172d3b!important}
+.client-form.client-four-tabs [data-client-category="doctors"],.client-form.client-four-tabs [data-client-category="doctors"]>summary{background:#dcebee!important}
+.client-form.client-four-tabs [data-client-category="doctors"]>summary strong{display:inline-block;border:1.5px solid #344753;border-radius:6px;padding:6px 10px;background:#ffffffb9;color:#172d3b!important}
+.client-form.client-four-tabs [data-client-category="medications"],.client-form.client-four-tabs [data-client-category="medications"]>summary{background:#eddee5!important}
+.client-form.client-four-tabs [data-client-category="medications"]>summary strong{display:inline-block;border:1.5px solid #344753;border-radius:6px;padding:6px 10px;background:#ffffffb9;color:#172d3b!important}
+.client-form.client-four-tabs [data-panel="information"]>details.field-group:nth-of-type(1),.client-form.client-four-tabs [data-panel="information"]>details.field-group:nth-of-type(1)>summary{background:#dae6ed!important}
+.client-form.client-four-tabs [data-panel="information"]>details.field-group:nth-of-type(2),.client-form.client-four-tabs [data-panel="information"]>details.field-group:nth-of-type(2)>summary{background:#e9e0d5!important}
+.client-form.client-four-tabs [data-panel="life"]>details.field-group:nth-of-type(1),.client-form.client-four-tabs [data-panel="life"]>details.field-group:nth-of-type(1)>summary{background:#dbe8df!important}
+.client-form.client-four-tabs [data-panel="life"]>details.field-group:nth-of-type(2),.client-form.client-four-tabs [data-panel="life"]>details.field-group:nth-of-type(2)>summary{background:#e5ddeb!important}
+.client-form.client-four-tabs [data-panel="hospital_indemnity"]>details.field-group:nth-of-type(1),.client-form.client-four-tabs [data-panel="hospital_indemnity"]>details.field-group:nth-of-type(1)>summary{background:#e6dfed!important}
+.client-form.client-four-tabs [data-panel="hospital_indemnity"]>details.field-group:nth-of-type(2),.client-form.client-four-tabs [data-panel="hospital_indemnity"]>details.field-group:nth-of-type(2)>summary{background:#dae9ec!important}
+.client-form.client-four-tabs [data-panel="retirement"]>details.field-group:nth-of-type(1),.client-form.client-four-tabs [data-panel="retirement"]>details.field-group:nth-of-type(1)>summary{background:#eee3d5!important}
+.client-form.client-four-tabs [data-panel="retirement"]>details.field-group:nth-of-type(2),.client-form.client-four-tabs [data-panel="retirement"]>details.field-group:nth-of-type(2)>summary{background:#dce9df!important}
+.client-form.client-four-tabs [data-panel="doctors"]>details.field-group:nth-of-type(1),.client-form.client-four-tabs [data-panel="doctors"]>details.field-group:nth-of-type(1)>summary{background:#dce8e9!important}
+.client-form.client-four-tabs [data-panel="doctors"]>details.field-group:nth-of-type(2),.client-form.client-four-tabs [data-panel="doctors"]>details.field-group:nth-of-type(2)>summary{background:#e8ddeb!important}
+.client-form.client-four-tabs [data-panel="medications"]>details.field-group:nth-of-type(1),.client-form.client-four-tabs [data-panel="medications"]>details.field-group:nth-of-type(1)>summary{background:#eadde5!important}
+.client-form.client-four-tabs [data-panel="medications"]>details.field-group:nth-of-type(2),.client-form.client-four-tabs [data-panel="medications"]>details.field-group:nth-of-type(2)>summary{background:#dce9eb!important}
+.client-form.client-four-tabs [data-panel="notes"]>details.field-group:nth-of-type(1),.client-form.client-four-tabs [data-panel="notes"]>details.field-group:nth-of-type(1)>summary{background:#eee3d9!important}
+.client-form.client-four-tabs [data-panel="notes"]>details.field-group:nth-of-type(2),.client-form.client-four-tabs [data-panel="notes"]>details.field-group:nth-of-type(2)>summary{background:#dfe6ed!important}
+
+/* Medical tab: visible dark outer rim on BOTH section containers
+   (Doctors & Pharmacies, and Medications), matching Coverage card outlines. */
+.client-form.client-four-tabs [data-client-group-panel="medical"] [data-client-category="doctors"],
+.client-form.client-four-tabs [data-client-group-panel="medical"] [data-client-category="medications"],
+.client-form.client-four-tabs [data-client-category="doctors"],
+.client-form.client-four-tabs [data-client-category="medications"]{
+  border:2px solid #252d34!important;
+  border-radius:13px!important;
+  overflow:hidden;
+  box-shadow:0 2px 8px rgba(27,35,42,.12)!important;
+}
+.client-form.client-four-tabs [data-client-category="doctors"]>summary,
+.client-form.client-four-tabs [data-client-category="medications"]>summary{
+  border-bottom:1px solid transparent;
+}
+.client-form.client-four-tabs [data-client-category="doctors"][open]>summary,
+.client-form.client-four-tabs [data-client-category="medications"][open]>summary{
+  border-bottom-color:#252d34!important;
+}
+
+/* Source: Arctos client-intake-sections.css */
+/* Distinct boxes inside Personal & Contact Information. Match the existing Height/Weight card language. */
+.client-form [data-panel="information"] .form-grid{align-items:start}
+.intake-section-box{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding:14px;border:1px solid #c7c2b8;border-radius:12px;background:#f7f5f1;min-width:0}
+.intake-section-title{margin-bottom:2px;padding-bottom:7px;border-bottom:1px solid #ddd8cf}
+.intake-section-title.span-all{grid-column:1/-1}
+.intake-section-title strong{font-size:14px;color:#33404a;letter-spacing:.01em}
+.intake-section-box .field{margin:0;min-width:0}
+.intake-section-box .field.span-all{grid-column:1/-1}
+.intake-section-address{grid-template-columns:repeat(2,minmax(0,1fr))}
+.intake-section-social{grid-template-columns:1fr}
+.intake-section-social .field{grid-column:1;align-self:start}
+.intake-products-box{margin:0;padding:14px;border:1px solid #c7c2b8!important;border-radius:12px;background:#f7f5f1}
+.intake-products-box legend{padding:0 4px;font-size:14px;font-weight:800;color:#33404a}
+.intake-section-underwriting{margin:0}
+@media(min-width:900px){
+  .intake-section-address{grid-template-columns:repeat(4,minmax(0,1fr))}
+}
+@media(max-width:560px){
+  .intake-section-box{gap:10px;padding:12px}
+  .intake-section-title strong,.intake-products-box legend{font-size:13px}
+  .intake-section-address{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .intake-section-social{grid-template-columns:1fr}
+}
+@media(max-width:390px){
+  .intake-section-box{grid-template-columns:1fr}
+  .intake-section-box .field,.intake-section-social .field{grid-column:1}
+}
+
+
+/* This file is intentionally based on the original Arctos client record CSS.
+ * Scope the bridge styles to the Office record dialog while retaining the
+ * actual Arctos field grouping and original selected-tab colors. */
+#dialog .oc-arctos-client-dialog .client-four-tabs{color:#253a4a}
+#dialog .oc-arctos-client-dialog .oc-client-main-tabs.client-main-tabs{
+ display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;
+ margin:2px 0 15px;padding:0}
+#dialog .oc-arctos-client-dialog .oc-client-tabpanel[data-client-group-panel][hidden]{display:none!important}
+#dialog .oc-arctos-client-dialog .oc-client-main-tabs.client-main-tabs button{border:1px solid #60717d!important;
+ border-radius:11px;min-height:48px;min-width:0;padding:10px 8px;font-size:13px;
+ font-weight:750;white-space:normal}
+#dialog .oc-arctos-client-dialog .oc-client-main-tabs button[aria-selected="true"]{
+ box-shadow:inset 0 0 0 2px #ffffff88!important;border:2px solid #324957!important}
+#dialog .oc-arctos-client-dialog .oc-client-tabpanel .client-overview-card{margin-bottom:16px}
+#dialog .oc-arctos-client-dialog .client-glance-activity{display:grid;grid-template-columns:1fr 1.3fr;gap:10px;margin-bottom:12px}
+#dialog .oc-arctos-client-dialog .client-glance-activity .client-glance-notes-wide{margin:0}
+#dialog .oc-arctos-client-dialog .client-glance-activity .client-review-checkoff{margin:0}
+#dialog .oc-arctos-client-dialog .client-glance-notes-wide>summary{cursor:pointer}
+#dialog .oc-arctos-client-dialog .client-glance-notes-wide textarea{
+ width:100%;box-sizing:border-box;min-height:105px;resize:vertical}
+#dialog .oc-arctos-client-dialog .field-group>summary{
+ cursor:pointer;background:#dfeaf1;color:#1b3b50;padding:12px 15px;font-weight:850}
+#dialog .oc-arctos-client-dialog .field-group>.form-grid{padding:14px}
+#dialog .oc-arctos-client-dialog .field-group .form-grid{
+ display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+#dialog .oc-arctos-client-dialog .oc-client-category.tone-overview.field-group>.form-grid{
+ display:grid;grid-template-columns:1fr;padding:14px;gap:11px}
+#dialog .oc-arctos-client-dialog .intake-section-box{border:1px solid #c7c2b8;
+ background:#f7f5f1;border-radius:12px;min-width:0;display:grid;
+ grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding:14px}
+#dialog .oc-arctos-client-dialog .intake-section-title{grid-column:1/-1;
+ padding-bottom:7px;border-bottom:1px solid #ddd8cf}
+#dialog .oc-arctos-client-dialog .intake-section-title strong{
+ font-size:14px;font-weight:850;letter-spacing:.01em;color:#33404a}
+#dialog .oc-arctos-client-dialog .intake-section-address{grid-template-columns:repeat(4,minmax(0,1fr))}
+#dialog .oc-arctos-client-dialog .intake-section-box>.field{min-width:0;margin:0}
+#dialog .oc-arctos-client-dialog .intake-section-box>.field.span-all{grid-column:1/-1}
+#dialog .oc-arctos-client-dialog .parity-secure{display:grid;gap:7px;
+ grid-column:1/-1;border:1px solid #cad9e3;border-radius:10px;background:#f3f8fb;padding:11px}
+#dialog .oc-arctos-client-dialog .parity-secure>span{font-size:12px;font-weight:850;color:#25495d}
+#dialog .oc-arctos-client-dialog .parity-secure input{max-width:440px;width:100%;
+ min-height:39px;border:1px solid #b5c8d5;border-radius:8px;padding:8px 10px}
+#dialog .oc-arctos-client-dialog .parity-secure button{
+ justify-self:start;min-height:35px;background:#e8f3f8;color:#21526c;
+ border:1px solid #a2c1d0;border-radius:8px;font-size:12px;padding:8px 12px}
+#dialog .oc-arctos-client-dialog .parity-secure-value{
+ font-size:12px;color:#526d7d;overflow-wrap:anywhere;white-space:pre-wrap}
+#dialog .oc-arctos-client-dialog [data-parity-stash][hidden]{display:none!important}
+#dialog .oc-arctos-client-dialog .parity-identification,
+#dialog .oc-arctos-client-dialog .parity-banking{margin-bottom:12px}
+#dialog .oc-arctos-client-dialog .office-parity-nested{border-radius:11px;overflow:hidden;
+ border:1px solid #bacbd7;background:#fff}
+#dialog .oc-arctos-client-dialog .office-parity-nested>summary{
+ min-height:40px;background:#e7dcd2;padding:13px 14px;font-size:13px;color:#263f50;font-weight:900}
+#dialog .oc-arctos-client-dialog .office-parity-nested>.form-grid{padding:13px}
+#dialog .oc-arctos-client-dialog .parity-hint{font-size:12px;color:#657987}
+#dialog .oc-arctos-client-dialog .client-category>summary{
+ display:flex;gap:12px;align-items:center;min-height:56px;padding:10px 14px}
+#dialog .oc-arctos-client-dialog .client-category>summary strong{
+ display:inline-block;border:1.5px solid #344753;border-radius:6px;
+ padding:6px 10px;background:#ffffffb9;color:#172d3b!important}
+#dialog .oc-arctos-client-dialog .client-category .client-category-body{
+ background:#fff;padding:13px}
+#dialog .oc-arctos-client-dialog .client-category .office-parity-nested>summary{
+ background:#d9e9f1}
+#dialog .oc-arctos-client-dialog .client-category .office-parity-nested.medicare-gov>summary{
+ background:#e2e8df}
+#dialog .oc-arctos-client-dialog .client-category .office-parity-nested.medicaid>summary{
+ background:#e7e0ea}
+#dialog .oc-arctos-client-dialog .client-category .office-parity-nested.sunfire>summary{
+ background:#eee5d9}
+@media(max-width:800px){
+ #dialog .oc-arctos-client-dialog .client-glance-activity{grid-template-columns:1fr}
+ #dialog .oc-arctos-client-dialog .intake-section-address{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:540px){
+ #dialog .oc-arctos-client-dialog .oc-client-main-tabs button{font-size:11px;padding:7px 4px}
+ #dialog .oc-arctos-client-dialog .field-group .form-grid,
+ #dialog .oc-arctos-client-dialog .intake-section-box{grid-template-columns:1fr}
+ #dialog .oc-arctos-client-dialog .intake-section-address{grid-template-columns:1fr}
+}
