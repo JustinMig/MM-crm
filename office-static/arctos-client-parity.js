@@ -273,6 +273,25 @@ function enhance(modal){
   const spouse=takeField('spouse');
   if(gender&&demographics)demographics.insertBefore(gender,demographics.querySelector('.parity-secure')||null);
   if(spouse&&household)household.append(spouse);
+  if(!gender&&demographics){
+   // Match the original Arctos personal-information layout for new clients.
+   // The current Office create-client endpoint only accepts basic contact
+   // details, so don't present unsaved fields as editable.
+   const field=mk('label','field oc-client-field');
+   field.append(mk('span','','Gender'));
+   const select=document.createElement('select');select.disabled=true;
+   select.setAttribute('aria-label','Gender');
+   select.append(mk('option','','Available after saving client'));
+   demographics.insertBefore(field,demographics.querySelector('.parity-secure')||null);
+   field.append(select);
+  }
+  if(!spouse&&household){
+   const field=mk('label','field oc-client-field');
+   field.append(mk('span','','Spouse'));
+   const input=document.createElement('input');input.type='text';input.disabled=true;
+   input.placeholder='Available after saving client';input.setAttribute('aria-label','Spouse');
+   field.append(input);household.append(field);
+  }
   // Arctos keeps this underwriting information in the personal details box,
   // in the order: Feet, Inches, Weight, Smoker, Veteran.
   const underwriting=mk('section','personal-underwriting-fields intake-section-underwriting span-all');
