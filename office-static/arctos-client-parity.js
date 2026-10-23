@@ -87,7 +87,7 @@ function enhance(modal){
  }
  // Keep original audited reveal controls connected, but remove the consolidated
  // Office grouping. Individual displays below invoke those same controls.
- const original=overview.querySelector('.oc-client-category.tone-identity');
+ const original=[...overview.querySelectorAll('.oc-client-category.tone-identity')].find(n=>/Identification & Protected/.test(n.querySelector('summary')?.textContent||''));
  if(original && /Identification & Protected/.test(original.querySelector('summary')?.textContent||'')){
   const stash=mk('div','parity-source-vault');stash.dataset.parityStash='';stash.hidden=true;
   stash.append(original);modal.append(stash);
