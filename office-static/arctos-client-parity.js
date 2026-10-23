@@ -45,6 +45,8 @@ function enhance(modal){
  nav?.querySelectorAll('button').forEach(b=>b.dataset.clientGroupTab=b.dataset.ocClientTab);
  shell.querySelectorAll('.oc-client-tabpanel').forEach(p=>p.dataset.clientGroupPanel=p.dataset.ocClientPanel);
  const overview=shell.querySelector('[data-oc-client-panel="overview"]');
+ shell.querySelectorAll('.oc-client-field').forEach(el=>el.classList.add('field'));
+ shell.querySelectorAll('.oc-client-form-grid').forEach(el=>el.classList.add('form-grid'));
  const form=overview?.querySelector('#editClient,#officeNewClientForm');
  if(!form)return;
  const glance=overview.querySelector('.oc-client-overview-card');
@@ -65,6 +67,7 @@ function enhance(modal){
   form.insertBefore(row,form.querySelector('.oc-client-category'));
  }
  const general=form.querySelector('.oc-client-category.tone-overview');
+ if(general)general.classList.add('field-group');
  const grid=general?.querySelector('.oc-client-form-grid');
  if(grid){
   const fields=[...grid.children];
@@ -97,6 +100,7 @@ function enhance(modal){
   general.after(driver,banking);
  }
  shell.querySelectorAll('.oc-client-category').forEach(cat=>{
+  if(cat.closest('#editClient,#officeNewClientForm'))return;
   cat.classList.add('client-category');
   const key=cat.classList.contains('tone-medicare')?'medicare':
     cat.classList.contains('tone-life')?'life':cat.classList.contains('tone-hospital')?'hospital_indemnity':
