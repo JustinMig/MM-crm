@@ -26,7 +26,10 @@ test('Sensitive data lives in relevant locations instead of consolidated Office 
  assert.match(js,/Medicaid Number/)
  assert.match(js,/Medicare\.gov Login Credentials/)
  assert.match(js,/\[data-parity-stash\] \[data-protected=/)
- assert.match(js,/timer=setTimeout\(\(\)=>/)
+ assert.match(js,/loadProtected\(modal\)/)
+ assert.match(js,/button\.click\(\)/)
+ assert.match(js,/document\.visibilityState==='hidden'/)
+ assert.doesNotMatch(js,/Reveal.*button\.onclick=.*original\.click\(\)/)
 })
 test('Existing note, client, and appointment handlers stay attached to original DOM',()=>{
  assert.match(js,/form\.prepend\(glance\)/)
@@ -37,4 +40,30 @@ test('Official Arctos four-tabs and client record colors remain included',()=>{
  assert.match(css,/Source: Arctos client-four-tabs\.css/)
  assert.match(css,/Source: Arctos client-record-page-colors\.css/)
  assert.match(css,/Source: Arctos client-intake-sections\.css/)
+})
+
+test('Coverage uses Arctos main categories and preserves the health plan and HIP sections',()=>{
+ for(const key of ['medicare','life','hospital_indemnity','retirement']){
+   assert.match(js,new RegExp('\\\\['+JSON.stringify(key)+','))
+ }
+ assert.match(js,/Health Plan Information/)
+ assert.match(js,/Medicare Information/)
+ assert.match(js,/Medicaid Information/)
+ assert.match(js,/Medicare\\.gov Login Credentials/)
+ assert.match(js,/Sunfire/)
+ assert.match(js,/Hospital Indemnity Plan Information/)
+ assert.match(js,/Annual Medicare Reviews/)
+})
+test('Notes & Files shows document list and original secure open control',()=>{
+ assert.match(js,/Documents & Files/)
+ assert.match(js,/arctos-files-status/)
+ assert.match(js,/data-office-doc/)
+ assert.match(js,/Client Notes/)
+ assert.match(css,/arctos-files-section/)
+})
+test('Arctos personal intake boxes are full width and do not split into mismatched columns',()=>{
+ assert.match(css,/arctos-personal-group/)
+ assert.match(css,/grid-template-columns:minmax\\(0,1fr\\)!important/)
+ assert.match(css,/intake-section-address/)
+ assert.match(css,/client-glance-activity/)
 })
