@@ -1,5 +1,5 @@
 (()=>{'use strict';
-const dialog=document.getElementById('dialog');if(!dialog)return;
+const currentDialog=()=>document.getElementById('dialog');
 const mk=(tag,cls='',html='')=>{const n=document.createElement(tag);n.className=cls;n.innerHTML=html;return n};
 const addGroup=(title,type)=>{const s=mk('section','intake-section-box intake-section-'+type+' span-all',
 '<div class="intake-section-title span-all"><strong>'+title+'</strong></div>');return s};
@@ -130,8 +130,9 @@ function enhance(modal){
  // their original DOM nodes. No stored identifier leaves the secure bridge.
 }
 const obs=new MutationObserver(()=>{
+ const dialog=currentDialog();if(!dialog)return;
  const modal=dialog.querySelector('.oc-arctos-client-dialog:not([data-arctos-parity])');
  if(modal){modal.dataset.arctosParity='pending';queueMicrotask(()=>enhance(modal))}
 });
-obs.observe(dialog,{childList:true,subtree:true});
+obs.observe(document.body,{childList:true,subtree:true});
 })();
