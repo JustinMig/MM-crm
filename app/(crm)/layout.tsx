@@ -74,6 +74,7 @@ export default async function CrmLayout({ children }: { children: React.ReactNod
         .nav>a[href="/clients"]{background:#dfe9e7!important;color:#3f5b57!important;box-shadow:inset 4px 0 0 #7f9c96}
         .nav>a[href="/campaigns"]{background:#e5e8ef!important;color:#48546a!important;box-shadow:inset 4px 0 0 #8894aa}
         .nav>a[href="/notifications"]{background:#eee9d8!important;color:#665f42!important;box-shadow:inset 4px 0 0 #aaa078}
+        .nav>a[href="/phone"]{background:#deebf3!important;color:#2c536b!important;box-shadow:inset 4px 0 0 #749cb2}
         .nav .nav-signout{background:#eee1e1!important;color:#6a4949!important;box-shadow:inset 4px 0 0 #a68181}
         .nav>a[href="/dashboard"]:hover{background:#d2dee7!important;color:#263c4e!important}
         .nav>a[href="/leads"]:hover{background:#d5e1d2!important;color:#344b37!important}
@@ -81,6 +82,7 @@ export default async function CrmLayout({ children }: { children: React.ReactNod
         .nav>a[href="/clients"]:hover{background:#d2e0dd!important;color:#344d49!important}
         .nav>a[href="/campaigns"]:hover{background:#d9dee8!important;color:#3d485c!important}
         .nav>a[href="/notifications"]:hover{background:#e2dcc7!important;color:#585238!important}
+        .nav>a[href="/phone"]:hover{background:#d0e3ed!important;color:#1e455c!important}
         .nav .nav-signout:hover{background:#e2d3d3!important;color:#5c3d3d!important}
 
         .mobile-nav>a[href="/dashboard"]{background:#edf2f5!important;color:#31485b!important;border-top:3px solid #7890a3}
@@ -89,6 +91,7 @@ export default async function CrmLayout({ children }: { children: React.ReactNod
         .mobile-nav>a[href="/clients"]{background:#edf3f2!important;color:#3f5b57!important;border-top:3px solid #7f9c96}
         .mobile-nav>a[href="/campaigns"]{background:#f0f1f6!important;color:#48546a!important;border-top:3px solid #8894aa}
         .mobile-nav>a[href="/notifications"]{background:#f5f2e8!important;color:#665f42!important;border-top:3px solid #aaa078}
+        .mobile-nav>a[href="/phone"]{background:#edf5f9!important;color:#2c536b!important;border-top:3px solid #749cb2}
         .mobile-nav .mobile-signout{background:#f5eded!important;color:#6a4949!important;border-top:3px solid #a68181}
         .duplicate-compare-nav{display:inline-flex;align-items:center;justify-content:center;min-height:34px;padding:6px 10px;border:1px solid #c9d5df;border-radius:999px;background:#f7fafc;color:#31485b;font-size:.72rem;font-weight:900;text-decoration:none;white-space:nowrap}
         .duplicate-compare-nav:hover{background:#edf3f6;color:#263c4e}
@@ -147,6 +150,7 @@ export default async function CrmLayout({ children }: { children: React.ReactNod
           <Link prefetch={false} className="nav-link nav-add-client" href="/clients/new">NEW CLIENT</Link>
           <Link prefetch={false} className="nav-link nav-clients" href="/clients">CLIENT RECORDS</Link>
           <Link prefetch={false} className="nav-link nav-outreach" href="/campaigns">OUTREACH</Link>
+          <Link prefetch={false} className="nav-link nav-phone" href="/phone">PHONE</Link>
           <NotificationsNavLink />
           <form action="/auth/signout" method="post"><button className="nav-signout" type="submit">Sign out</button></form>
         </nav>
@@ -170,6 +174,7 @@ export default async function CrmLayout({ children }: { children: React.ReactNod
         <Link prefetch={false} href="/clients/new"><b>＋</b><span>NEW</span></Link>
         <Link prefetch={false} href="/clients"><b>⌕</b><span>RECORDS</span></Link>
         <Link prefetch={false} className="mobile-outreach-link" href="/campaigns"><b>◎</b><span>OUTREACH</span></Link>
+        <Link prefetch={false} className="mobile-phone-link" href="/phone"><b>☎</b><span>PHONE</span></Link>
         <NotificationsNavLink mobile />
         <form action="/auth/signout" method="post" style={{ display: 'contents' }}><button type="submit" className="mobile-signout"><b>⇥</b>Sign out</button></form>
       </nav>
