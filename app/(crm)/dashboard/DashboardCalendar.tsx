@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 type Agent = { id: string; full_name: string }
 type ClientOption = {
@@ -146,6 +146,7 @@ export default function DashboardCalendar({ agents, appointmentAgents = agents, 
   const today = useMemo(() => new Date(), [])
   const todayKey = useMemo(() => isoDate(today), [today])
   const defaultOwner = agents[0]?.id || ''
+  const openedOfficeCall = useRef(false)
   const initialPickerCache = pickerCache.get(defaultOwner)
   const [month, setMonth] = useState(() => new Date(today.getFullYear(), today.getMonth(), 1))
   const [events, setEvents] = useState<CalendarEvent[]>([])
@@ -242,6 +243,31 @@ export default function DashboardCalendar({ agents, appointmentAgents = agents, 
       setPickerLoading(false)
     }
   }, [defaultOwner, pickerLoaded, pickerLoading])
+
+  // Office Call Data passes only a client ID/phone; open the existing, fully
+  // validated calendar editor with that caller pre-selected. The appointment
+  // is NOT saved until the agent selects a date/time and presses Save.
+  useEffect(() => {
+    if(openedOfficeCall.current || !defaultOwner)return
+    const params=new URLSearchParams(window.location.search)
+    if(params.get('from_call')!=='1')return
+    openedOfficeCall.current=true
+    const rawClient=params.get('call_client')||''
+    const clientId=/^[0-9a-f]{8}-[0-9a-f-]{27,36}$/i.test(rawClient)?rawClient:''
+    const number=(params.get('call_phone')||'').replace(/[^+()\d\s.\-]/g,'').slice(0,32)
+    const label=(params.get('call_label')||'RingCentral call').slice(0,60)
+    setDraft({
+      assigned_agent_id:defaultOwner,client_id:clientId,lead_id:'',
+      title:clientId?'Call follow-up':('Call back '+(number||'unknown caller')),
+      event_type:'appointment',event_date:todayKey,start_time:'',end_time:'',
+      notes:[label,number?'Phone: '+number:''].filter(Boolean).join(' · ')
+    })
+    setClientSearch(number)
+    setLeadSearch('')
+    setError('')
+    setEditorOpen(true)
+    void loadPickerOptions()
+  },[defaultOwner,loadPickerOptions,todayKey])
 
   useEffect(() => { void loadCalendar() }, [loadCalendar])
 
