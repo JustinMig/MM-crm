@@ -98,7 +98,8 @@ export async function listRecentRingCentralCalls(accessToken: string, days = 7, 
     )
     const next = (payload.records || []).filter(record => record.type === 'Voice' && record.id && record.startTime)
     records.push(...next)
-    if (!payload.records?.length || page >= Number(payload.paging?.totalPages || 1)) break
+    if (!payload.records?.length || payload.records.length < 100 ||
+      (payload.paging?.totalPages && page >= payload.paging.totalPages)) break
   }
   return [...new Map(records.map(record => [record.id,record])).values()]
 }
@@ -123,7 +124,8 @@ export async function listRecentRingCentralVoicemails(accessToken: string, days 
       `/restapi/v1.0/account/~/extension/~/message-store?${params.toString()}`,accessToken
     )
     records.push(...(payload.records||[]).filter(record=>record.type==='VoiceMail'&&record.id&&record.creationTime))
-    if (!payload.records?.length || page >= Number(payload.paging?.totalPages || 1)) break
+    if (!payload.records?.length || payload.records.length < 100 ||
+      (payload.paging?.totalPages && page >= payload.paging.totalPages)) break
   }
   return [...new Map(records.map(record=>[String(record.id),record])).values()]
 }
