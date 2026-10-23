@@ -106,6 +106,98 @@ function accordion(parent,title,cls){
  const d=mk('details','field-group parity-subsection '+cls);d.append(mk('summary','',title),mk('div','form-grid'));
  parent.append(d);return d.querySelector('.form-grid');
 }
+
+function finalizeArctosSections(modal){
+ const shell=modal.querySelector('.oc-client-four-tabs');if(!shell)return;
+ const overview=shell.querySelector('[data-oc-client-panel="overview"]');
+ overview?.querySelector('.client-glance-notes-wide')?.classList.add('arctos-top-note');
+ const general=overview?.querySelector('.oc-client-category.tone-overview');
+ general?.classList.add('arctos-personal-group');
+ const coverage=shell.querySelector('[data-oc-client-panel="coverage"]');
+ if(coverage){
+  const sections=[...coverage.querySelectorAll(':scope > .oc-client-category')];
+  let anchor=coverage.querySelector('.oc-client-group-heading');
+  for(const [key,pattern] of [
+   ['medicare',/Medicare & Current Coverage/i],
+   ['life',/Life Insurance/i],
+   ['hospital_indemnity',/Hospital Indemnity/i],
+   ['retirement',/Retirement/i]]){
+   const found=sections.find(el=>pattern.test(el.querySelector(':scope > summary')?.textContent||''));
+   if(!found)continue;
+   found.dataset.clientCategory=key;
+   found.classList.add('arctos-coverage-card');
+   if(anchor)anchor.insertAdjacentElement('afterend',found);
+   anchor=found;
+  }
+  const medicare=sections.find(el=>/Medicare & Current Coverage/i.test(el.querySelector(':scope > summary')?.textContent||''));
+  const body=medicare?.querySelector('.oc-client-category-body');
+  if(body){
+   const med=[...body.querySelectorAll(':scope > details')].find(el=>el.querySelector(':scope > summary')?.textContent==='Medicare Information');
+   const medBody=med?.querySelector(':scope > .form-grid');
+   const subsections=[...medBody?.querySelectorAll(':scope > .oc-client-subsection')||[]];
+   for(const [title,matcher,style] of [
+    ['Health Plan Information',/Medicare Advantage|Health Plans/i,'health'],
+    ['Annual Medicare Reviews',/Annual Medicare Reviews/i,'reviews']]){
+    const found=subsections.find(el=>matcher.test(el.querySelector('h4')?.textContent||''));
+    if(!found)continue;
+    const group=accordion(body,title,style);
+    group.append(found);
+   }
+   const medicaid=[...body.querySelectorAll(':scope > details')].find(el=>el.querySelector(':scope > summary')?.textContent==='Medicaid Information');
+   const sunfire=[...body.querySelectorAll(':scope > details')].find(el=>el.querySelector(':scope > summary')?.textContent==='Sunfire');
+   const datums=[...medBody?.querySelectorAll('.oc-client-datum')||[]];
+   for(const row of datums){
+    const title=row.querySelector('dt')?.textContent||'';
+    if(/medicaid level/i.test(title))medicaid?.querySelector('.form-grid')?.append(row);
+    if(/sunfire/i.test(title))sunfire?.querySelector('.form-grid')?.append(row);
+   }
+   for(const title of ['Medicare Information','Medicare.gov Login Credentials',
+     'Medicaid Information','Sunfire','Health Plan Information','Annual Medicare Reviews']){
+    const el=[...body.querySelectorAll(':scope > details')].find(group=>
+      group.querySelector(':scope > summary')?.textContent===title);
+    if(el)body.append(el);
+   }
+  }
+  const hip=coverage.querySelector('[data-client-category="hospital_indemnity"]');
+  const hipBody=hip?.querySelector('.oc-client-category-body');
+  if(hipBody)hipBody.prepend(mk('div','arctos-hip-label',
+   '<strong>Hospital Indemnity Plan Information</strong><p>Hospital, ambulance, outpatient, cancer and skilled-nursing benefits, where available in the original record.</p>'));
+ }
+ const medical=shell.querySelector('[data-oc-client-panel="medical"]');
+ if(medical){
+  const categories=[...medical.querySelectorAll('.oc-client-category')];
+  for(const [kind,title] of [['doctors',/Doctors/],['medications',/Medications/]]){
+   const item=categories.find(el=>title.test(el.querySelector(':scope > summary')?.textContent||''));
+   if(item)item.dataset.clientCategory=kind;
+  }
+ }
+ const files=shell.querySelector('[data-oc-client-panel="files"]');
+ if(files){
+  const sections=[...files.querySelectorAll(':scope > .oc-client-category')];
+  const doc=sections.find(el=>/Documents & Files/i.test(el.querySelector(':scope > summary')?.textContent||''));
+  const note=sections.find(el=>/Client Notes/i.test(el.querySelector(':scope > summary')?.textContent||''));
+  const heading=files.querySelector('.oc-client-group-heading');
+  const count=doc?.querySelectorAll('[data-office-doc]').length||0;
+  if(doc){
+   doc.classList.add('arctos-files-section');
+   const title=doc.querySelector(':scope > summary strong');
+   if(title)title.textContent='Documents & Files ('+count+')';
+   if(heading)heading.insertAdjacentElement('afterend',doc);
+  }
+  if(note){
+   note.classList.add('arctos-notes-section');
+   if(doc)doc.insertAdjacentElement('afterend',note);
+  }
+  if(heading){
+   const status=mk('div','arctos-files-status');
+   status.textContent=count
+    ?count+' saved client file'+(count===1?'':'s')+' available in Documents & Files.'
+    :'No documents attached to this client in this agency record.';
+   heading.insertAdjacentElement('afterend',status);
+  }
+ }
+}
+
 function enhance(modal){
  if(modal.dataset.arctosParity==='done')return;
  modal.dataset.arctosParity='done';
@@ -196,6 +288,8 @@ function enhance(modal){
    place.append(mk('p','parity-hint','Additional Sunfire details are managed in the agency CRM.'));
   }
  }
+ finalizeArctosSections(modal);
+ loadProtected(modal);
  // Existing appointment, save, note, and agency handlers remain attached to
  // their original DOM nodes. No stored identifier leaves the secure bridge.
 }
