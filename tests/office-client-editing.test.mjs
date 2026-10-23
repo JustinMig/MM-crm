@@ -32,6 +32,21 @@ test('Office client medical editors can add, update, and remove records', () => 
   }
 })
 
+test('Office Medicaid level matches Arctos choices and saves to medicare details', () => {
+  assert.match(live, /ocMedicaidLevels/)
+  for (const level of ['None', 'QMB', 'QMB+', 'SLMB', 'SLMB+', 'QI', 'QDWI', 'FBDE']) {
+    assert.ok(live.includes(`['${level}','`), `missing Arctos Medicaid level ${level}`)
+  }
+  assert.match(live, /data-medicaid-level-editor/)
+  assert.match(live, /save_medicare_details/)
+  assert.match(parity, /medicaidEditor/)
+  for (const bridge of [arctosBridge, platinumBridge]) {
+    assert.match(bridge, /saveMedicaidLevel/)
+    assert.match(bridge, /medicaidLevels/)
+    assert.match(bridge, /from\("medicare_details"\)\.upsert/)
+  }
+})
+
 for (const [name, bridge] of [['Arctos', arctosBridge], ['Platinum', platinumBridge]]) {
   test(`${name} bridge authorizes and audits protected and medical writes`, () => {
     assert.match(bridge, /actor\.permission\.can_edit/)

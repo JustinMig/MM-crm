@@ -133,6 +133,14 @@ const healthFields:Record<string,string[]>={
  medications:["medication_name","strength","dosage","frequency","prescribing_doctor","purpose","status","notes"],
  pharmacies:["pharmacy_name","pharmacy_location","pharmacy_name_2","pharmacy_location_2","medication_notes"]
 };
+const medicaidLevels=new Set(["","None","QMB","QMB+","SLMB","SLMB+","QI","QDWI","FBDE"]);
+async function saveMedicaidLevel(sb:ReturnType<typeof admin>,id:string,value:unknown,actor:{id:string;permission:any}){
+ if(!actor.permission.can_edit)throw Error("Editing is not authorized");
+ if(!uuid(id)||!await q(sb.from("clients").select("id").eq("id",id).maybeSingle()))throw Error("Client record not found");
+ const medicaidLevel=cleanText(value,32);if(!medicaidLevels.has(medicaidLevel))throw Error("Invalid Medicaid level");
+ await q(sb.from("medicare_details").upsert({client_id:id,medicaid_level:medicaidLevel||null,updated_at:new Date().toISOString()},{onConflict:"client_id"}));
+ await log("update","medicare_details",id,actor.id);return {saved:true,medicaid_level:medicaidLevel};
+}
 async function saveHealthRecords(sb:ReturnType<typeof admin>,kind:string,id:string,rows:unknown,actor:{id:string;permission:any}){
  if(!actor.permission.can_edit)throw Error("Editing is not authorized");
  if(!healthFields[kind]||!Array.isArray(rows)||rows.length>50)throw Error("Invalid medical record update");
@@ -234,6 +242,9 @@ async function perform(action:string,data:any,actor:{id:string;email:string;perm
  }
  if(action==="save_health_records"){
   return await saveHealthRecords(sb,String(data.kind||""),String(data.client_id||""),data.rows,actor);
+ }
+ if(action==="save_medicare_details"){
+  return await saveMedicaidLevel(sb,String(data.client_id||""),data.medicaid_level,actor);
  }
   if(action==="search"){
   const word=String(data.search||"").replace(/[^\p{L}\p{N} '-]/gu,"").trim().slice(0,70);

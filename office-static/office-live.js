@@ -962,6 +962,18 @@ function ocClientRecords(rows,emptyText){
   return '<dl class="oc-client-record">'+(data||'<p class="oc-client-empty">No additional details.</p>')+'</dl>';
  }).join("");
 }
+const ocMedicaidLevels=[
+ ['', 'Select…'],['None','None'],['QMB','QMB'],['QMB+','QMB+'],['SLMB','SLMB'],
+ ['SLMB+','SLMB+'],['QI','QI'],['QDWI','QDWI'],['FBDE','FBDE / Full Medicaid']
+];
+function ocMedicaidLevelEditor(value=""){
+ const saved=String(value||"");
+ const choices=ocMedicaidLevels.some(([key])=>key===saved)?ocMedicaidLevels:[...ocMedicaidLevels,[saved,saved+' (current saved value)']];
+ return '<form class="oc-medicaid-level-editor" data-medicaid-level-editor><label class="oc-client-field"><span>Medicaid Level</span><select name="medicaid_level">'+
+  choices.map(([key,label])=>'<option value="'+esc(key)+'"'+(key===saved?' selected':'')+'>'+esc(label)+'</option>').join('')+
+  '</select></label><div class="oc-medicaid-level-actions"><button type="submit" class="primary">Save Medicaid Level</button>'+
+  '<span data-medicaid-level-status>Uses the same Medicaid levels as Arctos.</span></div></form>';
+}
 function ocHealthInput(field,title,value="",type="text",extra=""){
  const tag=type==="textarea"
   ?'<textarea data-health-field="'+esc(field)+'" rows="3" '+extra+'>'+esc(value??"")+'</textarea>'
@@ -1107,6 +1119,8 @@ function ocClientProtected(a){
 }
 function ocClientDetailMarkup(details,a,id){
  const ds=key=>Array.isArray(details[key])?details[key]:[];
+ const medicareDetails=ds("medicare_details"),medicaidLevel=medicareDetails[0]?.medicaid_level||"";
+ const medicareDisplay=medicareDetails.map(row=>{const copy={...row};delete copy.medicaid_level;return copy;});
  const review=ds("client_review_manual");
  const reviewMarkup='<div class="oc-client-review"><strong>Completed Reviews</strong><span>'+
   (review.length?review.map(row=>esc(String(row.review_year||""))+": "+(row.completed?"Complete":"Not completed")).join(" · "):
@@ -1114,7 +1128,7 @@ function ocClientDetailMarkup(details,a,id){
  const overviewOther=ocClientAccordion("Identification & Protected Information",
   "Secure identifiers, banking and Medicare.gov credentials",ocClientProtected(a),"identity");
  const coverage=ocClientAccordion("Medicare & Current Coverage","Medicare, Medicaid, current plans and reviews",
-  ocClientSub("Medicare Information",ocClientRecords(ds("medicare_details"),"No Medicare details saved."))+
+  ocClientSub("Medicare Information",ocClientRecords(medicareDisplay,"No Medicare details saved.")+ocMedicaidLevelEditor(medicaidLevel))+
   ocClientSub("Medicare Advantage / Health Plans",ocClientRecords(ds("health_plans"),"No health plan records saved."))+
   ocClientSub("Annual Medicare Reviews",ocClientRecords(ds("athena_medicare_reviews"),"No completed Medicare review forms saved.")), "medicare")+
   ocClientAccordion("Life Insurance","Life policies, premiums and beneficiaries",
@@ -1226,6 +1240,19 @@ async function openClient(a,id,selectedTab="overview"){
   root.querySelectorAll("[data-protected]").forEach(button=>button.addEventListener("click",()=>{
    revealClientProtected(a,id,button.dataset.protected)
   }));
+  const medicaidEditor=root.querySelector("[data-medicaid-level-editor]");
+  if(medicaidEditor)medicaidEditor.onsubmit=async event=>{
+   event.preventDefault();
+   const button=medicaidEditor.querySelector('button[type="submit"]'),status=medicaidEditor.querySelector('[data-medicaid-level-status]');
+   button.disabled=true;if(status)status.textContent="Saving…";
+   try{
+    const medicaid_level=medicaidEditor.elements.medicaid_level.value;
+    await request(a,"save_medicare_details",{client_id:id,medicaid_level});
+    if(status)status.textContent="Medicaid level saved.";
+    toast("Medicaid level saved to "+LABEL[a]);
+   }catch(error){if(status)status.textContent="Save failed: "+(error.message||"Unable to save Medicaid level.");}
+   finally{button.disabled=false;}
+  };
   root.addEventListener("click",event=>{
    const add=event.target.closest?.("[data-add-health-row]");
    if(add){

@@ -175,6 +175,8 @@ function finalizeArctosSections(modal){
     if(/medicaid level/i.test(title))medicaid?.querySelector('.form-grid')?.append(row);
     if(/sunfire/i.test(title))sunfire?.querySelector('.form-grid')?.append(row);
    }
+   const medicaidEditor=medBody?.querySelector('[data-medicaid-level-editor]');
+   if(medicaidEditor)medicaid?.querySelector('.form-grid')?.prepend(medicaidEditor);
    for(const title of ['Medicare Information','Medicare.gov Login Credentials',
      'Medicaid Information','Sunfire','Health Plan Information','Annual Medicare Reviews']){
     const el=[...body.querySelectorAll(':scope > details')].find(group=>
