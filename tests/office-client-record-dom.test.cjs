@@ -17,7 +17,7 @@ async function fixture(agency='arctos',detailErrors={}){
  w.addEventListener('error',event=>errors.push(event.error?.message||event.message));
  w.sessionStorage.setItem('office_login_session',JSON.stringify({access_token:'synthetic-session'}));
  w.confirm=()=>true;
- const client={id,first_name:'Sample',last_name:'Client',phone:'555-0100',email:'sample@example.test',status:'active',products:['medicare'],date_of_birth:'1950-01-01',height_feet:6,height_inches:2,weight_lbs:200,veteran:false,smoker:false,drivers_license_state:'MS',drivers_license_expiration:'2030-01-01',notes:'Saved overview note',doctors_section_notes:'Saved doctor notes'};
+ const client={id,assigned_agent_id:id,first_name:'Sample',last_name:'Client',phone:'555-0100',email:'sample@example.test',status:'active',products:['medicare'],date_of_birth:'1950-01-01',height_feet:6,height_inches:2,weight_lbs:200,veteran:false,smoker:false,drivers_license_state:'MS',drivers_license_expiration:'2030-01-01',notes:'Saved overview note',doctors_section_notes:'Saved doctor notes'};
  const details={medicare_details:[{client_id:id,part_a_date:'2015-01-01',part_b_date:'2015-02-01',medicaid_level:'QMB',sunfire_code:'SAVED-SUNFIRE',notes:'Saved Medicare notes'}],client_doctors:[{id:doctorId,client_id:id,doctor_name:'Sample Doctor',specialty:'Cardiology',phone:'555-0111',notes:'Saved doctor note',updated_at:'2026-01-01T00:00:00Z'}],client_pharmacies:[{client_id:id,pharmacy_name:'Sample Pharmacy',pharmacy_location:'Sample City',pharmacy_name_2:'Second Pharmacy',pharmacy_location_2:'Other City'}],client_medications:[],health_plans:[{id:'33333333-3333-4333-8333-333333333333',carrier:'Sample Health',premium:0,status:'active',notes:'Plan note'}],life_policies:[],hospital_indemnity_plans:[],retirement_accounts:[],client_notes:[],documents:[],athena_medicare_reviews:[]};
  const secure={identifiers:{ssn:'111-22-3333',medicare_number:'TEST-MEDICARE',medicaid_number:'TEST-MEDICAID',drivers_license_number:'TEST-LICENSE'},banking:{bank_name:'Test Bank',account_number:'000111',routing_number:'000222'},medicare_gov:{username:'test-user',password:'test-password'}};
  let failNext=false;
@@ -38,6 +38,7 @@ async function fixture(agency='arctos',detailErrors={}){
   }else if(data.action==='delete_record'){details[data.table]=details[data.table].filter(row=>row.id!==data.record_id);result={saved:true};}
   else if(data.action==='appointments')result={appointments:[]};
   else if(data.action==='campaigns')result={campaigns:[]};
+  else if(data.action==='campaign_agents')result={agents:[{id,full_name:'Sample Agent'},{id:doctorId,full_name:'Second Agent'}]};
   return new Response(JSON.stringify(result));
  };
  w.eval(source('office-live.js'));w.eval(source('office-client-record.js'));w.eval(source('arctos-client-parity.js'));
@@ -119,13 +120,16 @@ test('Policy sections have real editable records and missing reads do not render
   assert.deepEqual(f.errors,[]);
  }finally{f.dom.window.close();}
 });
-test('Saving one protected field retains a pending clear in another section',async()=>{
+test('Protected fields are cleared through direct editing, without separate clear checkboxes',async()=>{
  const f=await fixture();try{
-  const ssn=f.q('[data-protected-input="ssn"]'),clear=f.q('[data-protected-clear="medicare_number"]');
-  f.fill(ssn,'999-88-7777');clear.checked=true;
+  const ssn=f.q('[data-protected-input="ssn"]'),medicare=f.q('[data-protected-input="medicare_number"]');
+  assert.equal(f.q('[data-protected-clear]'),null);
+  f.fill(ssn,'999-88-7777');f.fill(medicare,'');
   assert.equal(await ssn.closest('.parity-sensitive-editor').officeSaveProtected(),true);
-  assert.equal(f.secure.identifiers.ssn,'999-88-7777');assert.equal(clear.checked,true);
+  assert.equal(f.secure.identifiers.ssn,'999-88-7777');assert.equal(medicare.value,'');
   assert.equal(f.secure.identifiers.medicare_number,'TEST-MEDICARE');
+  assert.equal(await medicare.closest('.parity-sensitive-editor').officeSaveProtected(),true);
+  assert.equal(f.secure.identifiers.medicare_number,'');
   assert.deepEqual(f.errors,[]);
  }finally{f.dom.window.close();}
 });
@@ -146,6 +150,63 @@ test('Saving an office note keeps unsaved medical edits on screen',async()=>{
   await until(()=>note.querySelector('[data-section-status]').textContent==='Saved successfully.');
   assert.equal(doctor.querySelector('[name="phone"]').value,'unsaved-doctor-phone');
   assert.equal(note.querySelector('[name="note"]').value,'');assert.equal(f.q('.office-saved-note').textContent,'New synthetic note');
+  assert.deepEqual(f.errors,[]);
+ }finally{f.dom.window.close();}
+});
+test('Overview uses M/D/YYYY in the glance, inline agent assignment, compact personal disclosure and header checkboxes',async()=>{
+ const f=await fixture();try{
+  const {q,fill}=f;
+  assert.match(q('[data-office-client-meta]').textContent,/DOB: 1\/1\/1950/);
+  fill(q('.intake-section-contact [name="phone"]'),'555-changed');
+  assert.match(q('[data-office-client-meta]').textContent,/DOB: 1\/1\/1950/);
+  fill(q('[name="date_of_birth"]'),'1955-12-09');
+  assert.match(q('[data-office-client-meta]').textContent,/DOB: 12\/9\/1955/);
+  assert.equal(q('.client-overview-card').nextElementSibling.className,'office-assignment-inline');
+  assert.ok(q('.office-assignment-inline [name="assigned_agent_id"]'));
+  assert.equal(q('.arctos-personal-group [name="assigned_agent_id"]'),null);
+  assert.equal(q('[data-oc-client-panel="overview"] [name="status"]'),null);
+  assert.ok(q('.office-personal-compact'));
+  assert.equal(q('.office-personal-compact > summary').textContent,'Personal & Contact Information');
+  assert.equal(q('.office-personal-compact > summary small'),null);
+  assert.equal(q('.oc-client-modal-header').nextElementSibling.className,'office-client-flags');
+  assert.deepEqual(f.all('.office-client-flags label').map(el=>el.textContent.trim()),['Medicare','Life','Retirement','Deceased']);
+  assert.deepEqual(f.errors,[]);
+ }finally{f.dom.window.close();}
+});
+test('Deceased immediately clears products and persists with the Overview bottom Save',async()=>{
+ const f=await fixture();try{
+  const {q}=f,deceased=q('[data-office-deceased]');
+  q('[data-office-product="life"]').click();q('[data-office-product="retirement"]').click();
+  deceased.click();assert.equal(deceased.checked,true);
+  assert.equal(f.all('[data-office-product]').some(el=>el.checked),false);
+  q('[data-save-tab="overview"]').click();
+  await until(()=>q('[data-tab-save-footer="overview"] [data-tab-save-status]').textContent==='All changes in this tab are saved.');
+  assert.equal(f.client.status,'deceased');assert.deepEqual(f.client.products,[]);
+  q('[data-office-product="life"]').click();assert.equal(deceased.checked,false);
+  q('[data-save-tab="overview"]').click();
+  await until(()=>f.client.status==='active'&&q('[data-tab-save-footer="overview"]').dataset.saving==='false');
+  assert.deepEqual(f.client.products,['life']);assert.deepEqual(f.errors,[]);
+ }finally{f.dom.window.close();}
+});
+test('Permanent tab Save includes closed editors, protected edits, assignment and the office note',async()=>{
+ const f=await fixture();try{
+  const {q,fill}=f;
+  for(const key of ['overview','coverage','medical','files']){
+   const footer=q('[data-tab-save-footer="'+key+'"]');
+   assert.ok(footer);assert.equal(footer.closest('details'),null);assert.equal(footer.parentElement.dataset.ocClientPanel,key);
+  }
+  fill(q('.office-assignment-inline select'),doctorId);fill(q('.intake-section-name [name="first_name"]'),'Changed Name');fill(q('[data-protected-input="ssn"]'),'999-88-7777');
+  q('[data-save-tab="overview"]').click();
+  await until(()=>q('[data-tab-save-footer="overview"]').dataset.saving==='false');
+  assert.equal(f.client.first_name,'Changed Name');assert.equal(f.client.assigned_agent_id,doctorId);assert.equal(f.secure.identifiers.ssn,'999-88-7777');
+  fill(q('[data-office-record-editor="sunfire"] [name="sunfire_code"]'),'TAB-SAVE-SUNFIRE');fill(q('[data-protected-input="medicare_number"]'),'UPDATED-MEDICARE');
+  q('[data-save-tab="coverage"]').click();await until(()=>q('[data-tab-save-footer="coverage"]').dataset.saving==='false');
+  assert.equal(f.details.medicare_details[0].sunfire_code,'TAB-SAVE-SUNFIRE');assert.equal(f.secure.identifiers.medicare_number,'UPDATED-MEDICARE');
+  fill(q('[data-office-record-editor="client_doctors"] [name="phone"]'),'555-tab-save');fill(q('[data-office-record-editor="client_pharmacies"] [name="pharmacy_location"]'),'Tab Saved City');
+  q('[data-save-tab="medical"]').click();await until(()=>q('[data-tab-save-footer="medical"]').dataset.saving==='false');
+  assert.equal(f.details.client_doctors[0].phone,'555-tab-save');assert.equal(f.details.client_pharmacies[0].pharmacy_location,'Tab Saved City');
+  fill(q('#newClientNote [name="note"]'),'Tab saved note');q('[data-save-tab="files"]').click();await until(()=>q('[data-tab-save-footer="files"]').dataset.saving==='false');
+  assert.equal(q('.office-saved-note').textContent,'Tab saved note');assert.equal(q('#newClientNote [name="note"]').value,'');
   assert.deepEqual(f.errors,[]);
  }finally{f.dom.window.close();}
 });

@@ -31,7 +31,7 @@ test('Sensitive data lives in relevant locations and is editable through the aud
  assert.match(js,/officeReloadProtected/)
  assert.match(js,/data\.saveSensitive|save_sensitive/)
  assert.match(js,/data-protected-input/)
- assert.match(js,/data-protected-clear/)
+ assert.doesNotMatch(js,/data-protected-clear|Clear saved value/)
  assert.match(js,/Save Protected Information/)
  assert.match(js,/document\.visibilityState==='hidden'/)
  assert.match(js,/office:protected/)

@@ -36,10 +36,7 @@ const secure=(parent,modal,kind,field,title)=>{
   input.dataset.protectedInput=key;input.autocomplete='off';input.disabled=true;
   if(input instanceof HTMLInputElement)input.type=key==='password'?'password':'text';
   if(input instanceof HTMLTextAreaElement)input.rows=3;
-  const clear=mk('label','parity-protected-clear');
-  const clearBox=document.createElement('input');clearBox.type='checkbox';clearBox.dataset.protectedClear=key;
-  clear.append(clearBox,document.createTextNode(' Clear saved value'));
-  wrap.append(caption,input,clear);grid.append(wrap);
+  wrap.append(caption,input);grid.append(wrap);
  }
  const actions=mk('div','parity-sensitive-actions');
  const save=document.createElement('button');save.type='button';save.className='primary';save.dataset.saveProtected=kind;save.textContent='Save Protected Information';
@@ -50,9 +47,8 @@ const secure=(parent,modal,kind,field,title)=>{
   if(box.dataset.protectedLoaded!=='true'){status.textContent='Wait until saved values finish loading.';return false;}
   const values={};
   for(const input of box.querySelectorAll('[data-protected-input]')){
-   const key=input.dataset.protectedInput,clear=box.querySelector('[data-protected-clear="'+key+'"]');
-   if(clear?.checked)values[key]='';
-   else if(input.value!==input.dataset.initial)values[key]=input.value;
+   const key=input.dataset.protectedInput;
+   if(input.value!==input.dataset.initial)values[key]=input.value;
   }
   if(!Object.keys(values).length){status.textContent='No protected changes to save.';return true;}
   save.disabled=true;status.textContent='Saving securely…';
@@ -61,7 +57,6 @@ const secure=(parent,modal,kind,field,title)=>{
    for(const input of box.querySelectorAll('[data-protected-input]')){
     if(Object.prototype.hasOwnProperty.call(values,input.dataset.protectedInput)){
      input.value=input.dataset.initial=values[input.dataset.protectedInput];
-     const clear=box.querySelector('[data-protected-clear="'+input.dataset.protectedInput+'"]');if(clear)clear.checked=false;
     }
    }
    status.textContent='Saved securely.';

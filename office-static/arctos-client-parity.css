@@ -572,9 +572,6 @@
 #dialog .oc-arctos-client-dialog .parity-protected-field textarea{
  box-sizing:border-box;max-width:none;width:100%;min-height:40px;border:1px solid #b5c8d5;
  border-radius:8px;background:#fff;color:#193447;padding:8px 10px;resize:vertical}
-#dialog .oc-arctos-client-dialog .parity-protected-clear{
- display:flex;align-items:center;gap:6px;font-size:10px;color:#6e4550;font-weight:700}
-#dialog .oc-arctos-client-dialog .parity-protected-clear input{width:15px;min-height:15px;margin:0}
 #dialog .oc-arctos-client-dialog .parity-sensitive-actions{display:flex;justify-content:flex-end}
 #dialog .oc-arctos-client-dialog .parity-sensitive-actions .primary{
  background:#1f5d78;color:#fff;border-color:#1f5d78}
@@ -606,4 +603,57 @@
 @media(max-width:620px){
  #dialog .oc-arctos-client-dialog .parity-protected-form-grid,
  #dialog .oc-arctos-client-dialog .oc-health-edit-card .oc-client-form-grid{grid-template-columns:1fr}
+}
+
+/* Compact Overview and a persistent save bar on every client tab. */
+#dialog .oc-arctos-client-dialog .office-client-flags{
+ display:flex;flex-wrap:wrap;align-items:center;gap:8px 20px;margin:0 0 13px;padding:0 4px;color:#233d4e}
+#dialog .office-client-flags .office-product-choice{font-size:13px;gap:7px;margin:0;padding:3px 0}
+#dialog .office-client-flags .office-product-choice input{height:17px;accent-color:#245572;margin:0}
+#dialog .office-client-flags .office-deceased-choice{color:#8b3c45}
+#dialog .office-client-flags[hidden]{display:none!important}
+#dialog .office-assignment-inline{border:0;background:transparent;box-shadow:none;padding:0;margin:0 0 13px}
+#dialog .office-assignment-inline>label{display:flex;flex-direction:row;align-items:center;flex-wrap:wrap;gap:8px;margin:0}
+#dialog .office-assignment-inline>label>span{font-size:12px;font-weight:750;color:#385568}
+#dialog .office-assignment-inline select{width:260px;max-width:100%;min-height:34px;padding:5px 9px;border:1px solid #b5c8d5;border-radius:7px;color:#193447;background:#fff}
+#dialog .oc-arctos-client-dialog .arctos-personal-group.office-personal-compact,
+#dialog .oc-arctos-client-dialog .parity-identification>details{
+ margin:0 0 11px;border:1px solid #bacbd7;border-radius:10px;overflow:hidden;padding:0;background:#fff}
+#dialog .oc-arctos-client-dialog .arctos-personal-group.office-personal-compact>summary,
+#dialog .oc-arctos-client-dialog .parity-identification>details>summary{
+ display:flex;justify-content:space-between;align-items:center;gap:12px;min-height:0;padding:11px 14px;font-size:13px;font-weight:850;line-height:1.4;list-style:none;background:#dfeaf1;color:#1b3b50}
+#dialog .oc-arctos-client-dialog .arctos-personal-group.office-personal-compact>summary::after,
+#dialog .oc-arctos-client-dialog .parity-identification>details>summary::after{content:'⌄';font-size:17px}
+#dialog .oc-arctos-client-dialog .arctos-personal-group.office-personal-compact[open]>summary::after,
+#dialog .oc-arctos-client-dialog .parity-identification>details[open]>summary::after{transform:rotate(180deg)}
+#dialog .oc-arctos-client-dialog .office-personal-compact>.oc-client-category-body{padding:8px!important}
+#dialog .oc-arctos-client-dialog .arctos-personal-group.office-personal-compact>.oc-client-category-body>.oc-client-form-grid{
+ grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:7px!important}
+#dialog .oc-arctos-client-dialog .arctos-personal-group.office-personal-compact>.oc-client-category-body>.oc-client-form-grid>.intake-section-box{
+ grid-column:auto!important;padding:7px!important;gap:6px!important;border-radius:7px;align-content:start}
+#dialog .oc-arctos-client-dialog .arctos-personal-group.office-personal-compact>.oc-client-category-body>.oc-client-form-grid>.intake-section-address,
+#dialog .oc-arctos-client-dialog .arctos-personal-group.office-personal-compact>.oc-client-category-body>.oc-client-form-grid>.personal-underwriting-fields{grid-column:1/-1!important}
+#dialog .oc-arctos-client-dialog .office-personal-compact .personal-underwriting-fields{padding:7px!important;gap:6px!important;border-radius:7px}
+#dialog .oc-arctos-client-dialog .office-personal-compact :is(.intake-section-title,.personal-underwriting-title){padding-bottom:4px;margin:0;line-height:1.2}
+#dialog .oc-arctos-client-dialog .office-personal-compact :is(.intake-section-title,.personal-underwriting-title) strong{font-size:12px}
+#dialog .oc-arctos-client-dialog .office-personal-compact label.field{gap:3px;min-height:0;margin:0}
+#dialog .oc-arctos-client-dialog .office-personal-compact label.field>span{font-size:10px;line-height:1.2}
+#dialog .oc-arctos-client-dialog .office-personal-compact :is(input,select){box-sizing:border-box;min-height:31px;height:31px;padding:4px 7px;font-size:12px;border-radius:5px;margin:0}
+#dialog .oc-arctos-client-dialog .office-personal-compact .parity-sensitive-editor{padding:6px;gap:5px}
+#dialog .oc-arctos-client-dialog .office-personal-compact .parity-protected-form-grid{gap:5px;grid-template-columns:minmax(0,1fr)}
+#dialog .oc-arctos-client-dialog .office-personal-compact .parity-sensitive-editor-heading>strong,
+#dialog .oc-arctos-client-dialog .office-personal-compact .parity-sensitive-actions{display:none}
+#dialog .oc-arctos-client-dialog .office-personal-compact .parity-sensitive-status{font-size:10px}
+#dialog .oc-arctos-client-dialog .office-personal-compact .office-section-actions{margin-top:4px;gap:4px}
+#dialog .oc-arctos-client-dialog .office-personal-compact .office-section-actions button{min-height:27px;padding:4px 8px;font-size:10px}
+#dialog .oc-arctos-client-dialog .office-personal-compact .office-section-actions>[role=status]{font-size:10px;min-width:0}
+#dialog .oc-arctos-client-dialog .office-tab-save-footer{
+ position:sticky;bottom:0;z-index:25;display:flex;align-items:center;justify-content:flex-end;gap:12px;flex-wrap:wrap;
+ margin:15px 0 0;padding:12px 10px;background:#f5f8fa;border-top:1px solid #b9ccd8;box-shadow:0 -3px 9px #1934470b}
+#dialog .office-tab-save-footer>[role=status]{flex:1;min-width:100px;font-size:12px;color:#365666}
+#dialog .office-tab-save-footer button{min-height:42px;padding:10px 18px;background:#1f5d78;border:1px solid #1f5d78;border-radius:8px;color:#fff;font-size:13px;font-weight:800}
+@media(max-width:650px){
+ #dialog .oc-arctos-client-dialog .arctos-personal-group.office-personal-compact>.oc-client-category-body>.oc-client-form-grid{grid-template-columns:minmax(0,1fr)!important}
+ #dialog .office-client-flags{gap:6px 13px}
+ #dialog .office-tab-save-footer{padding-bottom:max(10px,env(safe-area-inset-bottom))}
 }

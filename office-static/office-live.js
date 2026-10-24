@@ -1051,11 +1051,15 @@ function ocClientNav(){
 function ocClientPanel(key,contents){
  return '<section class="oc-client-tabpanel" role="tabpanel" data-oc-client-panel="'+key+'"'+(key==="overview"?'':' hidden')+'>'+contents+'</section>';
 }
+function ocClientDisplayDate(value){
+ const match=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(value||""));
+ return match?Number(match[2])+"/"+Number(match[3])+"/"+match[1]:String(value||"");
+}
 function ocClientGlance(client,agencyName,isNew=false){
  const name=[client.first_name,client.last_name].filter(Boolean).join(" ").trim();
  const age=ocClientAge(client.date_of_birth), dob=client.date_of_birth;
  const meta=[
-  dob?"DOB: "+dob+(age===null?"":" (Age: "+age+")"):"",
+  dob?"DOB: "+ocClientDisplayDate(dob)+(age===null?"":" (Age: "+age+")"):"",
   client.phone||"",client.city&&client.state?client.city+", "+client.state:client.city||client.state||"",
   client.zip_code?"ZIP: "+client.zip_code:""
  ].filter(Boolean);
@@ -1104,6 +1108,7 @@ function ocClientBindTabs(root,requested="overview"){
   root.querySelectorAll("details[open]").forEach(item=>item.open=false);
   buttons.forEach(b=>{const active=b.dataset.ocClientTab===key;b.setAttribute("aria-selected",String(active));b.tabIndex=active?0:-1;});
   panels.forEach(p=>{p.hidden=p.dataset.ocClientPanel!==key;});
+  const flags=root.querySelector('.office-client-flags');if(flags)flags.hidden=key!=="overview";
  };
  buttons.forEach(b=>b.addEventListener("click",()=>choose(b.dataset.ocClientTab)));
  choose(ocClientTabs.some(([key])=>key===requested)?requested:"overview");
@@ -1202,7 +1207,7 @@ async function openClient(a,id,selectedTab="overview"){
    const meta=root.querySelector("[data-office-client-meta]");
    const values=Object.fromEntries(new FormData(form).entries());
    const age=ocClientAge(values.date_of_birth);
-   if(meta)meta.textContent=[values.date_of_birth?"DOB: "+values.date_of_birth+(age===null?"":" (Age: "+age+")"):"",
+   if(meta)meta.textContent=[values.date_of_birth?"DOB: "+ocClientDisplayDate(values.date_of_birth)+(age===null?"":" (Age: "+age+")"):"",
      values.phone||"",[values.city,values.state].filter(Boolean).join(", "),values.zip_code?"ZIP: "+values.zip_code:""].filter(Boolean).join(" · ");
    const title=root.querySelector("[data-office-client-name]");
    if(title)title.textContent=[values.first_name,values.last_name].filter(Boolean).join(" ")||"Client";
@@ -1489,7 +1494,7 @@ function ocOpenNewClientForm(){
   const age=ocClientAge(values.date_of_birth);
   const meta=root.querySelector("[data-office-client-meta]");
   if(meta)meta.textContent=[
-   values.date_of_birth?"DOB: "+values.date_of_birth+(age===null?"":" (Age: "+age+")"):"",
+   values.date_of_birth?"DOB: "+ocClientDisplayDate(values.date_of_birth)+(age===null?"":" (Age: "+age+")"):"",
    values.phone||"",
    [values.city,values.state].filter(Boolean).join(", "),
    values.zip_code?"ZIP: "+values.zip_code:""

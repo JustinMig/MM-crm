@@ -90,10 +90,21 @@ window.officeClientRecordEnhance=modal=>{
  const nameGroup=root.querySelector('.intake-section-name');
  if(nameGroup&&current.agency==='platinum')nameGroup.insertAdjacentHTML('beforeend',input('middle_name','Middle Name','text',client.middle_name));
  const household=root.querySelector('.intake-section-household');
- if(household)household.insertAdjacentHTML('beforeend',input('status','Client Status',['active','inactive','prospect','deceased'],client.status)+['medicare','life','retirement'].map(product=>'<label class="office-product-choice"><input type="checkbox" data-office-product="'+product+'"'+(client.products?.includes(product)?' checked':'')+'> '+product[0].toUpperCase()+product.slice(1)+'</label>').join(''));
- if(household){
-  household.insertAdjacentHTML('afterbegin',input('assigned_agent_id','Assigned Agent',[[client.assigned_agent_id||'',client.assigned_agent_id?'Loading assigned agent…':'Choose agent…']],client.assigned_agent_id));
-  const agent=household.querySelector('[name="assigned_agent_id"]');agent.disabled=true;
+ const flags=document.createElement('div');flags.className='office-client-flags';flags.setAttribute('role','group');flags.setAttribute('aria-label','Client coverage and status');
+ flags.innerHTML=['medicare','life','retirement'].map(product=>'<label class="office-product-choice"><input type="checkbox" data-office-product="'+product+'"'+(client.status!=='deceased'&&client.products?.includes(product)?' checked':'')+'> '+product[0].toUpperCase()+product.slice(1)+'</label>').join('')+'<label class="office-product-choice office-deceased-choice"><input type="checkbox" data-office-deceased'+(client.status==='deceased'?' checked':'')+'> Deceased</label>';
+ root.querySelector('.oc-client-modal-header')?.after(flags);
+ flags.hidden=!!root.querySelector('[data-oc-client-panel="overview"]')?.hidden;
+ const nonDeceasedStatus=client.status&&client.status!=='deceased'?client.status:'active';
+ flags.addEventListener('change',event=>{
+  if(event.target.matches('[data-office-deceased]')&&event.target.checked)flags.querySelectorAll('[data-office-product]').forEach(el=>el.checked=false);
+  if(event.target.matches('[data-office-product]')&&event.target.checked)flags.querySelector('[data-office-deceased]').checked=false;
+ });
+ const glance=root.querySelector('.client-overview-card');
+ if(glance){
+  const assignment=document.createElement('div');assignment.className='office-assignment-inline';
+  assignment.innerHTML=input('assigned_agent_id','Assigned Agent',[[client.assigned_agent_id||'',client.assigned_agent_id?'Loading assigned agent…':'Choose agent…']],client.assigned_agent_id);
+  glance.after(assignment);
+  const agent=assignment.querySelector('[name="assigned_agent_id"]');agent.disabled=true;
   void api.request(current.agency,'campaign_agents').then(result=>{
    if(!root.isConnected)return;
    const agents=result.agents||[];
@@ -102,6 +113,8 @@ window.officeClientRecordEnhance=modal=>{
    agent.disabled=!current.permissions?.edit;initials.set(agent,agent.value);
   }).catch(()=>{agent.closest('label').insertAdjacentHTML('beforeend','<small>Agent list could not load. Reopen the record to change assignment.</small>');});
  }
+ const personal=root.querySelector('.arctos-personal-group');
+ if(personal){personal.classList.add('office-personal-compact','parity-subsection');personal.querySelector(':scope > summary').textContent='Personal & Contact Information';}
  const license=root.querySelector('.parity-identification .form-grid');
  if(license)license.insertAdjacentHTML('beforeend',input('drivers_license_expiration','License Expiration','date',client.drivers_license_expiration)+input('drivers_license_state','License State','text',client.drivers_license_state));
  const scopedOverview=[...root.querySelectorAll('.intake-section-box,.intake-section-underwriting,.oc-client-note-overview,.parity-identification > details')].filter(el=>!el.parentElement?.closest('.intake-section-box,.intake-section-underwriting'));
@@ -134,9 +147,12 @@ window.officeClientRecordEnhance=modal=>{
   if(section.querySelector('[data-office-product]')){
    const products=[...section.querySelectorAll('[data-office-product]')].filter(el=>el.checked).map(el=>el.dataset.officeProduct);
    if(JSON.stringify(products)!==JSON.stringify(client.products||[]))changes.products=products;
-   if(changes.status==='deceased'){changes.products=[];section.querySelectorAll('[data-office-product]').forEach(el=>el.checked=false);}
+   const deceased=section.querySelector('[data-office-deceased]')?.checked;
+   const status=deceased?'deceased':nonDeceasedStatus;
+   if(status!==client.status)changes.status=status;
+   if(deceased){changes.products=[];section.querySelectorAll('[data-office-product]').forEach(el=>el.checked=false);}
   }
-  if(Object.keys(changes).length){await api.request(current.agency,'save_client',{client_id:current.id,changes});Object.assign(client,changes);editable.forEach(el=>initials.set(el,value(el)));section.querySelectorAll('[data-office-product]').forEach(el=>initials.set(el,value(el)));}
+  if(Object.keys(changes).length){await api.request(current.agency,'save_client',{client_id:current.id,changes});Object.assign(client,changes);editable.forEach(el=>initials.set(el,value(el)));section.querySelectorAll('[data-office-product],[data-office-deceased]').forEach(el=>initials.set(el,value(el)));}
   for(const box of section.querySelectorAll('.parity-sensitive-editor'))if(box.dataset.protectedLoaded==='true'&&box.officeSaveProtected&&await box.officeSaveProtected()===false)throw Error('Protected information was not saved. See the field message.');
  });
  const saveRecord=async form=>run(form,async()=>{
@@ -151,22 +167,47 @@ window.officeClientRecordEnhance=modal=>{
   delete form.dataset.newRecord;remember(form);
   const card=form.closest('.office-record-card');if(card){const updated=Object.fromEntries(controls(form).filter(el=>el.name).map(el=>[el.name,el.value]));card.querySelector('[data-record-title]').textContent=title(kind,updated);}
  });
+ const saveNote=async form=>run(form,async()=>{
+  const field=form.querySelector('[name="note"]');
+  if(!field.value.trim())throw Error('Enter a note.');
+  const message=field.value.trim();await api.request(current.agency,'add_note',{client_id:current.id,note:message});
+  const saved=document.createElement('p');saved.className='office-saved-note';saved.textContent=message;form.before(saved);
+  field.value='';remember(form);
+ });
+ const saveTab=async key=>{
+  const panel=root.querySelector('[data-oc-client-panel="'+key+'"]'),footer=panel?.querySelector('[data-tab-save-footer]');
+  if(!panel||!footer||footer.dataset.saving==='true')return;
+  footer.dataset.saving='true';const button=footer.querySelector('button'),status=footer.querySelector('[data-tab-save-status]');button.disabled=true;status.textContent='Saving…';
+  let ok=true;
+  try{
+   if(key==='overview'){
+    if(!await saveOverview(flags))ok=false;
+    if(!await saveOverview(panel))ok=false;
+   }else{
+    for(const section of panel.querySelectorAll('.office-doctors-notes,.office-old-plan-details'))if(dirty(section)&&!await saveOverview(section))ok=false;
+    for(const form of panel.querySelectorAll('[data-office-record-editor]'))if((dirty(form)||form.dataset.newRecord==='true')&&!await saveRecord(form))ok=false;
+    for(const box of panel.querySelectorAll('.parity-sensitive-editor'))if(box.dataset.protectedLoaded==='true'&&box.officeSaveProtected&&!await box.officeSaveProtected())ok=false;
+    const note=panel.querySelector('#newClientNote');if(note&&note.querySelector('[name="note"]').value&& !await saveNote(note))ok=false;
+   }
+   status.textContent=ok?'All changes in this tab are saved.':'Some changes could not save. Open the section with the error and retry.';
+  }catch(error){status.textContent='Save failed: '+error.message;}
+  finally{footer.dataset.saving='false';button.disabled=!current.permissions?.edit;}
+ };
+ for(const [key,label] of [['overview','Overview'],['coverage','Coverage'],['medical','Medical'],['files','Notes & Files']]){
+  const panel=root.querySelector('[data-oc-client-panel="'+key+'"]');
+  if(panel)panel.insertAdjacentHTML('beforeend','<div class="office-tab-save-footer" data-tab-save-footer="'+key+'"><span data-tab-save-status role="status" aria-live="polite"></span><button type="button" class="primary" data-save-tab="'+key+'">Save '+label+'</button></div>');
+ }
  root.addEventListener('submit',event=>{
   const form=event.target.closest('[data-office-record-editor]');
   if(form){event.preventDefault();event.stopImmediatePropagation();void saveRecord(form);}
-  else if(event.target.id==='editClient'){event.preventDefault();event.stopImmediatePropagation();void saveOverview(event.target);}
+  else if(event.target.id==='editClient'){event.preventDefault();event.stopImmediatePropagation();void saveTab('overview');}
   else if(event.target.id==='newClientNote'){
    event.preventDefault();event.stopImmediatePropagation();
-   const form=event.target,field=form.querySelector('[name="note"]');
-   void run(form,async()=>{
-    if(!field.value.trim())throw Error('Enter a note.');
-    const message=field.value.trim();await api.request(current.agency,'add_note',{client_id:current.id,note:message});
-    const saved=document.createElement('p');saved.className='office-saved-note';saved.textContent=message;form.before(saved);
-    field.value='';remember(form);
-   });
+   void saveNote(event.target);
   }
  },true);
  root.addEventListener('click',async event=>{
+  const tabSave=event.target.closest('[data-save-tab]');if(tabSave){event.preventDefault();await saveTab(tabSave.dataset.saveTab);return;}
   const save=event.target.closest('[data-save-overview]');if(save){event.preventDefault();await saveOverview(save.closest('.intake-section-box,.intake-section-underwriting,.oc-client-note-overview,.parity-identification > details,.office-doctors-notes,.office-old-plan-details'));return;}
   const add=event.target.closest('[data-office-add-record]');if(add){
    const kind=add.dataset.officeAddRecord,list=root.querySelector('[data-office-record-list="'+kind+'"]');list.insertAdjacentHTML('beforeend',card(kind,{},true));remember(list.lastElementChild);list.lastElementChild.querySelector('input')?.focus();return;
@@ -190,6 +231,6 @@ window.officeClientRecordEnhance=modal=>{
  // The identifiers are loaded after this enhancement; use their secure baseline, not their empty loading state.
  for(const el of root.querySelectorAll('[data-protected-input]'))initials.delete(el);
  root.querySelectorAll('details[open]').forEach(el=>el.open=false);
- if(!current.permissions?.edit)root.querySelectorAll('input,select,textarea,button[data-save-overview],button[type="submit"],button[data-office-add-record],button[data-office-save-list],button[data-delete-record]').forEach(el=>el.disabled=true);
+ if(!current.permissions?.edit)root.querySelectorAll('input,select,textarea,button[data-save-overview],button[data-save-tab],button[type="submit"],button[data-office-add-record],button[data-office-save-list],button[data-delete-record]').forEach(el=>el.disabled=true);
 };
 })();
