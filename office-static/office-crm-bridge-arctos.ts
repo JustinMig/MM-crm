@@ -1,5 +1,6 @@
 // @ts-nocheck -- Supabase Edge Function is compiled by Deno, not the Next.js TypeScript project.
 import { createClient } from "npm:@supabase/supabase-js@2.57.0";
+import { writeOfficeRecord, recordSelection } from "./office-record-store.ts";
 const MM_URL="https://aefdewkiqgiwkquklnvr.supabase.co";
 const MM_PUBLIC="sb_publishable_3dEzyrV3AvaxDMQDMTsvKw_mT7M_vqx";
 const SCOPE="arctos";
@@ -8,9 +9,10 @@ const SERVICE_URL=Deno.env.get("SUPABASE_URL")||"";
 const SERVICE_KEY=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")||"";
 const json=(body:unknown,code=200)=>new Response(JSON.stringify(body),{status:code,headers:{"Content-Type":"application/json","Cache-Control":"private, no-store","Vary":"Origin","Access-Control-Allow-Origin":ROOT_ORIGIN,"X-Content-Type-Options":"nosniff"}});
 const uuid=(s:unknown)=>/^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(String(s||""));
-const authorizedChanges=new Set(["first_name","last_name","middle_name","phone","email","date_of_birth","gender","address1","address2","city","county","state","zip_code","status","products","notes","spouse","height_feet","height_inches","weight_lbs","smoker","veteran"]);
-const clientSelection=SCOPE==="platinum"?"id,assigned_agent_id,first_name,last_name,middle_name,phone,email,date_of_birth,gender,address1,address2,city,county,state,zip_code,status,products,notes,spouse,height_feet,height_inches,weight_lbs,smoker,veteran,drivers_license_expiration,drivers_license_state":"id,assigned_agent_id,first_name,last_name,phone,email,date_of_birth,gender,address1,address2,city,county,state,zip_code,status,products,notes,spouse,height_feet,height_inches,weight_lbs,smoker,veteran,drivers_license_expiration,drivers_license_state,doctors_section_notes";
+const authorizedChanges=new Set(["first_name","last_name","middle_name","phone","email","date_of_birth","gender","address1","address2","city","county","state","zip_code","status","products","notes","spouse","height_feet","height_inches","weight_lbs","smoker","veteran","drivers_license_expiration","drivers_license_state","doctors_section_notes","old_plan_carrier","old_plan_id","old_plan_member_id","old_plan_year"]);
+const clientSelection=SCOPE==="platinum"?"id,assigned_agent_id,first_name,last_name,middle_name,phone,email,date_of_birth,gender,address1,address2,city,county,state,zip_code,status,products,notes,spouse,height_feet,height_inches,weight_lbs,smoker,veteran,drivers_license_expiration,drivers_license_state":"id,assigned_agent_id,first_name,last_name,phone,email,date_of_birth,gender,address1,address2,city,county,state,zip_code,status,products,notes,spouse,height_feet,height_inches,weight_lbs,smoker,veteran,drivers_license_expiration,drivers_license_state,doctors_section_notes,old_plan_carrier,old_plan_id,old_plan_member_id,old_plan_year";
 const safeMessage=(e:unknown)=>e instanceof Error?e.message:"Request failed";
+authorizedChanges.add("assigned_agent_id");
 function admin(){if(!SERVICE_URL||!SERVICE_KEY)throw Error("Agency secure connection is not configured");return createClient(SERVICE_URL,SERVICE_KEY,{auth:{persistSession:false,autoRefreshToken:false}})}
 async function check(req:Request){
  const header=req.headers.get("authorization")||"";
@@ -220,6 +222,7 @@ async function officeProtected(sb:ReturnType<typeof admin>,kind:string,id:string
 async function perform(action:string,data:any,actor:{id:string;email:string;permission:any}){
  const sb=admin();
  if(action==="session")return {connected:true,agency:SCOPE,permissions:{edit:!!actor.permission.can_edit,sensitive:!!actor.permission.can_view_sensitive}};
+ if(action==="save_record"||action==="delete_record")return await writeOfficeRecord({sb,actor,scope:SCOPE,log},action,data);
  if(action==="document_url"){
    const clientID=String(data.client_id||""), documentID=String(data.document_id||"");
    if(!uuid(clientID)||!uuid(documentID))throw Error("Invalid client or document");
@@ -267,6 +270,7 @@ async function perform(action:string,data:any,actor:{id:string;email:string;perm
    ["life_policies","id,client_id,carrier,product,policy_number,policy_type,face_amount,premium,premium_mode,effective_date,status,notes,beneficiary_name,beneficiary_relationship"],
    ["client_notes","id,client_id,title,body,created_at"],
    ["hospital_indemnity_plans","*"],
+   ["retirement_accounts",recordSelection(SCOPE,"retirement_accounts")],
    ["athena_medicare_reviews","id,client_id,review_kind,workflow_status,review_date,next_contact_date"],
    ["client_sms_messages","id,client_id,direction,body,status,occurred_at"],
    ["client_completed_appointments","event_id,client_id,event_date,start_time,activity_title,completed_at"],
@@ -276,9 +280,9 @@ async function perform(action:string,data:any,actor:{id:string;email:string;perm
    ["documents","id,client_id,file_name,category,mime_type,created_at"],
    ["client_doctors","*"],["client_pharmacies","*"],["client_medications","*"]
   ] as const;
-  const details:any={};
-  await Promise.all(tables.map(async ([name,selection])=>{try{const v=await q(sb.from(name).select(selection).eq("client_id",id).limit(100));details[name]=v;}catch{details[name]=[];}}));
-  return {client,details};
+  const details:any={},detail_errors:Record<string,string>={};
+  await Promise.all(tables.map(async ([name,selection])=>{try{const selected=["medicare_details","health_plans","life_policies","hospital_indemnity_plans","retirement_accounts","client_doctors","client_medications","client_pharmacies"].includes(name)?recordSelection(SCOPE,name):selection;const v=await q(sb.from(name).select(selected).eq("client_id",id).limit(100));details[name]=v;}catch{details[name]=[];detail_errors[name]="This section could not load";}}));
+  return {client,details,detail_errors};
  }
  if(action==="appointments"){
   const from=String(data.from||"").slice(0,10);const to=String(data.to||"").slice(0,10);
@@ -336,6 +340,12 @@ async function perform(action:string,data:any,actor:{id:string;email:string;perm
   const clean:Record<string,any>={};
   for(const [name,value] of Object.entries(fields)){if(SCOPE==="arctos"&&name==="middle_name")throw Error("This field is not available in Arctos");if(!authorizedChanges.has(name))throw Error("Field is not available in Office CRM");if(value!==null&&typeof value!=="string"&&typeof value!=="number"&&typeof value!=="boolean"&&!Array.isArray(value))throw Error("Invalid field type");if(typeof value==="string"&&value.length>2000)throw Error("Value too long");clean[name]=value;}
   if(!Object.keys(clean).length)throw Error("No changes supplied");
+  if("assigned_agent_id" in clean){
+   if(!uuid(clean.assigned_agent_id))throw Error("Choose an assigned agent");
+   if(!await q(sb.from("profiles").select("id").eq("id",clean.assigned_agent_id).eq("active",true).in("role",["owner","agent"]).maybeSingle()))throw Error("Assigned agent is not available");
+  }
+  if("products" in clean&&(!Array.isArray(clean.products)||clean.products.some((value:unknown)=>!["medicare","life","retirement"].includes(String(value)))))throw Error("Invalid product choices");
+  if(clean.status==="deceased"||existing.status==="deceased"&&!clean.status)clean.products=[];
   await q(sb.from("clients").update(clean).eq("id",id).select("id").single());
   await log("update","client",id,actor.id);
   return {saved:true};

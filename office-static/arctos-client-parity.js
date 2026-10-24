@@ -2,7 +2,7 @@
 const currentDialog=()=>document.getElementById('dialog');
 const mk=(tag,cls='',html='')=>{const n=document.createElement(tag);n.className=cls;n.innerHTML=html;return n};
 const addGroup=(title,type)=>{const s=mk('section','intake-section-box intake-section-'+type+' span-all',
-'<div class="intake-section-title span-all"><strong>'+title+'</strong></div>');return s};
+'<div class="intake-section-title span-all"><strong>'+title+'</strong></div>');s.dataset.intakeSection=type;return s};
 // Protected information is editable for Office staff who have both agency edit
 // and sensitive-data permissions. Reads and writes still go through the audited
 // agency bridge, and values are cleared whenever the record leaves the screen.
@@ -33,7 +33,7 @@ const secure=(parent,modal,kind,field,title)=>{
   const wrap=mk('label','field parity-protected-field');
   const caption=mk('span');caption.textContent=label;
   const input=document.createElement(key==='payment_notes'||key==='card_notes'?'textarea':'input');
-  input.dataset.protectedInput=key;input.name='office_protected_'+key;input.autocomplete='off';
+  input.dataset.protectedInput=key;input.autocomplete='off';input.disabled=true;
   if(input instanceof HTMLInputElement)input.type=key==='password'?'password':'text';
   if(input instanceof HTMLTextAreaElement)input.rows=3;
   const clear=mk('label','parity-protected-clear');
@@ -43,32 +43,41 @@ const secure=(parent,modal,kind,field,title)=>{
  }
  const actions=mk('div','parity-sensitive-actions');
  const save=document.createElement('button');save.type='button';save.className='primary';save.dataset.saveProtected=kind;save.textContent='Save Protected Information';
- actions.append(save);box.append(heading,grid,actions);parent.append(box);
- save.addEventListener('click',async()=>{
+ actions.append(save);box.append(heading,grid,actions);parent.append(box);save.disabled=true;
+ box.officeSaveProtected=async()=>{
   const api=window.officeCrmClientBridge,current=api?.current?.(),status=box.querySelector('.parity-sensitive-status');
-  if(!api||!current){status.textContent='Save the client before editing protected information.';return;}
+  if(!api||!current){status.textContent='Save the client before editing protected information.';return false;}
+  if(box.dataset.protectedLoaded!=='true'){status.textContent='Wait until saved values finish loading.';return false;}
   const values={};
   for(const input of box.querySelectorAll('[data-protected-input]')){
    const key=input.dataset.protectedInput,clear=box.querySelector('[data-protected-clear="'+key+'"]');
    if(clear?.checked)values[key]='';
    else if(input.value!==input.dataset.initial)values[key]=input.value;
   }
-  if(!Object.keys(values).length){status.textContent='No protected changes to save.';return;}
+  if(!Object.keys(values).length){status.textContent='No protected changes to save.';return true;}
   save.disabled=true;status.textContent='Saving securely…';
   try{
    await api.request(current.agency,'save_sensitive',{client_id:current.id,kind,values});
+   for(const input of box.querySelectorAll('[data-protected-input]')){
+    if(Object.prototype.hasOwnProperty.call(values,input.dataset.protectedInput)){
+     input.value=input.dataset.initial=values[input.dataset.protectedInput];
+     const clear=box.querySelector('[data-protected-clear="'+input.dataset.protectedInput+'"]');if(clear)clear.checked=false;
+    }
+   }
    status.textContent='Saved securely.';
    await modal.officeReloadProtected?.(kind);
-  }catch(error){status.textContent='Save failed: '+(error?.message||'Unable to save protected information.');}
+   return true;
+  }catch(error){status.textContent='Save failed: '+(error?.message||'Unable to save protected information.');return false;}
   finally{save.disabled=false;}
- });
+ };
+ save.addEventListener('click',()=>void box.officeSaveProtected());
  return box;
 };
 function loadProtected(modal){
  const nodes=[...modal.querySelectorAll('.parity-auto-sensitive')].filter(node=>node.isConnected);
  if(!nodes.length)return;
  const api=window.officeCrmClientBridge,current=api?.current?.();
- if(!api||!current){
+ if(!api||!current||!modal.querySelector('#editClient')){
   nodes.forEach(node=>node.querySelector('.parity-sensitive-status').textContent=
    'Save the client to edit protected information, or request agency permission.');
   return;
@@ -78,11 +87,12 @@ function loadProtected(modal){
    for(const input of node.querySelectorAll('[data-protected-input]')){
     const key=input.dataset.protectedInput;
     const value=key==='card_number'?'':String(data[key]??'');
-    input.value=value;input.dataset.initial=value;
-    const clear=node.querySelector('[data-protected-clear="'+key+'"]');if(clear)clear.checked=false;
+    if(input.dataset.initial===undefined||input.value===input.dataset.initial){input.value=value;input.dataset.initial=value;}
+    input.disabled= !current.permissions?.edit;
     if(key==='card_number'&&data.card_last4)input.placeholder='Saved ending in '+String(data.card_last4)+' — enter a new value to replace';
    }
    node.querySelector('.parity-sensitive-status').textContent='Editable secure fields loaded.';
+   node.dataset.protectedLoaded='true';node.querySelector('[data-save-protected]').disabled= !current.permissions?.edit;
   }
  };
  const protectedHandler=event=>{
@@ -256,7 +266,7 @@ function enhance(modal){
  }
  const general=form.querySelector('.oc-client-category.tone-overview');
  if(general)general.classList.add('field-group');
- const grid=general?.querySelector('.oc-client-form-grid');
+ const grid=general?.querySelector('.oc-client-form-grid:not(.oc-client-agency-grid)');
  if(grid){
   const fields=[...grid.children];
   for(const [title,key,names] of [
@@ -393,6 +403,7 @@ function enhance(modal){
   }
  }
  finalizeArctosSections(modal);
+ window.officeClientRecordEnhance?.(modal);
  loadProtected(modal);
  // Existing appointment, save, note, and agency handlers remain attached to
  // their original DOM nodes. No stored identifier leaves the secure bridge.

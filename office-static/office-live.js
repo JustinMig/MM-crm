@@ -38,7 +38,7 @@ async function request(which,action,params={},retried=false){
 }
 window.officeCrmClientBridge=Object.freeze({
  request:(which,action,params={})=>request(which,action,params),
- current:()=>activeClient?{agency:activeClient.agency,id:activeClient.id}:null
+ current:()=>activeClient?{agency:activeClient.agency,id:activeClient.id,client:activeClient.client,details:activeClient.details,errors:activeClient.errors,permissions:connected[activeClient.agency]?.permissions}:null
 });
 async function checkConnections(){
  const res=await Promise.allSettled(["arctos","platinum"].map(which=>request(which,"session")));
@@ -1101,7 +1101,7 @@ function ocClientBindTabs(root,requested="overview"){
  const panels=[...root.querySelectorAll("[data-oc-client-panel]")];
  const choose=(key)=>{
   // Same reset behavior as Arctos: nested dropdowns close on tab changes.
-  root.querySelectorAll(".oc-client-category[open]").forEach(item=>item.open=false);
+  root.querySelectorAll("details[open]").forEach(item=>item.open=false);
   buttons.forEach(b=>{const active=b.dataset.ocClientTab===key;b.setAttribute("aria-selected",String(active));b.tabIndex=active?0:-1;});
   panels.forEach(p=>{p.hidden=p.dataset.ocClientPanel!==key;});
  };
@@ -1162,7 +1162,7 @@ async function openClient(a,id,selectedTab="overview"){
   const result=await request(a,"client",{client_id:id});
   if(!document.getElementById("dialog")||!dlg.isConnected)return;
   const c=result.client||{},details=result.details||{};
-  activeClient={agency:a,id,client:c};
+  activeClient={agency:a,id,client:c,details,errors:result.detail_errors||{}};
   const name=[c.first_name,c.last_name].filter(Boolean).join(" ").trim()||"Client";
   const blocks=ocClientDetailMarkup(details,a,id);
   const editForm='<form id="editClient" class="oc-client-main-form" autocomplete="off">'+
@@ -1188,7 +1188,7 @@ async function openClient(a,id,selectedTab="overview"){
   let baseline=JSON.stringify(Object.fromEntries(new FormData(form).entries()));
   const notice=root.querySelector("[data-oc-save-state]");
   const close=()=>{
-   if(JSON.stringify(Object.fromEntries(new FormData(form).entries()))!==baseline &&
+   if((root.officeHasUnsavedChanges?root.officeHasUnsavedChanges():JSON.stringify(Object.fromEntries(new FormData(form).entries()))!==baseline) &&
      !confirm("Discard unsaved client changes?"))return;
    activeClient=null;dlg.innerHTML="";
   };
@@ -1217,7 +1217,7 @@ async function openClient(a,id,selectedTab="overview"){
     const current=Object.fromEntries(new FormData(form).entries());
     const changes={};
     // Only save bridge-supported fields. Preserve nulls and other policy data.
-    for(const [key,value]of Object.entries(current))if(JSON.stringify(value)!==JSON.stringify(c[key]??""))changes[key]=value;
+    for(const [key,value]of Object.entries(current))if(!key.startsWith("office_protected_")&&key in c&&JSON.stringify(value)!==JSON.stringify(c[key]??""))changes[key]=value;
     // The underlying client schema has typed date, number and boolean fields.
     // Clearing them sends null, not an invalid empty string.
     for(const field of ["date_of_birth","height_feet","height_inches","weight_lbs","veteran","smoker"])
@@ -1330,6 +1330,7 @@ async function requestSchedule(which, action, params={},retried=false){
  return result;
 }
 function ocCloseEntry(){
+ activeClient=null;
  const el=document.getElementById("dialog");if(el)el.innerHTML="";
 }
 function ocAgencyMarkup(withOffice){
@@ -1440,6 +1441,7 @@ function ocOpenAppointmentForm(prefillDay,phoneHint=""){
 }
 
 function ocOpenNewClientForm(){
+ activeClient=null;
  const dlg=document.getElementById("dialog");
  if(!dlg)return;
  const newClient={};

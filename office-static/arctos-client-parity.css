@@ -534,6 +534,29 @@
 }
 
 /* Editable protected and medical records in Office CRM. */
+#dialog .office-record-editor{display:grid;gap:14px;grid-column:1/-1;min-width:0;width:100%}
+#dialog .office-record-editor>.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+#dialog .office-record-editor .field{display:grid;gap:6px;min-width:0}
+#dialog .office-record-editor .field>span{color:#385568;font-size:12px;font-weight:750}
+#dialog .office-record-editor :is(input,select,textarea){box-sizing:border-box;width:100%;min-height:40px;padding:8px 10px;border:1px solid #b5c8d5;border-radius:8px;background:#fff;color:#193447}
+#dialog .office-record-editor textarea{min-height:95px;resize:vertical}
+#dialog .office-record-editor .field:has(textarea){grid-column:1/-1}
+#dialog .office-section-actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:flex-end;grid-column:1/-1;width:100%;margin:10px 0 0}
+#dialog .office-section-actions>[role=status]{flex:1;font-size:12px;color:#365666;min-width:100px}
+#dialog .office-section-actions button,#dialog .office-record-editor button{white-space:normal;min-height:38px;padding:9px 13px}
+#dialog .office-record-card{display:block;border:1px solid #b6c8d4;border-radius:11px;background:#fff;margin:0 0 11px;overflow:hidden}
+#dialog .office-record-card>summary{display:flex;justify-content:space-between;gap:12px;cursor:pointer;padding:14px;background:#f1f6f8;color:#234459;list-style:none}
+#dialog .office-record-card>summary>span{display:grid;gap:4px}
+#dialog .office-record-card>summary small{font-size:12px;color:#5b6f7b}
+#dialog .office-record-card>summary::-webkit-details-marker{display:none}
+#dialog .office-record-card[open]>summary>b{transform:rotate(180deg)}
+#dialog .office-record-card>.health-record-body{padding:14px}
+#dialog [data-office-record-list],#dialog .office-doctors-notes,#dialog .office-old-plan-details{grid-column:1/-1;width:100%;min-width:0}
+#dialog .office-old-plan-details,#dialog .office-doctors-notes{display:grid;gap:10px}
+#dialog .office-product-choice{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:700}
+#dialog .office-product-choice input{width:17px!important;min-height:17px!important}
+#dialog .office-remove-record{justify-self:start;color:#8c3544}
+@media(max-width:620px){#dialog .office-record-editor>.form-grid{grid-template-columns:1fr}}
 #dialog .oc-arctos-client-dialog .parity-sensitive-editor{gap:11px}
 #dialog .oc-arctos-client-dialog .parity-sensitive-editor-heading{
  display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}

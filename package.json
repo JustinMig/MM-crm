@@ -11,6 +11,7 @@
     "start": "next start",
     "test": "node --test tests/critical-regressions.test.mjs tests/performance-upgrades.test.mjs tests/dashboard-quick-tools.test.mjs tests/ringcentral-calling.test.mjs tests/office-ringcentral-review.test.mjs tests/office-phone-navigation.test.mjs tests/office-client-parity.test.mjs tests/office-client-editing.test.mjs",
     "test:smoke": "node --test tests/production-smoke.test.mjs",
+    "test:office-client": "node --test tests/office-client-parity.test.mjs tests/office-client-editing.test.mjs tests/office-record-store.test.mjs tests/office-client-record-dom.test.cjs",
     "typecheck": "tsc --noEmit",
     "check": "npm run test && npm run typecheck && npm run build && npm run test:smoke"
   },
@@ -25,6 +26,7 @@
     "@types/node": "^24.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "jsdom": "26.1.0",
     "typescript": "^5.9.0"
   }
 }
