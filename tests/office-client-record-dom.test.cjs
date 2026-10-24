@@ -8,7 +8,7 @@ const source=name=>fs.readFileSync(path.join(__dirname,'../office-static',name),
 const id='11111111-1111-4111-8111-111111111111',doctorId='22222222-2222-4222-8222-222222222222';
 const sleep=()=>new Promise(resolve=>setTimeout(resolve,5));
 async function until(fn){for(let i=0;i<200;i++){if(fn())return;await sleep();}throw Error('Timed out waiting for UI update');}
-async function fixture(agency='arctos',detailErrors={}){
+async function fixture(agency='arctos',detailErrors={},exact=false){
  const dom=new JSDOM('<div id="office-root"></div>',{url:'https://office.test',runScripts:'outside-only',pretendToBeVisual:true});
  const w=dom.window,requests=[],errors=[];
  const observers=[],NativeObserver=w.MutationObserver;
@@ -30,6 +30,7 @@ async function fixture(agency='arctos',detailErrors={}){
   else if(data.action==='save_sensitive'){Object.assign(secure[data.kind],data.values);result={saved:true};}
   else if(data.action==='save_client'){Object.assign(client,data.changes);result={saved:true};}
   else if(data.action==='add_note')result={saved:true};
+  else if(data.action==='save_review_checkoff'||data.action==='add_client_to_campaign')result={saved:true};
   else if(data.action==='save_record'){
    if(failNext){failNext=false;return new Response(JSON.stringify({error:'Synthetic save failure'}),{status:400});}
    let row=(details[data.table]||[]).find(row=>data.record_id?row.id===data.record_id:row.client_id===id);
@@ -41,6 +42,7 @@ async function fixture(agency='arctos',detailErrors={}){
   else if(data.action==='campaign_agents')result={agents:[{id,full_name:'Sample Agent'},{id:doctorId,full_name:'Second Agent'}]};
   return new Response(JSON.stringify(result));
  };
+ if(exact){w.eval(source('arctos-overview-template.js'));w.eval(source('office-arctos-overview.js'));}
  w.eval(source('office-live.js'));w.eval(source('office-client-record.js'));w.eval(source('arctos-client-parity.js'));
  const q=selector=>w.document.querySelector(selector),all=selector=>[...w.document.querySelectorAll(selector)];
  await until(()=>q('[data-tab="clients"]'));q('[data-tab="clients"]').click();
@@ -208,5 +210,57 @@ test('Permanent tab Save includes closed editors, protected edits, assignment an
   fill(q('#newClientNote [name="note"]'),'Tab saved note');q('[data-save-tab="files"]').click();await until(()=>q('[data-tab-save-footer="files"]').dataset.saving==='false');
   assert.equal(q('.office-saved-note').textContent,'Tab saved note');assert.equal(q('#newClientNote [name="note"]').value,'');
   assert.deepEqual(f.errors,[]);
+ }finally{f.dom.window.close();}
+});
+for(const agency of ['arctos','platinum'])test(agency+' uses the copied Arctos Overview with secure editable values and typed saves',async()=>{
+ const f=await fixture(agency,{},true);try{
+  const {q,fill}=f,form=q('[data-office-exact-overview]');
+  assert.ok(form);assert.equal(q('.office-client-flags'),null);assert.equal(q('.office-personal-compact'),null);
+  assert.deepEqual([...form.querySelectorAll('[data-panel=information] > details > summary')].map(el=>el.textContent),['Personal & Contact Information','Driver’s License Identification','Banking Information']);
+  assert.deepEqual([...form.querySelectorAll('.product-choices label')].map(el=>el.textContent.trim()),['Medicare','Life','Retirement','Deceased']);
+  assert.match(q('[data-client-summary-meta]').textContent,/DOB: 01\/01\/1950/);
+  assert.equal(q('[name=license_number]').value,'TEST-LICENSE');
+  assert.equal(q('[name=banking_payment_method]').value,'bank');assert.equal(q('[name=banking_account_number]').value,'000111');
+  assert.equal(q('[data-banking-panel=bank]').hidden,false);assert.equal(q('[data-banking-panel=card]').hidden,true);
+  assert.equal(q('[data-oc-client-panel=overview] details[open]'),null);
+  fill(q('[name=first_name]'),'Copied');fill(q('[name=date_of_birth]'),'12/09/1955');fill(q('[name=address]'),'123 Test St');fill(q('[name=zip]'),'12345');fill(q('[name=license_expiration]'),'12/31/2030');fill(q('[name=ssn]'),'999-88-7777');fill(q('[name=banking_account_number]'),'NEW-ACCOUNT');fill(q('[data-client-glance-note]'),'Updated overview note');
+  q('[data-save-tab=overview]').click();await until(()=>q('[data-tab-save-footer=overview]').dataset.saving==='false');
+  assert.match(q('[data-tab-save-status]').textContent,/All changes/);
+  assert.equal(f.client.date_of_birth,'1955-12-09');assert.equal(f.client.address1,'123 Test St');assert.equal(f.client.zip_code,'12345');assert.equal(f.client.drivers_license_expiration,'2030-12-31');assert.equal(f.client.notes,'Updated overview note');assert.equal(f.secure.identifiers.ssn,'999-88-7777');assert.equal(f.secure.banking.account_number,'NEW-ACCOUNT');
+  q('[data-office-deceased]').click();assert.equal(f.all('[data-office-product]').some(el=>el.checked),false);
+  q('[data-save-tab=overview]').click();await until(()=>f.client.status==='deceased');assert.deepEqual(f.client.products,[]);
+  assert.deepEqual(f.errors,[]);
+ }finally{f.dom.window.close();}
+});
+test('Copied banking saves only selected method changes and never sends CVV or erases a saved card',async()=>{
+ const f=await fixture('arctos',{},true);try{
+  const {q,fill}=f;fill(q('[name=banking_payment_method]'),'card');q('[name=banking_payment_method]').dispatchEvent(new f.w.Event('change',{bubbles:true}));
+  fill(q('[name=banking_card_expiration]'),'12/29');fill(q('[name=banking_cvv]'),'123');
+  q('[data-save-tab=overview]').click();await until(()=>q('[data-tab-save-footer=overview]').dataset.saving==='false');
+  const saved=f.requests.filter(r=>r.action==='save_sensitive'&&r.kind==='banking').at(-1);
+  assert.deepEqual(saved.values,{payment_method:'card',card_expiration:'12/29'});assert.equal(q('[data-banking-panel=card]').hidden,false);
+  assert.deepEqual(f.errors,[]);
+ }finally{f.dom.window.close();}
+});
+test('Copied dates reject impossible dates before writing; review checkoff uses the authorized bridge',async()=>{
+ const f=await fixture('arctos',{},true);try{
+  const {q,fill}=f;fill(q('[name=date_of_birth]'),'02/31/1955');q('[data-save-tab=overview]').click();await until(()=>q('[data-tab-save-footer=overview]').dataset.saving==='false');
+  assert.match(q('[data-tab-save-status]').textContent,/could not save/);assert.equal(f.client.date_of_birth,'1950-01-01');
+  q('[data-client-review-manual]').click();await until(()=>f.requests.some(r=>r.action==='save_review_checkoff'));
+  assert.equal(f.requests.find(r=>r.action==='save_review_checkoff').completed,true);
+  assert.deepEqual(f.errors,[]);
+ }finally{f.dom.window.close();}
+});
+test('Rendered Overview preserves the generated Arctos DOM structure rather than the old Office layout',async()=>{
+ const f=await fixture('arctos',{},true);try{
+  const reference=f.w.document.createElement('div');reference.innerHTML=f.w.officeArctosOverviewMarkup;
+  const shape=node=>{
+   if(node.nodeType===3)return node.textContent.trim()||null;
+   if(node.nodeType!==1||node.matches('[data-client-athena]'))return null;
+   const dynamic=node.matches('[data-client-summary-name],[data-client-summary-meta],[data-client-review-status],[role=status]');
+   return {tag:node.tagName,classes:node.className,children:dynamic?[]:[...node.childNodes].map(shape).filter(Boolean)};
+  };
+  const actual=f.q('[data-office-exact-overview]');
+  assert.deepEqual([...actual.childNodes].map(shape).filter(Boolean),[...reference.childNodes].map(shape).filter(Boolean));
  }finally{f.dom.window.close();}
 });

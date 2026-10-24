@@ -1,3 +1,5 @@
+/* Legacy Office layouts stop at the copied Arctos Overview boundary. */
+@scope (:root) to ([data-office-arctos-overview]) {
 /* Source: Arctos client-four-tabs.css */
 /* Arctos client-record simplification: four visible sections; original fields preserved. */
 .client-four-tabs{min-width:0;color:#253a4a}
@@ -656,4 +658,5 @@
  #dialog .oc-arctos-client-dialog .arctos-personal-group.office-personal-compact>.oc-client-category-body>.oc-client-form-grid{grid-template-columns:minmax(0,1fr)!important}
  #dialog .office-client-flags{gap:6px 13px}
  #dialog .office-tab-save-footer{padding-bottom:max(10px,env(safe-area-inset-bottom))}
+}
 }

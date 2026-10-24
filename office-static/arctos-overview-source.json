@@ -1,0 +1,13 @@
+{
+  "source": "https://mh.mayerig.com",
+  "copied": "2026-10-24",
+  "files": {
+    "views.js": "630ec3445c6a39f2e05ec50893a9d046c10ffe4beb59fcdbd576c1fd3f217652",
+    "client-product-status.js": "0a021414f651869b011b3873c04d9f1a025ed25cc55e0666bb0ad336eabd8ae2",
+    "banking-information.js": "ffa9dcba7a4647cbec7a959581b5212d5fa8fff2b99f912cd86437966b815786",
+    "client-personal-underwriting.js": "5bae0d76f3c3180a8c8098d48a137f0dae6d926f97c8aa2ba128e3261b93b2a3",
+    "client-intake-sections.js": "09a6a3e027f4697f6563b6f11a43846912649a131425ba047a456eb6c4fffa5c",
+    "workspace-styles.css": "7bbcc297aa7305769213f499a4182102b38a93d91f752307e9e4a71aeedf58ad",
+    "client-record-page-colors.css": "6e505c41525d2a5546675f4d254b5c6769b35ab22cff55461e14368cba064557"
+  }
+}

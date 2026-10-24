@@ -18,6 +18,25 @@ const numeric=new Set(['premium','face_amount','admission_benefit','daily_benefi
 const booleans=new Set(['medicaid_enrolled','medicare_gov_connected']);
 const singletons=new Set(['medicare_details','client_pharmacies']);
 const uuid=(value)=>/^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(String(value||''));
+export async function writeOfficeOverview({sb,actor,scope,agencyActorId=null,log},action,data){
+ if(!actor.permission.can_edit)throw Error('Editing is not authorized');
+ const clientId=String(data.client_id||'');if(!uuid(clientId))throw Error('Invalid client');
+ const query=async promise=>{const {data,error}=await promise;if(error)throw Error('Agency overview could not be saved.');return data;};
+ if(!await query(sb.from('clients').select('id').eq('id',clientId).maybeSingle()))throw Error('Client not found');
+ if(action==='save_review_checkoff'){
+  if(!Number.isInteger(data.review_year)||data.review_year<2000||data.review_year>2100||typeof data.completed!=='boolean')throw Error('Invalid review checkoff');
+  await query(sb.from('client_review_manual').upsert({client_id:clientId,review_year:data.review_year,completed:data.completed,completed_at:data.completed?new Date().toISOString():null,updated_by:agencyActorId},{onConflict:'client_id,review_year'}));
+  await log('save_review_checkoff','client',clientId,actor.id);return {saved:true};
+ }
+ if(action==='add_client_to_campaign'){
+  const campaignId=String(data.campaign_id||'');if(!uuid(campaignId))throw Error('Invalid campaign');
+  if(!await query(sb.from('campaigns').select('id').eq('id',campaignId).maybeSingle()))throw Error('Campaign not found in this agency');
+  if(scope==='arctos'&&!agencyActorId)throw Error('Your Office account needs an Arctos agent link before adding campaign members.');
+  await query(sb.from('campaign_members').upsert({campaign_id:campaignId,client_id:clientId,added_by:agencyActorId},{onConflict:'campaign_id,client_id',ignoreDuplicates:true}));
+  await log('add_client_to_campaign','client',clientId,actor.id);return {saved:true};
+ }
+ throw Error('Unsupported overview operation');
+}
 export function recordFields(scope,table){return [...(common[table]||[]),...(scope==='platinum'?platinum[table]||[]:[])];}
 export function recordSelection(scope,table){return [singletons.has(table)?'client_id':'id,client_id','updated_at',...recordFields(scope,table)].join(',');}
 export async function writeOfficeRecord(context,action,data){

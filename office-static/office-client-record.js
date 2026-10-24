@@ -50,6 +50,7 @@ window.officeClientRecordEnhance=modal=>{
  const value=el=>el.type==='checkbox'?String(el.checked):el.value;
  const controls=host=>[...host.querySelectorAll('input,textarea,select')].filter(el=>el.type!=='hidden');
  const remember=host=>controls(host).forEach(el=>initials.set(el,value(el)));
+ root.officeRememberControl=el=>initials.set(el,value(el));
  const dirty=host=>controls(host).some(el=>initials.has(el)&&initials.get(el)!==value(el));
  const hasUnsaved=()=>dirty(root)||!!root.querySelector('[data-new-record="true"]');
  root.officeHasUnsavedChanges=hasUnsaved;
@@ -87,14 +88,17 @@ window.officeClientRecordEnhance=modal=>{
   const doctors=root.querySelector('[data-client-category="doctors"] > .oc-client-category-body');
   if(doctors)doctors.insertAdjacentHTML('afterbegin','<section class="office-doctors-notes">'+input('doctors_section_notes','Doctors Section Notes','textarea',client.doctors_section_notes)+'<div class="office-section-actions"><span data-section-status role="status"></span><button type="button" class="primary" data-save-overview>Save Doctors Notes</button></div></section>');
  }
+ const exact=!!root.querySelector('[data-office-exact-overview]');
+ let flags=root.querySelector('[data-office-exact-overview] .product-choices');
+ const nonDeceasedStatus=client.status&&client.status!=='deceased'?client.status:'active';
+ if(!exact){
  const nameGroup=root.querySelector('.intake-section-name');
  if(nameGroup&&current.agency==='platinum')nameGroup.insertAdjacentHTML('beforeend',input('middle_name','Middle Name','text',client.middle_name));
  const household=root.querySelector('.intake-section-household');
- const flags=document.createElement('div');flags.className='office-client-flags';flags.setAttribute('role','group');flags.setAttribute('aria-label','Client coverage and status');
+ flags=document.createElement('div');flags.className='office-client-flags';flags.setAttribute('role','group');flags.setAttribute('aria-label','Client coverage and status');
  flags.innerHTML=['medicare','life','retirement'].map(product=>'<label class="office-product-choice"><input type="checkbox" data-office-product="'+product+'"'+(client.status!=='deceased'&&client.products?.includes(product)?' checked':'')+'> '+product[0].toUpperCase()+product.slice(1)+'</label>').join('')+'<label class="office-product-choice office-deceased-choice"><input type="checkbox" data-office-deceased'+(client.status==='deceased'?' checked':'')+'> Deceased</label>';
  root.querySelector('.oc-client-modal-header')?.after(flags);
  flags.hidden=!!root.querySelector('[data-oc-client-panel="overview"]')?.hidden;
- const nonDeceasedStatus=client.status&&client.status!=='deceased'?client.status:'active';
  flags.addEventListener('change',event=>{
   if(event.target.matches('[data-office-deceased]')&&event.target.checked)flags.querySelectorAll('[data-office-product]').forEach(el=>el.checked=false);
   if(event.target.matches('[data-office-product]')&&event.target.checked)flags.querySelector('[data-office-deceased]').checked=false;
@@ -124,13 +128,26 @@ window.officeClientRecordEnhance=modal=>{
   (section.querySelector(':scope > .form-grid,:scope > .oc-client-category-body')||section).append(action);
  }
  root.querySelector('#editClient > .oc-client-save-footer')?.remove();
+ }
+ if(exact)window.officeArctosOverviewBind?.(root);
  const noteForm=root.querySelector('#newClientNote');
  if(noteForm&&!noteForm.querySelector('[data-section-status]'))noteForm.insertAdjacentHTML('beforeend','<span data-section-status role="status" aria-live="polite"></span>');
  root.querySelectorAll('.oc-client-readonly-hint').forEach(el=>{if(el.closest('[data-oc-client-panel="coverage"]'))el.remove();});
  const healthHost=medicare&&[...medicare.querySelectorAll(':scope > details')].find(el=>el.querySelector('summary')?.textContent==='Health Plan Information')?.querySelector(':scope > .form-grid');
  if(healthHost&&current.agency==='arctos')healthHost.insertAdjacentHTML('beforeend',group('Old Plan Details','<section class="office-old-plan-details">'+[['old_plan_carrier','Insurance Company'],['old_plan_id','Plan ID'],['old_plan_member_id','Member ID'],['old_plan_year','Year']].map(([key,label])=>input(key,label,'text',client[key])).join('')+'<div class="office-section-actions"><span data-section-status role="status"></span><button type="button" class="primary" data-save-overview>Save Old Plan Details</button></div></section>'));
  const coreKeys=new Set(['assigned_agent_id','first_name','last_name','middle_name','date_of_birth','gender','phone','email','address1','address2','city','state','zip_code','county','spouse','height_feet','height_inches','weight_lbs','smoker','veteran','notes','status','drivers_license_expiration','drivers_license_state','doctors_section_notes','old_plan_carrier','old_plan_id','old_plan_member_id','old_plan_year']);
- const normalize=el=>el.value===''?null:['height_feet','height_inches','weight_lbs'].includes(el.name)?Number(el.value):['smoker','veteran'].includes(el.name)?el.value==='true':el.value;
+ const coreKey=el=>el.dataset.officeCoreKey||el.name;
+ const normalize=el=>{
+  if(el.value==='')return null;
+  if(el.hasAttribute('data-date')){
+   const m=/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(el.value);
+   if(!m)throw Error('Enter the date as MM/DD/YYYY.');
+   const iso=m[3]+'-'+m[1].padStart(2,'0')+'-'+m[2].padStart(2,'0'),date=new Date(iso+'T12:00:00Z');
+   if(!Number.isFinite(date.getTime())||date.toISOString().slice(0,10)!==iso)throw Error('Enter a valid date.');
+   return iso;
+  }
+  return ['height_feet','height_inches','weight_lbs'].includes(el.name)?Number(el.value):['smoker','veteran'].includes(el.name)?el.value==='true':el.value;
+ };
  const busy=new WeakSet();
  const run=async(host,task)=>{
   if(busy.has(host))return false;busy.add(host);
@@ -141,9 +158,9 @@ window.officeClientRecordEnhance=modal=>{
   finally{busy.delete(host);buttons.forEach(button=>button.disabled=false);}
  };
  const saveOverview=async section=>run(section,async()=>{
-  const editable=controls(section).filter(el=>coreKeys.has(el.name)&&!el.disabled);
+  const editable=controls(section).filter(el=>coreKeys.has(coreKey(el))&&!el.disabled);
   for(const el of editable)if(!el.checkValidity()){el.closest('details')?.setAttribute('open','');el.reportValidity();throw Error('Complete the highlighted field.');}
-  const changes={};for(const el of editable)if(value(el)!==initials.get(el))changes[el.name]=normalize(el);
+  const changes={};for(const el of editable)if(value(el)!==initials.get(el))changes[coreKey(el)]=normalize(el);
   if(section.querySelector('[data-office-product]')){
    const products=[...section.querySelectorAll('[data-office-product]')].filter(el=>el.checked).map(el=>el.dataset.officeProduct);
    if(JSON.stringify(products)!==JSON.stringify(client.products||[]))changes.products=products;
@@ -154,6 +171,7 @@ window.officeClientRecordEnhance=modal=>{
   }
   if(Object.keys(changes).length){await api.request(current.agency,'save_client',{client_id:current.id,changes});Object.assign(client,changes);editable.forEach(el=>initials.set(el,value(el)));section.querySelectorAll('[data-office-product],[data-office-deceased]').forEach(el=>initials.set(el,value(el)));}
   for(const box of section.querySelectorAll('.parity-sensitive-editor'))if(box.dataset.protectedLoaded==='true'&&box.officeSaveProtected&&await box.officeSaveProtected()===false)throw Error('Protected information was not saved. See the field message.');
+  if(section.querySelector('[data-office-exact-overview]'))await root.officeSaveExactProtected?.();
  });
  const saveRecord=async form=>run(form,async()=>{
   const kind=form.dataset.officeRecordEditor,table=tableFor(kind);
@@ -181,7 +199,7 @@ window.officeClientRecordEnhance=modal=>{
   let ok=true;
   try{
    if(key==='overview'){
-    if(!await saveOverview(flags))ok=false;
+    if(!exact&&!await saveOverview(flags))ok=false;
     if(!await saveOverview(panel))ok=false;
    }else{
     for(const section of panel.querySelectorAll('.office-doctors-notes,.office-old-plan-details'))if(dirty(section)&&!await saveOverview(section))ok=false;
@@ -196,6 +214,7 @@ window.officeClientRecordEnhance=modal=>{
  for(const [key,label] of [['overview','Overview'],['coverage','Coverage'],['medical','Medical'],['files','Notes & Files']]){
   const panel=root.querySelector('[data-oc-client-panel="'+key+'"]');
   if(panel)panel.insertAdjacentHTML('beforeend','<div class="office-tab-save-footer" data-tab-save-footer="'+key+'"><span data-tab-save-status role="status" aria-live="polite"></span><button type="button" class="primary" data-save-tab="'+key+'">Save '+label+'</button></div>');
+  if(exact&&key==='overview'){const footer=panel.querySelector('[data-tab-save-footer]');footer.classList.add('modal-footer');footer.querySelector('button').classList.add('btn');footer.querySelector('button').textContent='Save Client';}
  }
  root.addEventListener('submit',event=>{
   const form=event.target.closest('[data-office-record-editor]');

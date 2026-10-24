@@ -139,7 +139,7 @@ function accordion(parent,title,cls){
 function finalizeArctosSections(modal){
  const shell=modal.querySelector('.oc-client-four-tabs');if(!shell)return;
  const overview=shell.querySelector('[data-oc-client-panel="overview"]');
- overview?.querySelector('.client-glance-notes-wide')?.classList.add('arctos-top-note');
+ if(!overview?.hasAttribute('data-office-arctos-overview'))overview?.querySelector('.client-glance-notes-wide')?.classList.add('arctos-top-note');
  const general=overview?.querySelector('.oc-client-category.tone-overview');
  general?.classList.add('arctos-personal-group');
  const coverage=shell.querySelector('[data-oc-client-panel="coverage"]');
@@ -242,6 +242,7 @@ function enhance(modal){
  shell.querySelectorAll('.oc-client-form-grid').forEach(el=>el.classList.add('form-grid'));
  const form=overview?.querySelector('#editClient,#officeNewClientForm');
  if(!form)return;
+ if(!form.hasAttribute('data-office-exact-overview')){
  const glance=overview.querySelector('.oc-client-overview-card');
  if(glance){
   glance.classList.add('client-overview-card');
@@ -369,6 +370,7 @@ function enhance(modal){
   const banking=mk('div','parity-banking');body=accordion(banking,'Banking Information','banking');
   secure(body,modal,'banking','','Banking & Payment Information');
   general.after(driver,banking);
+ }
  }
  shell.querySelectorAll('.oc-client-category').forEach(cat=>{
   if(cat.closest('#editClient,#officeNewClientForm'))return;

@@ -1188,6 +1188,7 @@ async function openClient(a,id,selectedTab="overview"){
     ocClientPanel("files",'<div class="oc-client-group-heading"><strong>Notes & Files</strong><p>Client notes, forms and documents.</p></div>'+blocks.notes)+
     '<p class="oc-client-modal-error" data-office-client-error role="alert"></p></div></div>';
   const root=dlg.querySelector(".oc-arctos-client-dialog");
+  window.officeArctosOverviewMount?.(root,c);
   ocClientBindTabs(root,selectedTab);
   const form=root.querySelector("#editClient");
   let baseline=JSON.stringify(Object.fromEntries(new FormData(form).entries()));
@@ -1204,6 +1205,7 @@ async function openClient(a,id,selectedTab="overview"){
    ocOpenAppointmentForm(undefined,hint);
   };
   form.addEventListener("input",()=>{
+   if(form.hasAttribute('data-office-exact-overview'))return;
    const meta=root.querySelector("[data-office-client-meta]");
    const values=Object.fromEntries(new FormData(form).entries());
    const age=ocClientAge(values.date_of_birth);
