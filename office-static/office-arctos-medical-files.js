@@ -62,8 +62,9 @@ window.officeArctosMedicalFilesMount=modal=>{
  const notesFields=()=>[clientNote,...modal.querySelectorAll('[data-office-exact-overview] [name="notes"]')];
  modal.addEventListener('input',event=>{if(!notesFields().includes(event.target))return;for(const input of notesFields())if(input!==event.target)input.value=event.target.value;});
  modal.addEventListener('office:client-core-saved',event=>{for(const group of groups.filter(group=>group.table==='clients'))for(const [input,key]of group.pairs)if(key in event.detail.changes&&input.value===String(event.detail.changes[key]??''))remember(input);});
- const changed=group=>group.pairs.some(([input])=>!input.disabled&&input.value!==baseline.get(input));
- const meaningful=group=>group.pairs.some(([input,key])=>key!=='status'&&input.value.trim());
+ const activePairs=group=>{group.pairs=group.pairs.map(([input,key])=>{const live=group.host.querySelector('[name="'+input.name+'"]');if(live&&live!==input){if(!baseline.has(live))baseline.set(live,baseline.get(input));return [live,key];}return [input,key];});return group.pairs;};
+ const changed=group=>activePairs(group).some(([input])=>!input.disabled&&input.value!==baseline.get(input));
+ const meaningful=group=>activePairs(group).some(([input,key])=>key!=='status'&&input.value.trim());
  const saving={medical:false,files:false};
  async function save(key){
   if(!edit||saving[key])return false;saving[key]=true;const form=forms[key];
