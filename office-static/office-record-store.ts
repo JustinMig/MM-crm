@@ -53,7 +53,8 @@ export async function writeOfficeRecord(context,action,data){
   if(existing&&existing.client_id!==clientId)throw Error('Record does not belong to this client');
  }
  if(action==='delete_record'){
-  if(singletons.has(table)||!recordId||!existing)throw Error('Record not found');
+  if(singletons.has(table)||!recordId)throw Error('Record not found');
+  if(!existing)return {saved:true};
   await query(sb.from(table).delete().eq('client_id',clientId).eq('id',recordId));
   await log('delete',table,recordId,actor.id);return {saved:true};
  }

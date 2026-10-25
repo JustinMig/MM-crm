@@ -48,7 +48,7 @@ window.officeClientRecordEnhance=modal=>{
  const rows=kind=>Array.isArray(details[kind])?details[kind]:[];
  const initials=new WeakMap();
  const value=el=>el.type==='checkbox'?String(el.checked):el.value;
- const controls=host=>[...host.querySelectorAll('input,textarea,select')].filter(el=>el.type!=='hidden');
+ const controls=host=>[...host.querySelectorAll('input,textarea,select')].filter(el=>el.type!=='hidden'&&!el.closest('[data-office-arctos-medical-files]'));
  const remember=host=>controls(host).forEach(el=>initials.set(el,value(el)));
  root.officeRememberControl=el=>initials.set(el,value(el));
  const dirty=host=>controls(host).some(el=>initials.has(el)&&initials.get(el)!==value(el));
@@ -169,7 +169,7 @@ window.officeClientRecordEnhance=modal=>{
    if(status!==client.status)changes.status=status;
    if(deceased){changes.products=[];section.querySelectorAll('[data-office-product]').forEach(el=>el.checked=false);}
   }
-  if(Object.keys(changes).length){await api.request(current.agency,'save_client',{client_id:current.id,changes});Object.assign(client,changes);editable.forEach(el=>initials.set(el,value(el)));section.querySelectorAll('[data-office-product],[data-office-deceased]').forEach(el=>initials.set(el,value(el)));}
+  if(Object.keys(changes).length){await api.request(current.agency,'save_client',{client_id:current.id,changes});Object.assign(client,changes);editable.forEach(el=>initials.set(el,value(el)));section.querySelectorAll('[data-office-product],[data-office-deceased]').forEach(el=>initials.set(el,value(el)));root.dispatchEvent(new CustomEvent('office:client-core-saved',{detail:{changes}}));}
   for(const box of section.querySelectorAll('.parity-sensitive-editor'))if(box.dataset.protectedLoaded==='true'&&box.officeSaveProtected&&await box.officeSaveProtected()===false)throw Error('Protected information was not saved. See the field message.');
   if(section.querySelector('[data-office-exact-overview]'))await root.officeSaveExactProtected?.();
  });
@@ -203,20 +203,24 @@ window.officeClientRecordEnhance=modal=>{
     if(!await saveOverview(panel))ok=false;
    }else if(key==='coverage'&&root.officeSaveExactCoverage){
     if(!await root.officeSaveExactCoverage())ok=false;
+   }else if(key==='medical'&&root.officeSaveExactMedical){
+    if(!await root.officeSaveExactMedical())ok=false;
+   }else if(key==='files'&&root.officeSaveExactFiles){
+    if(!await root.officeSaveExactFiles())ok=false;
    }else{
     for(const section of panel.querySelectorAll('.office-doctors-notes,.office-old-plan-details'))if(dirty(section)&&!await saveOverview(section))ok=false;
     for(const form of panel.querySelectorAll('[data-office-record-editor]'))if((dirty(form)||form.dataset.newRecord==='true')&&!await saveRecord(form))ok=false;
     for(const box of panel.querySelectorAll('.parity-sensitive-editor'))if(box.dataset.protectedLoaded==='true'&&box.officeSaveProtected&&!await box.officeSaveProtected())ok=false;
     const note=panel.querySelector('#newClientNote');if(note&&note.querySelector('[name="note"]').value&& !await saveNote(note))ok=false;
    }
-   status.textContent=ok?'All changes in this tab are saved.':'Some changes could not save. Open the section with the error and retry.';
+   if(ok)status.textContent='All changes in this tab are saved.';else if(!status.textContent.startsWith('Save failed:'))status.textContent='Some changes could not save. Open the section with the error and retry.';
   }catch(error){status.textContent='Save failed: '+error.message;}
   finally{footer.dataset.saving='false';button.disabled=!current.permissions?.edit;}
  };
  for(const [key,label] of [['overview','Overview'],['coverage','Coverage'],['medical','Medical'],['files','Notes & Files']]){
   const panel=root.querySelector('[data-oc-client-panel="'+key+'"]');
   if(panel)panel.insertAdjacentHTML('beforeend','<div class="office-tab-save-footer" data-tab-save-footer="'+key+'"><span data-tab-save-status role="status" aria-live="polite"></span><button type="button" class="primary" data-save-tab="'+key+'">Save '+label+'</button></div>');
-  if(exact&&key==='overview'||key==='coverage'&&root.officeSaveExactCoverage){const footer=panel.querySelector('[data-tab-save-footer]');footer.classList.add('modal-footer');footer.querySelector('button').classList.add('btn');footer.querySelector('button').textContent='Save Client';}
+  if(exact&&key==='overview'||key==='coverage'&&root.officeSaveExactCoverage||['medical','files'].includes(key)&&root.officeSaveExactMedical){const footer=panel.querySelector('[data-tab-save-footer]');footer.classList.add('modal-footer');footer.querySelector('button').classList.add('btn');footer.querySelector('button').textContent='Save Client';}
  }
  root.addEventListener('submit',event=>{
   const form=event.target.closest('[data-office-record-editor]');
@@ -248,10 +252,10 @@ window.officeClientRecordEnhance=modal=>{
  const tracker=new MutationObserver(()=>{for(const el of controls(root))if(!initials.has(el)&&!el.dataset.protectedInput)initials.set(el,value(el));if(!root.isConnected)tracker.disconnect();});
  tracker.observe(root,{subtree:true,childList:true});
  remember(root);
- root.officeHasUnsavedChanges=()=>hasUnsaved()||!!root.officeExactCoverageDirty?.()||[...root.querySelectorAll('[data-protected-input]')].some(el=>el.dataset.initial!==undefined&&el.value!==el.dataset.initial);
+ root.officeHasUnsavedChanges=()=>hasUnsaved()||!!root.officeExactCoverageDirty?.()||!!root.officeExactMedicalFilesDirty?.()||[...root.querySelectorAll('[data-protected-input]')].some(el=>el.dataset.initial!==undefined&&el.value!==el.dataset.initial);
  // The identifiers are loaded after this enhancement; use their secure baseline, not their empty loading state.
  for(const el of root.querySelectorAll('[data-protected-input]'))initials.delete(el);
  root.querySelectorAll('details[open]').forEach(el=>el.open=false);
- if(!current.permissions?.edit)root.querySelectorAll('input,select,textarea,button[data-save-overview],button[data-save-tab],button[type="submit"],button[data-office-add-record],button[data-office-save-list],button[data-delete-record]').forEach(el=>el.disabled=true);
+ if(!current.permissions?.edit)root.querySelectorAll('input,select,textarea,button[data-save-overview],button[data-save-tab],button[type="submit"],button[data-office-add-record],button[data-office-save-list],button[data-delete-record]').forEach(el=>{if(!el.matches('[data-cfh-search]'))el.disabled=true;});
 };
 })();

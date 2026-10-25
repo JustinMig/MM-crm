@@ -33,31 +33,20 @@ test('Sunfire and Medicaid load and save independently without changing Medicare
   assert.deepEqual(f.errors,[]);
  }finally{f.dom.window.close();}
 });
-test('Doctors, medication and individual pharmacy records collapse; add opens; saves retain other drafts',async()=>{
+test('Copied doctors and pharmacies collapse; Add opens; tab saves retain other drafts and retry identities',async()=>{
  const f=await fixture();try{
-  const {q,all,fill,submit}=f;
-  assert.equal(q('[data-office-record-editor="client_doctors"]').closest('details').open,false);
-  const pharmacy=q('[data-office-record-editor="client_pharmacies"]');assert.equal(pharmacy.closest('details').open,false);
-  assert.equal(pharmacy.querySelectorAll('details[open]').length,0);
-  q('[data-client-category="doctors"]').open=true;
-  const doctor=q('[data-office-record-editor="client_doctors"]');doctor.closest('details').open=true;
-  fill(doctor.querySelector('[name="phone"]'),'555-edited');submit(doctor);
-  await until(()=>doctor.querySelector('[data-section-status]').textContent==='Saved successfully.');
-  assert.equal(f.details.client_doctors[0].phone,'555-edited');assert.equal(q('[data-client-category="doctors"]').open,true);
-  fill(pharmacy.querySelector('[name="pharmacy_location"]'),'Updated City');submit(pharmacy);
-  await until(()=>pharmacy.querySelector('[data-section-status]').textContent==='Saved successfully.');
-  assert.equal(f.details.client_pharmacies[0].pharmacy_name_2,'Second Pharmacy');
-  q('[data-office-add-record="client_doctors"]').click();const added=all('[data-office-record-editor="client_doctors"]').at(-1);
-  assert.equal(added.closest('details').open,true);
-  fill(added.querySelector('[name="doctor_name"]'),'New Doctor');submit(added);
-  await until(()=>!added.dataset.newRecord);assert.equal(f.details.client_doctors.length,2);
-  f.fail();fill(added.querySelector('[name="phone"]'),'555-retry');submit(added);
-  await until(()=>added.querySelector('[data-section-status]').textContent.includes('Synthetic save failure'));
-  assert.equal(added.querySelector('[name="phone"]').value,'555-retry');
-  submit(added);await until(()=>added.querySelector('[data-section-status]').textContent==='Saved successfully.');
-  assert.equal(f.details.client_doctors.length,2);
-  q('[data-oc-client-tab="coverage"]').click();assert.equal(all('.oc-arctos-client-dialog details[open]').length,0);
-  assert.deepEqual(f.errors,[]);
+  const {q,all,fill}=f,doctor=q('[data-kind="doctor"]'),pharmacy=q('[data-pharmacy-panel]');
+  assert.equal(doctor.open,false);assert.equal(pharmacy.closest('details').open,false);
+  q('[data-client-category="doctors"]').open=true;doctor.open=true;
+  fill(doctor.querySelector('[name$="_phone"]'),'555-edited');fill(pharmacy.querySelector('[name="pharmacy_location"]'),'Updated City');
+  q('[data-save-tab="medical"]').click();await until(()=>q('[data-tab-save-footer="medical"]').dataset.saving==='false');
+  assert.equal(f.details.client_doctors[0].phone,'555-edited');assert.equal(f.details.client_pharmacies[0].pharmacy_location,'Updated City');assert.equal(f.details.client_pharmacies[0].pharmacy_name_2,'Second Pharmacy');
+  q('[data-add-health-record="doctors"]').click();const added=all('[data-kind="doctor"]').at(-1);assert.equal(added.open,true);
+  fill(added.querySelector('[name$="_doctor_name"]'),'New Doctor');q('[data-save-tab="medical"]').click();await until(()=>q('[data-tab-save-footer="medical"]').dataset.saving==='false');assert.equal(f.details.client_doctors.length,2);
+  f.fail();fill(added.querySelector('[name$="_phone"]'),'555-retry');q('[data-save-tab="medical"]').click();await until(()=>q('[data-tab-save-status]').closest('[data-tab-save-footer]')&&q('[data-tab-save-footer="medical"]').dataset.saving==='false');
+  assert.match(q('[data-tab-save-footer="medical"]').textContent,/Synthetic save failure/);assert.equal(added.querySelector('[name$="_phone"]').value,'555-retry');
+  q('[data-save-tab="medical"]').click();await until(()=>q('[data-tab-save-footer="medical"]').dataset.saving==='false');assert.equal(f.details.client_doctors.length,2);
+  q('[data-oc-client-tab="coverage"]').click();assert.equal(all('.oc-arctos-client-dialog details[open]').length,0);assert.deepEqual(f.errors,[]);
  }finally{f.dom.window.close();}
 });
 test('Policy sections have real editable records and missing reads do not render blank destructive editors',async()=>{
@@ -93,14 +82,11 @@ test('New Client never loads the previously opened client protected values',asyn
   assert.deepEqual(f.errors,[]);
  }finally{f.dom.window.close();}
 });
-test('Saving an office note keeps unsaved medical edits on screen',async()=>{
+test('Saving an Arctos client-history note keeps unsaved medical edits on screen',async()=>{
  const f=await fixture();try{
-  const doctor=f.q('[data-office-record-editor="client_doctors"]');f.fill(doctor.querySelector('[name="phone"]'),'unsaved-doctor-phone');
-  const note=f.q('#newClientNote');f.fill(note.querySelector('[name="note"]'),'New synthetic note');f.submit(note);
-  await until(()=>note.querySelector('[data-section-status]').textContent==='Saved successfully.');
-  assert.equal(doctor.querySelector('[name="phone"]').value,'unsaved-doctor-phone');
-  assert.equal(note.querySelector('[name="note"]').value,'');assert.equal(f.q('.office-saved-note').textContent,'New synthetic note');
-  assert.deepEqual(f.errors,[]);
+  const {q,fill}=f,phone=q('[data-kind="doctor"] [name$="_phone"]');fill(phone,'555-draft');
+  fill(q('[data-cfh-note-title]'),'Follow up');fill(q('[data-cfh-note-body]'),'Saved client note');q('[data-cfh-note-save]').click();
+  await until(()=>q('[data-cfh-note-message]').textContent==='Client note saved.');assert.equal(f.details.client_notes[0].body,'Saved client note');assert.equal(phone.value,'555-draft');assert.equal(f.requests.some(x=>x.action==='save_record'),false);assert.deepEqual(f.errors,[]);
  }finally{f.dom.window.close();}
 });
 test('Overview uses M/D/YYYY in the glance, inline agent assignment, compact personal disclosure and header checkboxes',async()=>{
@@ -152,11 +138,11 @@ test('Permanent tab Save includes closed editors, protected edits, assignment an
   fill(q('[name="sunfire_code"]'),'TAB-SAVE-SUNFIRE');fill(q('[data-protected-input="medicare_number"]'),'UPDATED-MEDICARE');
   q('[data-save-tab="coverage"]').click();await until(()=>q('[data-tab-save-footer="coverage"]').dataset.saving==='false');
   assert.equal(f.details.medicare_details[0].sunfire_code,'TAB-SAVE-SUNFIRE');assert.equal(f.secure.identifiers.medicare_number,'UPDATED-MEDICARE');
-  fill(q('[data-office-record-editor="client_doctors"] [name="phone"]'),'555-tab-save');fill(q('[data-office-record-editor="client_pharmacies"] [name="pharmacy_location"]'),'Tab Saved City');
+  fill(q('[data-kind="doctor"] [name$="_phone"]'),'555-tab-save');fill(q('[data-pharmacy-panel] [name="pharmacy_location"]'),'Tab Saved City');
   q('[data-save-tab="medical"]').click();await until(()=>q('[data-tab-save-footer="medical"]').dataset.saving==='false');
   assert.equal(f.details.client_doctors[0].phone,'555-tab-save');assert.equal(f.details.client_pharmacies[0].pharmacy_location,'Tab Saved City');
-  fill(q('#newClientNote [name="note"]'),'Tab saved note');q('[data-save-tab="files"]').click();await until(()=>q('[data-tab-save-footer="files"]').dataset.saving==='false');
-  assert.equal(q('.office-saved-note').textContent,'Tab saved note');assert.equal(q('#newClientNote [name="note"]').value,'');
+  fill(q('[data-cfh-note-title]'),'Follow up');fill(q('[data-cfh-note-body]'),'Tab saved note');q('[data-save-tab="files"]').click();await until(()=>q('[data-tab-save-footer="files"]').dataset.saving==='false');
+  assert.equal(f.details.client_notes[0].body,'Tab saved note');assert.equal(q('[data-cfh-note-body]').value,'');
   assert.deepEqual(f.errors,[]);
  }finally{f.dom.window.close();}
 });

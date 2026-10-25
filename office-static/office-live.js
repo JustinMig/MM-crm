@@ -28,16 +28,16 @@ async function refresh(){
  access=await response.json();
  sessionStorage.setItem("office_login_session",JSON.stringify(access));
 }
-async function request(which,action,params={},retried=false){
+async function request(which,action,params={},retried=false,options={}){
  if(!access)throw Error("Sign in first");
- let response=await fetch(ENDPOINTS[which],{method:"POST",headers:headers(),body:JSON.stringify({action,...params}),cache:"no-store"});
- if(response.status===401&&!retried){await refresh();return request(which,action,params,true)}
+ let response=await fetch(ENDPOINTS[which],{method:"POST",headers:headers(),body:JSON.stringify({action,...params}),cache:"no-store",signal:options.signal});
+ if(response.status===401&&!retried){await refresh();return request(which,action,params,true,options)}
  let body;try{body=await response.json()}catch{throw Error("Invalid reply from "+LABEL[which])}
  if(!response.ok)throw Error(body.error||"Unable to access "+LABEL[which]);
  return body;
 }
 window.officeCrmClientBridge=Object.freeze({
- request:(which,action,params={})=>request(which,action,params),
+ request:(which,action,params={},options={})=>request(which,action,params,false,options),
  current:()=>activeClient?{agency:activeClient.agency,id:activeClient.id,client:activeClient.client,details:activeClient.details,errors:activeClient.errors,permissions:connected[activeClient.agency]?.permissions}:null
 });
 async function checkConnections(){

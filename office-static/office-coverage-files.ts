@@ -1,21 +1,26 @@
 // @ts-nocheck -- Shared Supabase Edge implementation; no client-side credentials.
 const UUID=value=>/^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(String(value||''));
-const CATEGORIES=new Set(['medicare_card','medicaid_card','health_plan_card','life_policy_document','hospital_indemnity_document','soa']);
+const CATEGORIES=new Set(['medicare_card','medicaid_card','health_plan_card','life_policy_document','hospital_indemnity_document','soa','medication_document','extra_document','application','insurance_policy','id']);
 const TYPES=new Set(['application/pdf','image/jpeg','image/png','image/webp','image/heic','image/heif','application/msword','application/vnd.openxmlformats-officedocument.wordprocessingml.document','application/vnd.ms-excel','application/vnd.openxmlformats-officedocument.spreadsheetml.sheet','text/plain']);
-const SELECT='id,client_id,category,file_name,mime_type,file_size,document_date,created_at,life_policy_id,hospital_indemnity_plan_id,compliance_locked,appointment_date,coverage_year,signed_at,retention_until';
+const SELECT='id,client_id,category,file_name,mime_type,file_size,document_date,notes,created_at,life_policy_id,hospital_indemnity_plan_id,compliance_locked,appointment_date,coverage_year,signed_at,retention_until';
 const unwrap=async promise=>{const {data,error}=await promise;if(error)throw Error('The agency file operation failed. Please retry.');return data;};
 export async function officeCoverageFiles({sb,actor,scope,agencyActorId,log},action,data){
  const clientId=String(data.client_id||'');if(!UUID(clientId))throw Error('Invalid client');
  const client=await unwrap(sb.from('clients').select('id,assigned_agent_id').eq('id',clientId).maybeSingle());if(!client)throw Error('Client not found');
  const bucket=sb.storage.from(scope==='arctos'?'mh-client-documents':'platinum-client-documents');
  if(action==='coverage_documents')return {documents:await unwrap(sb.from('documents').select(SELECT).eq('client_id',clientId).order('created_at',{ascending:false}).limit(1000))};
+ if(action==='client_documents'){
+  const offset=Number(data.offset??0),limit=Number(data.limit??200);if(!Number.isInteger(offset)||offset<0||offset>=4000||!Number.isInteger(limit)||limit<1||limit>200)throw Error('Invalid file page');
+  const rows=await unwrap(sb.from('documents').select(SELECT+',storage_path').eq('client_id',clientId).order('created_at',{ascending:false}).order('id',{ascending:false}).range(offset,Math.min(offset+limit-1,3999)));
+  return {documents:rows.map(row=>{const value={...row,file_available:String(row.storage_path||'').startsWith(clientId+'/')};delete value.storage_path;return value;})};
+ }
  if(!actor.permission.can_edit)throw Error('Editing is not authorized');
  const documentId=String(data.document_id||'');if(!UUID(documentId))throw Error('Invalid document');
  const stored=await unwrap(sb.from('documents').select(SELECT+',storage_path').eq('id',documentId).maybeSingle());
  if(stored&&stored.client_id!==clientId)throw Error('Document does not belong to this client');
- if(action==='coverage_remove_document'){
+ if(action==='coverage_remove_document'||action==='client_remove_document'){
   if(!stored)throw Error('Document not found');
-  if(stored.compliance_locked||stored.category==='soa'||!CATEGORIES.has(stored.category))throw Error('This document is retained and cannot be removed here');
+  if(stored.compliance_locked||['soa','scope_of_appointment'].includes(String(stored.category).toLowerCase())||new Date(stored.retention_until)>new Date()||action==='coverage_remove_document'&&!CATEGORIES.has(stored.category))throw Error('This document is retained and cannot be removed here');
   if(!String(stored.storage_path||'').startsWith(clientId+'/'))throw Error('Invalid document location');
   await unwrap(bucket.remove([stored.storage_path]));
   await unwrap(sb.from('documents').delete().eq('id',documentId).eq('client_id',clientId));

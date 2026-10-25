@@ -1,5 +1,5 @@
 /* Legacy Office layouts stop at the copied Arctos Overview boundary. */
-@scope (:root) to (:is([data-office-arctos-overview],[data-office-arctos-coverage])) {
+@scope (:root) to (:is([data-office-arctos-overview],[data-office-arctos-coverage],[data-office-arctos-medical-files])) {
 /* Source: Arctos client-four-tabs.css */
 /* Arctos client-record simplification: four visible sections; original fields preserved. */
 .client-four-tabs{min-width:0;color:#253a4a}

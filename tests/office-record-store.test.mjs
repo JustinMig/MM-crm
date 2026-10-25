@@ -64,6 +64,12 @@ test('Medical record saves reject stale versions and preserve other fields',asyn
  await writeOfficeRecord(f.context,'save_record',{client_id:id,record_id:recordId,table:'client_doctors',expected_updated_at:'old-version',changes:{phone:'new'}})
  assert.equal(f.database.client_doctors[0].doctor_name,'Test Doctor');assert.equal(f.database.client_doctors[0].phone,'new')
 })
+test('Medical record removal can retry after a lost success response without a second mutation',async()=>{
+ const f=fixture(),data={client_id:id,record_id:recordId,table:'client_doctors'}
+ assert.equal((await writeOfficeRecord(f.context,'delete_record',data)).saved,true)
+ assert.equal((await writeOfficeRecord(f.context,'delete_record',data)).saved,true)
+ assert.equal(f.database.client_doctors.length,0);assert.equal(f.audit.length,1)
+})
 test('Invalid dates, amounts and Medicaid levels are rejected before writes',async()=>{
  const f=fixture()
  for(const changes of [{part_a_date:'2026-02-30'},{medicaid_level:'NOT-A-LEVEL'}])await assert.rejects(writeOfficeRecord(f.context,'save_record',{client_id:id,table:'medicare_details',changes}),/valid/)

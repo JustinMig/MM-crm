@@ -1,0 +1,1444 @@
+/* Exact Arctos Medical and Notes & Files declarations and cascade. */
+/* Client records coordinated soft shades. */
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-form.client-four-tabs [data-client-category="medicare"],
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-form.client-four-tabs [data-client-category="medicare"]>summary{background:#dae8ef!important}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-form.client-four-tabs [data-client-category="medicare"]>summary strong{display:inline-block;border:1.5px solid #344753;border-radius:6px;padding:6px 10px;background:#ffffffb9;color:#172d3b!important}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-form.client-four-tabs [data-client-category="life"],
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-form.client-four-tabs [data-client-category="life"]>summary{background:#dce9df!important}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-form.client-four-tabs [data-client-category="life"]>summary strong{display:inline-block;border:1.5px solid #344753;border-radius:6px;padding:6px 10px;background:#ffffffb9;color:#172d3b!important}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-form.client-four-tabs [data-client-category="hospital_indemnity"],
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-form.client-four-tabs [data-client-category="hospital_indemnity"]>summary{background:#e8e0ef!important}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-form.client-four-tabs [data-client-category="hospital_indemnity"]>summary strong{display:inline-block;border:1.5px solid #344753;border-radius:6px;padding:6px 10px;background:#ffffffb9;color:#172d3b!important}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-form.client-four-tabs [data-client-category="retirement"],
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-form.client-four-tabs [data-client-category="retirement"]>summary{background:#f0e5d8!important}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-form.client-four-tabs [data-client-category="retirement"]>summary strong{display:inline-block;border:1.5px solid #344753;border-radius:6px;padding:6px 10px;background:#ffffffb9;color:#172d3b!important}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-form.client-four-tabs [data-client-category="doctors"],
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-form.client-four-tabs [data-client-category="doctors"]>summary{background:#dcebee!important}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-form.client-four-tabs [data-client-category="doctors"]>summary strong{display:inline-block;border:1.5px solid #344753;border-radius:6px;padding:6px 10px;background:#ffffffb9;color:#172d3b!important}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-form.client-four-tabs [data-client-category="medications"],
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-form.client-four-tabs [data-client-category="medications"]>summary{background:#eddee5!important}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-form.client-four-tabs [data-client-category="medications"]>summary strong{display:inline-block;border:1.5px solid #344753;border-radius:6px;padding:6px 10px;background:#ffffffb9;color:#172d3b!important}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-form.client-four-tabs [data-panel="information"]>details.field-group:nth-of-type(1),
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-form.client-four-tabs [data-panel="information"]>details.field-group:nth-of-type(1)>summary{background:#dae6ed!important}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-form.client-four-tabs [data-panel="information"]>details.field-group:nth-of-type(2),
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-form.client-four-tabs [data-panel="information"]>details.field-group:nth-of-type(2)>summary{background:#e9e0d5!important}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-form.client-four-tabs [data-panel="life"]>details.field-group:nth-of-type(1),
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-form.client-four-tabs [data-panel="life"]>details.field-group:nth-of-type(1)>summary{background:#dbe8df!important}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-form.client-four-tabs [data-panel="life"]>details.field-group:nth-of-type(2),
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-form.client-four-tabs [data-panel="life"]>details.field-group:nth-of-type(2)>summary{background:#e5ddeb!important}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-form.client-four-tabs [data-panel="hospital_indemnity"]>details.field-group:nth-of-type(1),
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-form.client-four-tabs [data-panel="hospital_indemnity"]>details.field-group:nth-of-type(1)>summary{background:#e6dfed!important}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-form.client-four-tabs [data-panel="hospital_indemnity"]>details.field-group:nth-of-type(2),
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-form.client-four-tabs [data-panel="hospital_indemnity"]>details.field-group:nth-of-type(2)>summary{background:#dae9ec!important}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-form.client-four-tabs [data-panel="retirement"]>details.field-group:nth-of-type(1),
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-form.client-four-tabs [data-panel="retirement"]>details.field-group:nth-of-type(1)>summary{background:#eee3d5!important}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-form.client-four-tabs [data-panel="retirement"]>details.field-group:nth-of-type(2),
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-form.client-four-tabs [data-panel="retirement"]>details.field-group:nth-of-type(2)>summary{background:#dce9df!important}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-form.client-four-tabs [data-panel="doctors"]>details.field-group:nth-of-type(1),
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-form.client-four-tabs [data-panel="doctors"]>details.field-group:nth-of-type(1)>summary{background:#dce8e9!important}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-form.client-four-tabs [data-panel="doctors"]>details.field-group:nth-of-type(2),
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-form.client-four-tabs [data-panel="doctors"]>details.field-group:nth-of-type(2)>summary{background:#e8ddeb!important}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-form.client-four-tabs [data-panel="medications"]>details.field-group:nth-of-type(1),
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-form.client-four-tabs [data-panel="medications"]>details.field-group:nth-of-type(1)>summary{background:#eadde5!important}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-form.client-four-tabs [data-panel="medications"]>details.field-group:nth-of-type(2),
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-form.client-four-tabs [data-panel="medications"]>details.field-group:nth-of-type(2)>summary{background:#dce9eb!important}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-form.client-four-tabs [data-panel="notes"]>details.field-group:nth-of-type(1),
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-form.client-four-tabs [data-panel="notes"]>details.field-group:nth-of-type(1)>summary{background:#eee3d9!important}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-form.client-four-tabs [data-panel="notes"]>details.field-group:nth-of-type(2),
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-form.client-four-tabs [data-panel="notes"]>details.field-group:nth-of-type(2)>summary{background:#dfe6ed!important}
+
+/* Medical tab: visible dark outer rim on BOTH section containers
+   (Doctors & Pharmacies, and Medications), matching Coverage card outlines. */
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-form.client-four-tabs [data-client-group-panel="medical"] [data-client-category="doctors"],
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-form.client-four-tabs [data-client-group-panel="medical"] [data-client-category="medications"],
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-form.client-four-tabs [data-client-category="doctors"],
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-form.client-four-tabs [data-client-category="medications"]{
+  border:2px solid #252d34!important;
+  border-radius:13px!important;
+  overflow:hidden;
+  box-shadow:0 2px 8px rgba(27,35,42,.12)!important;
+}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-form.client-four-tabs [data-client-category="doctors"]>summary,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-form.client-four-tabs [data-client-category="medications"]>summary{
+  border-bottom:1px solid transparent;
+}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-form.client-four-tabs [data-client-category="doctors"][open]>summary,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-form.client-four-tabs [data-client-category="medications"][open]>summary{
+  border-bottom-color:#252d34!important;
+}
+
+/* RingCentral Call Data review — visible missed calls grouped by Central day and voicemail inbox. */
+/* Missed Calls and Voicemails: each day is a native, closed-by-default
+   disclosure group. Notes, appointments, and playback stay inside that day. */
+@media(max-width:620px){}
+
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files]{--bg:#07131c;--panel:#0d1b27;--line:#213a4d;--text:#edf4f8;--muted:#9aafbe;--gold:#c8a65a;--ink:#172033;--soft:#64748b;color-scheme:dark}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] *{box-sizing:border-box}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files]{font-family:Inter,"Segoe UI",Arial,sans-serif}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] button,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] input,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] select,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] textarea{font:inherit}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] button,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] a,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] input,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] select,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] textarea{touch-action:manipulation}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] button{cursor:pointer}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] button:disabled,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .disabled{cursor:not-allowed;opacity:.55}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] [hidden]{display:none!important}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] a{color:inherit}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] h1,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] h2,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] h3,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] h4,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] p{overflow-wrap:anywhere}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] h1,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] h2,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] h3{margin-top:0}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] h2{font-size:1.15rem}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] h3{font-size:1rem}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] p{line-height:1.5}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] button:focus-visible,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] a:focus-visible,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] input:focus-visible,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] select:focus-visible,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] textarea:focus-visible,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] summary:focus-visible{outline:3px solid #2f82bf;outline-offset:3px}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] input,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] select,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] textarea{min-width:0}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] textarea{resize:vertical;min-height:120px}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] a.btn{text-decoration:none}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .eyebrow{font-size:10px;letter-spacing:.12em;color:var(--muted);font-weight:800}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:40px;padding:9px 13px;border:1px solid transparent;border-radius:10px;font-size:13px;font-weight:800;line-height:1.3}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .primary{background:#18324a;border-color:#18324a;color:#fff}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .secondary{background:#f1f5f8;border-color:#cbd7e0;color:#334d60}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .danger{background:#fff5f5;border-color:#e4bbbb;color:#993c3c}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .btn:hover:not(:disabled){filter:brightness(.96)}
+/* Original Mayer CRM compact toolbar geometry, glyphs and muted icon tiles. */
+/* Native dialogs provide focus isolation. All close paths use the same draft guard. */
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files]{color-scheme:light;color:var(--ink);background:#f8fafb}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .workspace-dialog::backdrop{background:rgba(17,28,39,.54)}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files]{}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .modal-footer{border-top:1px solid #d7e0e7;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;background:#fff}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .footer-actions{display:flex;gap:8px}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .field{display:grid;gap:6px;min-width:0;font-size:13px;font-weight:700;color:#405568}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .field input,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .field select,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .field textarea{width:100%;min-height:44px;border:1px solid #c4d1dc;border-radius:10px;padding:10px 11px;background:#fff;color:#172033;font-weight:400}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .field input::placeholder,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .field textarea::placeholder{color:#708190;opacity:1}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .field input:disabled,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .field select:disabled{background:#eaf0f4;color:#6c7d8c}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .span-all{grid-column:1/-1}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .field-group{border:1px solid #d4dfe7;background:#fff;border-radius:12px;overflow:hidden;margin-bottom:12px}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .field-group>summary{font-size:14px;font-weight:800;padding:15px 16px;cursor:pointer}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .field-group[open]>summary{border-bottom:1px solid #e0e7ed;background:#f2f6f9}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .field-group>.form-grid{padding:16px}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-form .form-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+/* Calendar matches the month grid, today/reschedule queues, controls and day overlays. */#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] #client-results{margin-top:18px}
+@media(max-width:1100px){#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-form .form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:760px){}
+@media(max-width:720px){#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files]{}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files]{}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .modal-footer{padding:10px 12px max(10px,env(safe-area-inset-bottom));gap:7px}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .footer-actions{gap:6px}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .modal-footer .btn{padding:9px 11px;font-size:12px}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .field-group>.form-grid{padding:12px}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-form .form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:480px){#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .form-grid,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-form .form-grid{grid-template-columns:minmax(0,1fr)}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .field input,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .field select,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .field textarea{font-size:16px}}
+@media(prefers-reduced-motion:reduce){#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] *,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] *::before,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] *::after{transition:none!important;scroll-behavior:auto!important}}
+
+/* Arctos phase 1: concise, accessible grouped navigation. */
+@media(max-width:760px){
+}
+@media(max-width:760px){}
+@media(max-width:520px){}
+
+/* M&H CRM current single-user client-search layout.
+   Justin Mayer is the only active CRM user at this time, so the Agent filter is unnecessary. */
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] body[data-single-agent="true"] #client-search .field:has(select[name="agent"]){display:none!important}
+
+@supports not selector(:has(*)){
+  #dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] body[data-single-agent="true"] #client-search select[name="agent"]{display:none!important}
+}@media(max-width:1050px){}@media(max-width:720px){}@media(max-width:460px){}
+
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-documents-panel{display:grid;gap:14px}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .document-manager-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .document-manager-head h3{margin:0 0 4px}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .document-manager-head p{margin:0;color:var(--muted);font-size:13px;max-width:760px}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .document-upload-card{display:grid;grid-template-columns:minmax(160px,.8fr) minmax(220px,1.4fr) auto auto;gap:10px;align-items:end;padding:14px;border:1px solid var(--line);border-radius:12px;background:#0d1b27}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .document-upload-card label{display:grid;gap:6px;color:#dbe7ee;font-size:12px;font-weight:800}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .document-upload-card select,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .document-upload-card input[type=file]{width:100%;min-height:42px;border:1px solid #345168;border-radius:9px;background:#071722;color:#f0f5f9;padding:8px 10px}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .document-camera{display:flex!important;align-items:center;justify-content:center;min-height:42px}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .document-status{min-height:20px;color:var(--muted);font-size:12px}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .document-status.error{color:#ffb4b4}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .document-list{display:grid;gap:8px}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .document-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 13px;border:1px solid #294457;border-radius:10px;background:#0d1b27}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .document-row-main{min-width:0;display:grid;gap:4px}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .document-row-main strong{overflow-wrap:anywhere}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .document-row-main span{color:var(--muted);font-size:11px;text-transform:capitalize}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .document-row-actions{display:flex;gap:7px;flex-shrink:0}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .document-row-actions .danger{background:#fff5f5;border-color:#e4bbbb;color:#993c3c}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .document-empty{display:grid;gap:4px;padding:22px;border:1px dashed #345168;border-radius:10px;text-align:center;color:var(--muted)}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .document-empty strong{color:var(--text)}@media(max-width:900px){#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .document-upload-card{grid-template-columns:1fr 1fr}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .document-upload-card .btn{width:100%}}@media(max-width:640px){#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .document-upload-card{grid-template-columns:1fr}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .document-row{align-items:stretch;flex-direction:column}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .document-row-actions{display:grid;grid-template-columns:1fr 1fr}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .document-upload-card select,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .document-upload-card input[type=file]{font-size:16px}}
+/* Client record uploads: readable labels and action buttons across all file sections. */
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .document-upload-card .btn,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .document-upload-card .document-camera,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .document-file-picker,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .document-file-picker span,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .document-upload-card input[type="file"]::file-selector-button,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] [data-panel] button[class*="upload"],
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] [data-panel] label[class*="camera"],
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] [data-panel] button[class*="camera"] { color: #000 !important; }
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .document-upload-card input[type="file"]::file-selector-button { background:#fff; border:1px solid #bac5cc; border-radius:6px; padding:6px 10px; }
+
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] [data-panel="medicare"]{display:grid;gap:10px}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] [data-panel="medicare"]>details.field-group{margin:0;border:1px solid #36566d;border-left:4px solid #4f88a8;border-radius:12px;overflow:hidden;background:#0b1a25;box-shadow:0 4px 12px rgba(0,0,0,.14)}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] [data-panel="medicare"]>details.field-group:nth-of-type(2){border-left-color:#7396ac}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] [data-panel="medicare"]>details.field-group:nth-of-type(3){border-left-color:#5e8198}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] [data-panel="medicare"]>details.field-group:nth-of-type(4){border-left-color:#8aa7b9}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] [data-panel="medicare"]>details.field-group:nth-of-type(5){border-left-color:#6d91a9}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] [data-panel="medicare"]>details.field-group>summary{position:relative;display:flex;align-items:center;min-height:50px;padding:12px 48px 12px 15px;background:#122a3a;color:#f4f8fb;font-weight:900;letter-spacing:.01em;cursor:pointer;list-style:none;border-bottom:1px solid transparent;transition:background .16s ease,border-color .16s ease}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] [data-panel="medicare"]>details.field-group>summary::-webkit-details-marker{display:none}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] [data-panel="medicare"]>details.field-group>summary::after{content:'+';position:absolute;right:15px;top:50%;transform:translateY(-50%);display:grid;place-items:center;width:25px;height:25px;border:1px solid #527086;border-radius:7px;background:#0a1b27;color:#fff;font-size:18px;font-weight:700;line-height:1}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] [data-panel="medicare"]>details.field-group>summary:hover{background:#173447}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] [data-panel="medicare"]>details.field-group[open]>summary{background:#193b50;border-bottom-color:#36566d}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] [data-panel="medicare"]>details.field-group[open]>summary::after{content:'−';background:#244f69;border-color:#668aa1}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] [data-panel="medicare"]>details.field-group>.form-grid{padding:14px;background:#0d1b27}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] [data-panel="medicare"]>details.field-group+details.field-group{margin-top:2px}@media(max-width:700px){#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] [data-panel="medicare"]{gap:8px}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] [data-panel="medicare"]>details.field-group>summary{min-height:46px;padding:11px 44px 11px 13px}}@media(max-width:430px){}
+/* Color-blind-friendly, high-contrast Medicare accordion headers. Loaded after the base Medicare styles. */
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] [data-panel="medicare"]>details.field-group{
+  border:1px solid #8a8178;
+  border-left-width:1px;
+  background:#fffdf8;
+  box-shadow:0 3px 10px rgba(45,39,32,.10);
+}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] [data-panel="medicare"]>details.field-group>summary{
+  color:#111!important;
+  border-bottom-color:transparent;
+  text-shadow:none;
+  padding-left:52px!important;
+}
+/* Use both color and a numbered marker so the sections never depend on color alone. */
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] [data-panel="medicare"]>details.field-group>summary::before{
+  position:absolute;
+  left:14px;
+  top:50%;
+  transform:translateY(-50%);
+  width:25px;
+  height:25px;
+  display:grid;
+  place-items:center;
+  border:2px solid #111;
+  border-radius:50%;
+  background:#fff;
+  color:#111;
+  font-size:12px;
+  font-weight:950;
+  line-height:1;
+}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] [data-panel="medicare"]>details.field-group:nth-of-type(1)>summary{background:#f6df86}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] [data-panel="medicare"]>details.field-group:nth-of-type(2)>summary{background:#a9d6f5}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] [data-panel="medicare"]>details.field-group:nth-of-type(3)>summary{background:#f3b66e}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] [data-panel="medicare"]>details.field-group:nth-of-type(4)>summary{background:#c9b8e6}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] [data-panel="medicare"]>details.field-group:nth-of-type(5)>summary{background:#a8d8cf}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] [data-panel="medicare"]>details.field-group:nth-of-type(6)>summary{background:#e4c58b}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] [data-panel="medicare"]>details.field-group:nth-of-type(1)>summary::before{content:'1'}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] [data-panel="medicare"]>details.field-group:nth-of-type(2)>summary::before{content:'2'}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] [data-panel="medicare"]>details.field-group:nth-of-type(3)>summary::before{content:'3'}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] [data-panel="medicare"]>details.field-group:nth-of-type(4)>summary::before{content:'4'}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] [data-panel="medicare"]>details.field-group:nth-of-type(5)>summary::before{content:'5'}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] [data-panel="medicare"]>details.field-group:nth-of-type(6)>summary::before{content:'6'}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] [data-panel="medicare"]>details.field-group:nth-of-type(1)>summary:hover,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] [data-panel="medicare"]>details.field-group:nth-of-type(1)[open]>summary{background:#edcf58}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] [data-panel="medicare"]>details.field-group:nth-of-type(2)>summary:hover,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] [data-panel="medicare"]>details.field-group:nth-of-type(2)[open]>summary{background:#86c4ed}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] [data-panel="medicare"]>details.field-group:nth-of-type(3)>summary:hover,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] [data-panel="medicare"]>details.field-group:nth-of-type(3)[open]>summary{background:#eba14d}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] [data-panel="medicare"]>details.field-group:nth-of-type(4)>summary:hover,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] [data-panel="medicare"]>details.field-group:nth-of-type(4)[open]>summary{background:#b6a0da}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] [data-panel="medicare"]>details.field-group:nth-of-type(5)>summary:hover,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] [data-panel="medicare"]>details.field-group:nth-of-type(5)[open]>summary{background:#8bc8bc}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] [data-panel="medicare"]>details.field-group:nth-of-type(6)>summary:hover,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] [data-panel="medicare"]>details.field-group:nth-of-type(6)[open]>summary{background:#d7b36d}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] [data-panel="medicare"]>details.field-group[open]>summary{color:#111!important;border-bottom-color:#8a8178}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] [data-panel="medicare"]>details.field-group>summary::after,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] [data-panel="medicare"]>details.field-group[open]>summary::after{
+  background:#fff;
+  border:2px solid #111;
+  color:#111;
+}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] [data-panel="medicare"]>details.field-group>.form-grid{
+  background:#fffdf8;
+  color:#111;
+}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] [data-panel="medicare"]>details.field-group>.form-grid .field>span,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] [data-panel="medicare"]>details.field-group>.form-grid label,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] [data-panel="medicare"]>details.field-group>.form-grid strong{
+  color:#111;
+}
+/* Dark action boxes always use white text for contrast. */
+@media(max-width:700px){
+  #dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] [data-panel="medicare"]>details.field-group>summary{padding-left:48px!important}
+  #dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] [data-panel="medicare"]>details.field-group>summary::before{left:11px;width:24px;height:24px}
+}@media(max-width:700px){}
+
+@media (max-width: 760px) {
+}
+
+@media (max-width: 430px) {
+}
+
+@media (max-width: 700px) {
+}
+
+@media (max-width: 700px) {
+}
+
+@media (max-width: 700px) {
+}
+
+@media (max-width: 700px) {
+}
+@media(max-width:700px){
+}@media(max-width:700px){}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] [data-panel="doctors"],
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] [data-panel="medications"],
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] [data-panel="hospital_indemnity"]{color:#172033}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .health-tab-toolbar{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:14px;padding:14px;border:1px solid #d6e0e7;border-radius:13px;background:#fff}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .health-tab-toolbar h3{margin:0 0 4px}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .health-tab-toolbar p{margin:0;color:#64748b;font-size:13px}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .health-record-list{display:grid;gap:10px}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .health-tab-empty{padding:28px 16px;border:1px dashed #bdcad4;border-radius:12px;background:#f8fbfd;color:#64748b;text-align:center;font-size:13px}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .health-record-card{overflow:hidden;border:1px solid #8a8178;border-radius:13px;background:#fffdf8;box-shadow:0 3px 10px rgba(45,39,32,.08)}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .health-record-card>summary{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:58px;padding:11px 16px;cursor:pointer;list-style:none;color:#111}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .health-record-card>summary::-webkit-details-marker{display:none}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .health-record-card>summary span{display:grid;gap:3px;min-width:0}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .health-record-card>summary strong{font-size:15px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .health-record-card>summary small{font-size:12px;font-weight:700;color:#475569}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .health-record-card>summary b{width:30px;height:30px;display:grid;place-items:center;border:2px solid #111;border-radius:50%;background:#fff;transition:transform .15s ease}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .health-record-card[open]>summary b{transform:rotate(180deg)}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .health-doctor>summary{background:#a8d8cf}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .health-doctor[open]>summary{background:#8bc8bc}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .health-medication>summary{background:#f2b6c6}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .health-medication[open]>summary{background:#e99bb0}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .health-record-body{padding:15px;background:#fffdf8}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .health-record-actions{display:flex;justify-content:flex-end}
+@media(max-width:700px){#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .health-tab-toolbar{flex-direction:column}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .health-tab-toolbar .btn{width:100%}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .health-record-card>summary{padding:10px 12px}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .health-record-body{padding:12px}}
+
+/* General doctors notes stay above individual doctor cards. */
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] [data-panel="doctors"] .health-doctors-general-notes{display:grid;gap:7px;margin:12px 0 16px;padding:13px;border:1px solid #c9d8df;border-radius:10px;background:#f5f9fb;color:#18384a;font-weight:750}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] [data-panel="doctors"] .health-doctors-general-notes textarea{width:100%;box-sizing:border-box;min-height:95px;resize:vertical;padding:11px 12px;border:1px solid #bdccd5;border-radius:8px;background:#fff;color:#172b3a;font:inherit;font-weight:400;line-height:1.5}
+
+/* Distinct, dark outlined Medical sections and individual doctor/medication cards. */
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] [data-panel="doctors"],
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] [data-panel="medications"],
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] [data-panel="pharmacies"]{border:2px solid #252d34!important;border-radius:13px!important;padding:15px!important;background:#fff!important;margin-bottom:14px!important}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] [data-panel="doctors"] .health-tab-toolbar,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] [data-panel="medications"] .health-tab-toolbar,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] [data-panel="pharmacies"] .pharmacy-panel{border:1.5px solid #252d34!important}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] [data-panel="doctors"] .health-record-card,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] [data-panel="medications"] .health-record-card{border:1.5px solid #252d34!important}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .medication-autocomplete-menu{position:absolute;z-index:180;left:0;right:0;top:calc(100% + 4px);max-height:300px;overflow:auto;background:#fff;border:1px solid #cfd9e2;border-radius:10px;box-shadow:0 12px 32px rgba(15,23,42,.18);padding:4px}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .medication-autocomplete-option{display:flex;width:100%;border:0;background:#fff;color:#263746;text-align:left;padding:9px 10px;border-radius:7px;font:inherit;font-size:.88rem;cursor:pointer;align-items:center;justify-content:space-between;gap:12px}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .medication-autocomplete-option small{flex:0 0 auto;color:#718096;font-size:.72rem;font-weight:700}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .medication-autocomplete-option:hover,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .medication-autocomplete-option:focus{background:#edf4f8;outline:none}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .medication-lookup-status{display:block;margin-top:5px;font-size:.72rem;font-weight:600;color:#718096}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .medication-lookup-status.no-results{font-weight:500}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .health-tab-bottom-actions{display:flex;justify-content:flex-end;margin-top:14px}
+@media(max-width:700px){#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .medication-autocomplete-menu{max-height:240px}#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .health-tab-bottom-actions .btn{width:100%}}
+
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .pharmacy-panel{
+  margin-bottom:14px;
+  padding:15px;
+  border:1px solid #adb5bb;
+  border-radius:13px;
+  background:#f7f7f4;
+  box-shadow:0 2px 7px rgba(45,52,58,.06);
+}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .pharmacy-panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .pharmacy-panel-head h3{margin:0 0 4px;color:#263746}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .pharmacy-panel-head p{margin:0;color:#687681;font-size:13px}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .pharmacy-fields{padding:12px;border:1px solid #c8cecf;border-radius:11px;background:#e6e1dc}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .pharmacy-file-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px;padding-top:12px;border-top:1px solid #c9cfD2}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .pharmacy-file-head>div:first-child{display:grid;gap:3px}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .pharmacy-file-head strong{color:#263746;font-size:13px}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .pharmacy-file-head span{color:#687681;font-size:12px;line-height:1.4}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .pharmacy-file-actions{display:flex;gap:8px;flex-wrap:wrap}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .pharmacy-file-list{display:grid;gap:8px;margin-top:10px}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .pharmacy-file-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 11px;border:1px solid #c8cfd4;border-radius:10px;background:#fff}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .pharmacy-file-row.queued{background:#f0ede8;border-style:dashed}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .pharmacy-file-row>div:first-child{display:grid;gap:3px;min-width:0}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .pharmacy-file-row strong{overflow:hidden;color:#263746;font-size:13px;text-overflow:ellipsis;white-space:nowrap}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .pharmacy-file-row span{color:#687681;font-size:11px}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .pharmacy-file-row>div:last-child{display:flex;gap:7px;flex:none}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .pharmacy-file-empty{padding:15px;border:1px dashed #bbc3c8;border-radius:10px;background:#f5f6f5;color:#687681;text-align:center;font-size:12px}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .pharmacy-file-status{min-height:18px;margin-top:8px;color:#65737d;font-size:12px;font-weight:700}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .pharmacy-file-status.error{color:#8b3e3e}
+@media(max-width:700px){
+  #dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .pharmacy-file-head,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .pharmacy-file-row{align-items:stretch;flex-direction:column}
+  #dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .pharmacy-file-actions,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .pharmacy-file-row>div:last-child{width:100%}
+  #dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .pharmacy-file-actions .btn,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .pharmacy-file-row>div:last-child .btn{flex:1}
+}
+
+/* Quiet, readable client search details. No changes to client-record themes. */
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] #client-results[aria-busy=true]{cursor:progress}
+@media(max-width:1150px){}
+
+/* iPhone / narrow-phone result cards: collapsed summary view only. */
+@media(max-width:620px){
+}
+
+/* Very narrow iPhones: keep Name + Phone + State and drop County first. */
+@media(max-width:360px){
+}
+@media(prefers-reduced-motion:reduce){}
+
+/* Search criteria stay simple; sorting appears with the requested results. */
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] #client-search .field{min-width:0;color:#dce6ed}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] #client-search .field input,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] #client-search .field select{width:100%;min-height:44px}
+@media(max-width:900px){}
+@media(max-width:620px){#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] #client-search .field input,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] #client-search .field select{font-size:16px}}
+
+/* Deceased archive list, opened from the compact client-summary counter. */
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] #client-active-search[hidden],
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] #deceased-client-archive[hidden]{display:none!important}
+@media(max-width:760px){}
+
+
+/* Client month-of-birth archive and independent multi-select texting. */
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] #client-birthday-list[hidden]{display:none!important}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] #client-results [data-cmp-selectionbar][hidden]{display:none!important}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] #client-search [data-start-mass-text]{border-color:#8eb8ca;background:#e9f5f9;color:#17475f}
+@media(max-width:620px){
+ #dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] #client-search [data-start-mass-text]{grid-column:1/-1}
+}
+
+/* Compact client totals use the same muted campaign-counter language without taking over the page. */
+
+/* Full Life + Medicare commission tracker. */
+
+@media(max-width:720px){}
+@media(max-width:620px){}
+@media(max-width:360px){}
+
+/* Deceased is the fourth ORIGINAL compact client counter, not a second oversized row. */
+@media(max-width:620px){
+}
+
+/* Five small client counters; birthday list sits directly after Deceased. */
+@media(max-width:700px){
+}
+@media(max-width:390px){
+}@media(min-width:900px){}@media(max-width:560px){}
+/* Distinct boxes inside Personal & Contact Information. Match the existing Height/Weight card language. */
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-form [data-panel="information"] .form-grid{align-items:start}
+@media(min-width:900px){
+}
+@media(max-width:560px){
+}
+@media(max-width:390px){
+}
+
+/* Keep Product Type checkbox labels readable in Client Information without changing panel backgrounds. */@media(max-width:620px){}@media(max-width:390px){}@media(max-width:620px){}
+
+/* Campaigns: restrained slate/sage accents, compact records, native accessible controls. */
+@media(max-width:1080px){}
+@media(max-width:620px){}
+
+/* Make unavailable campaign calendar choices visually distinct on browsers that style native selects. */
+
+/* Campaign dashboard: compact icon counters with isolated outcome views. */
+@media(max-width:760px){}
+@media(max-width:390px){}
+
+/* Persistent selected view: dark fill, white content, double border and a check.
+   aria-pressed is set by the existing campaign controller, not by hover/focus. */
+@media(max-width:760px){}
+@media(forced-colors:active){}
+
+/* Sixth stage: a recorded face-to-face contact, separate from No Answer and Completed. */
+/* Every campaign client retains its own compact, collapsed notes dropdown.
+   Expanded notes span the whole client card, not the narrow name column. */
+@media(max-width:760px){
+}
+@media(max-width:760px){}
+@media(max-width:390px){}@media(max-width:620px){}
+/* One visual campaign box, with separate Open and Delete buttons inside it.
+   Keep the controls as siblings: a button must not be nested in another button. */
+@media(max-width:620px){}
+
+@media(max-width:620px){
+}@media(max-width:620px){}@media(max-width:620px){}@media(max-width:760px){}
+/* Phone-only bottom dock for the existing M&H toolbar. Desktop/tablet layout is unchanged. */
+@media (max-width: 700px) {
+
+  /* Phone toolbar keeps only menu + action icons. Branding remains in the slide-out nav. */
+
+  /* Spread the quick actions evenly from the end of the menu button to the right edge. */
+
+  /* Keep the slide-out navigation above the bottom dock on phones. */
+
+  #dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] {
+  }
+}
+
+@media (max-width: 390px) {
+}
+@media(max-width:900px){}
+@media(max-width:560px){}
+@media(max-width:620px){}
+@media(max-width:980px){}
+@media(max-width:620px){}
+@media(max-width:620px){}
+
+/* Carrier brand tints — keep plan text black and backgrounds intentionally light. */
+
+/* HealthSpring/Cigna 2027 — soft teal, consistent with the five-carrier picker. */
+
+/* 2027 SB/EOC source ledger and field-by-field confirmation. */
+@media(max-width:540px){}
+
+
+/* Athena's Medicare — independent, responsive review workspace. */
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] #athena-medicare-host{--at-ink:#16354b;--at-blue:#285875;--at-green:#176f5d;--at-line:#d5e3eb;--at-light:#f4f8fb;--at-bg:#ffffff;max-width:1230px;margin:0 auto 48px;color:var(--at-ink)}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] #athena-medicare-host *{box-sizing:border-box}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] #athena-medicare-host button,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] #athena-medicare-host input,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] #athena-medicare-host select,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] #athena-medicare-host textarea{font-family:inherit}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] #athena-medicare-host button{cursor:pointer}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] #athena-medicare-host button:focus-visible,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] #athena-medicare-host input:focus-visible,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] #athena-medicare-host select:focus-visible,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] #athena-medicare-host textarea:focus-visible{outline:3px solid #92bcd1;outline-offset:2px}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] #athena-medicare-host [hidden]{display:none!important}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] #athena-medicare-host [data-at-progress]{display:flex;flex-direction:column;gap:4px}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] #athena-medicare-host [data-at-progress] strong{font-size:24px;color:#176d58}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] #athena-medicare-host [data-at-progress] small{font-size:11px;color:#6d8795}
+@media(max-width:1050px){}
+@media(max-width:680px){
+}
+@media print{}
+
+/* Athena Medicare: distinct, subtle colors for each of the nine review sections. */
+
+
+/* Crisp black outlines around each Athena section and its title only. */
+
+
+/* Section 2: individual, distinct Medicare, Medicaid and Medicare.gov panels. */
+@media(max-width:650px){}
+
+/* Athena review supporting-document camera and drag/drop */
+
+/* Shared client Overview notes, deliberately above Athena section one. */
+
+
+/* Section 6: compact, consistent needs checkboxes (desktop and phone). */
+@media(max-width:480px){
+}
+
+
+/* Athena home: explicit, easily scanned unfinished review queue. */
+@media(max-width:480px){}
+
+
+/* Unfinished reviews: two compact client cards per row, actions together at the end. */
+@media(max-width:850px){}
+@media(max-width:480px){}
+
+/* Old plan details are explicitly separated from the current plan in Athena Step 3. */
+@media(max-width:600px){}
+
+/* Arctos client-record simplification: four visible sections; original fields preserved. */
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs{min-width:0;color:#253a4a}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs [data-client-group-panel][hidden]{display:none!important}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs [data-client-group-panel]{min-width:0}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs [data-client-summary-name]{display:block;font-size:19px;font-weight:800;color:#17364b;line-height:1.35}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs [data-client-summary-meta]{margin:5px 0 0;font-size:12px;color:#5b6d7c;line-height:1.6}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs .client-group-heading{margin:1px 0 16px}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs .client-group-heading>strong{font-weight:850;font-size:16px;color:#213d50}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs .client-group-heading>p{font-size:13px;color:#617687;margin:5px 0 0}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs .client-category{border:1px solid #d7e1e9;background:#fff;border-radius:13px;margin:0 0 11px;min-width:0;overflow:clip}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs .client-category>summary{display:flex;align-items:center;justify-content:space-between;cursor:pointer;gap:12px;padding:16px 17px;list-style:none;background:#f7fafc}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs .client-category>summary::-webkit-details-marker{display:none}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs .client-category>summary>span:first-child{display:grid;gap:4px}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs .client-category>summary strong{font-size:14px;color:#243f52}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs .client-category>summary small{font-size:12px;color:#74899a;line-height:1.3}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs .client-category>summary .client-category-chevron{color:#607c91;font-size:22px;font-weight:500;transition:transform .17s ease}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs .client-category[open]>summary .client-category-chevron{transform:rotate(180deg)}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs .client-category>summary:hover{background:#eff5f8}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs .client-category[open]>summary{border-bottom:1px solid #dce5ec}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs .client-category-body{padding:14px;min-width:0}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs .client-category-body>.field-group:last-child{margin-bottom:0}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs [data-client-group-panel="files"]>[data-panel="notes"]{min-width:0}
+@media(max-width:720px){
+  #dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs [data-client-summary-name]{font-size:17px}
+  #dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs .client-category>summary{padding:14px 12px}
+  #dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs .client-category-body{padding:10px}
+}
+@media(max-width:380px){}
+
+/* Override legacy per-tab colors, without changing the individual insurance form colors. */
+
+
+/* Coverage cards: dark outlines and distinct soft shades, matching Athena. */
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs [data-client-group-panel="coverage"] .client-category{
+  border:2px solid #25313b;
+  border-radius:13px;
+}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs [data-client-group-panel="coverage"] .client-category>summary strong{
+  display:inline-block;
+  justify-self:start;
+  border:1.5px solid #25313b;
+  border-radius:6px;
+  padding:6px 11px;
+  background:rgba(255,255,255,.78);
+  color:#172330;
+  line-height:1.35;
+}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs [data-client-group-panel="coverage"] .client-category[data-client-category="medicare"],
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs [data-client-group-panel="coverage"] .client-category[data-client-category="medicare"]>summary,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs [data-client-group-panel="coverage"] .client-category[data-client-category="medicare"]>summary:hover{background:#eaf3fa}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs [data-client-group-panel="coverage"] .client-category[data-client-category="life"],
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs [data-client-group-panel="coverage"] .client-category[data-client-category="life"]>summary,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs [data-client-group-panel="coverage"] .client-category[data-client-category="life"]>summary:hover{background:#edf6ef}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs [data-client-group-panel="coverage"] .client-category[data-client-category="hospital_indemnity"],
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs [data-client-group-panel="coverage"] .client-category[data-client-category="hospital_indemnity"]>summary,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs [data-client-group-panel="coverage"] .client-category[data-client-category="hospital_indemnity"]>summary:hover{background:#f5eff9}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs [data-client-group-panel="coverage"] .client-category[data-client-category="retirement"],
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs [data-client-group-panel="coverage"] .client-category[data-client-category="retirement"]>summary,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs [data-client-group-panel="coverage"] .client-category[data-client-category="retirement"]>summary:hover{background:#f9f3e8}
+
+/* Clearly differentiated Medicare accordion headings, with high-contrast colors. */
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs [data-panel="medicare"]>details.field-group:nth-of-type(1){background:#d4e4ee!important;border:2px solid #273440!important}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs [data-panel="medicare"]>details.field-group:nth-of-type(1)>summary{background:#d4e4ee!important;color:#16222e!important;font-weight:850!important}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs [data-panel="medicare"]>details.field-group:nth-of-type(1)[open]>summary{background:#c0d7e6!important}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs [data-panel="medicare"]>details.field-group:nth-of-type(2){background:#d7e7d9!important;border:2px solid #273440!important}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs [data-panel="medicare"]>details.field-group:nth-of-type(2)>summary{background:#d7e7d9!important;color:#16222e!important;font-weight:850!important}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs [data-panel="medicare"]>details.field-group:nth-of-type(2)[open]>summary{background:#c5dcc9!important}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs [data-panel="medicare"]>details.field-group:nth-of-type(3){background:#e3d9ee!important;border:2px solid #273440!important}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs [data-panel="medicare"]>details.field-group:nth-of-type(3)>summary{background:#e3d9ee!important;color:#16222e!important;font-weight:850!important}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs [data-panel="medicare"]>details.field-group:nth-of-type(3)[open]>summary{background:#d5c7e6!important}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs [data-panel="medicare"]>details.field-group:nth-of-type(4){background:#eee1cb!important;border:2px solid #273440!important}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs [data-panel="medicare"]>details.field-group:nth-of-type(4)>summary{background:#eee1cb!important;color:#16222e!important;font-weight:850!important}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs [data-panel="medicare"]>details.field-group:nth-of-type(4)[open]>summary{background:#e4d1b3!important}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs [data-panel="medicare"]>details.field-group:nth-of-type(5){background:#d0e5e5!important;border:2px solid #273440!important}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs [data-panel="medicare"]>details.field-group:nth-of-type(5)>summary{background:#d0e5e5!important;color:#16222e!important;font-weight:850!important}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs [data-panel="medicare"]>details.field-group:nth-of-type(5)[open]>summary{background:#bad8d9!important}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs [data-panel="medicare"]>details.field-group:nth-of-type(6){background:#eddae2!important;border:2px solid #273440!important}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs [data-panel="medicare"]>details.field-group:nth-of-type(6)>summary{background:#eddae2!important;color:#16222e!important;font-weight:850!important}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs [data-panel="medicare"]>details.field-group:nth-of-type(6)[open]>summary{background:#e2c7d3!important}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs [data-panel="medicare"]>details.field-group>summary{padding:14px 16px!important;border-radius:8px!important}
+
+/* Client Overview: compact annual review completion, expansive synced notes. */
+
+/* Client at a Glance: action buttons replace redundant section navigation. */
+/* Overview note is a closed native accordion on every newly opened record. */
+/* Keep shortcuts compact when 2 actions, or 3 with the Medicare Review link. */
+@media(max-width:630px){
+}
+@media(max-width:380px){
+}
+
+/* Inline confirmation for the reliable Client at a Glance campaign action. */
+
+/* Arctos Step 4: purposeful daily dashboard with on-demand calendar */
+@media(max-width:880px){}
+@media(max-width:620px){
+}
+
+/* Dashboard surface separation: gentle color, clear borders, and readable contrast. */
+
+/* Calm dashboard palette: navy / blue / sage with restrained warm alert accents.
+   Scope to the Dashboard so records and other CRM screens are unchanged. */
+
+/* Today's Schedule: restrained warm yellow, coordinated with blue/sage dashboard. */
+
+/* Arctos Work Queue: one uncluttered view over leads, campaigns, and follow-ups */
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] #work-queue-host[hidden]{display:none!important}
+@media(max-width:900px){}
+@media(max-width:630px){
+}
+
+/* Arctos step 6 — one client Notes & Files workspace */
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-files-hub{display:grid;gap:14px;margin:0 0 18px;padding:17px;border:1px solid #cddfe6;border-radius:15px;background:#f8fbfc;color:#214055}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .cfh-intro{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .cfh-intro h3{margin:4px 0 6px;font-size:19px;color:#173a4f;font-weight:850}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .cfh-intro p{margin:0;color:#587184;font-size:12px;line-height:1.5;max-width:72ch}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .cfh-intro .btn{min-width:80px;flex:none;font-size:12px}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .cfh-categories{display:flex;flex-wrap:wrap;gap:7px}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .cfh-categories button{border:1px solid #cddce5;background:#fff;color:#496779;border-radius:9px;padding:9px 12px;min-height:40px;font-size:12px;font-weight:750;display:flex;align-items:center;gap:8px}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .cfh-categories button:hover{background:#eef5f8}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .cfh-categories button[aria-pressed="true"]{background:#193b50;color:#fff;border-color:#193b50}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .cfh-categories button span{padding:3px 6px;border-radius:18px;background:#e4eef2;color:#345a6b;font-size:11px;font-variant-numeric:tabular-nums}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .cfh-categories button[aria-pressed="true"] span{background:#3c6175;color:#fff}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .cfh-search{display:grid;gap:6px;min-width:0}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .cfh-search>span{font-size:12px;font-weight:750;color:#537183}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .cfh-search input{width:100%;min-height:43px;border:1px solid #c5d7e0;border-radius:9px;padding:9px 12px;background:#fff;color:#223c50;font-size:14px;box-sizing:border-box}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .cfh-status{font-size:12px;color:#607b8b;background:#eef5f7;border:1px solid #dae6eb;border-radius:9px;padding:10px 12px;line-height:1.5}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .cfh-records{display:grid;gap:8px}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .cfh-file{display:flex;justify-content:space-between;align-items:center;gap:13px;padding:11px 13px;background:#fff;border:1px solid #d8e4e9;border-radius:10px}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .cfh-file-info{display:grid;min-width:0;gap:4px;flex:1}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .cfh-file-info strong{font-size:13px;color:#203e52;overflow-wrap:anywhere}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .cfh-file-info small{color:#718694;font-size:11px;overflow-wrap:anywhere}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .cfh-file .btn{font-size:12px;min-height:36px;padding:7px 13px;flex:none}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .cfh-unavailable{color:#936f4b;font-size:11px;font-weight:650}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .cfh-empty,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .cfh-more{font-size:12px;color:#708797;margin:0;padding:14px;border:1px dashed #ccdae2;border-radius:9px;background:#fff;line-height:1.5}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .cfh-where{border-top:1px solid #d6e3e8;padding:14px 0 0}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .cfh-where>strong{font-size:13px;color:#2b4c60}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .cfh-where p{font-size:12px;color:#718697;margin:5px 0 12px;line-height:1.45}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .cfh-jumps{display:flex;flex-wrap:wrap;gap:7px}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .cfh-jumps button{border:1px solid #bed2de;border-radius:9px;padding:8px 11px;min-height:38px;background:#fff;color:#325f74;font-weight:700;font-size:12px}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .cfh-jumps button:hover{background:#edf5f8}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .cfh-notes-history{border-top:1px solid #d5e1e8;padding-top:14px;display:grid;gap:10px}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .cfh-notes-head h3{font-size:15px;margin:0;color:#23475b}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .cfh-notes-head p{font-size:11px;color:#70899b;margin:4px 0 0}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .cfh-notes-list{display:grid;gap:7px}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .cfh-note{background:#fff;border:1px solid #d9e3e9;border-radius:10px;overflow:hidden}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .cfh-note>summary{cursor:pointer;list-style:none;padding:12px;display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:13px}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .cfh-note>summary::-webkit-details-marker{display:none}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .cfh-note>summary strong{min-width:0;overflow-wrap:anywhere;color:#234758}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .cfh-note>summary small{white-space:nowrap;color:#7c909e;font-size:11px}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .cfh-note>p{white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px;line-height:1.6;color:#3b5667;padding:12px;margin:0;border-top:1px solid #e7edf1}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .cfh-note .danger{margin:0 12px 12px;font-size:11px}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .cfh-new-note{background:#fff;border:1px solid #d5e2e9;border-radius:10px;overflow:hidden}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .cfh-new-note>summary{cursor:pointer;padding:12px 14px;color:#346575;font-weight:750;font-size:13px}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .cfh-note-editor{padding:13px;display:grid;gap:11px;border-top:1px solid #e3ebef}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .cfh-note-editor label{display:grid;gap:5px}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .cfh-note-editor label>span{color:#4e6b7c;font-weight:750;font-size:12px}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .cfh-note-editor input,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .cfh-note-editor textarea{width:100%;min-width:0;box-sizing:border-box;border:1px solid #c5d6e0;border-radius:8px;background:#fff;color:#26465a;padding:10px 12px;font-size:14px}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .cfh-note-editor .btn{justify-self:start;font-size:12px;min-height:40px}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .cfh-note-message{font-size:12px;color:#466e7f;min-height:14px;margin:0}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .cfh-general-uploader{margin:10px 0 15px;border:1px solid #cfdee5;background:#f5f9fa;border-radius:12px;overflow:hidden}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .cfh-general-uploader>summary{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;list-style:none;color:#244a60;font-size:14px;font-weight:800}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .cfh-general-uploader>summary::-webkit-details-marker{display:none}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .cfh-general-uploader>summary::after{content:'▾';color:#617c8d}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .cfh-general-uploader[open]>summary::after{content:'▴'}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .cfh-general-uploader>.notes-extras-documents{padding:13px}
+@media(max-width:650px){
+ #dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-files-hub{padding:12px;gap:11px}
+ #dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .cfh-intro h3{font-size:17px}
+ #dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .cfh-intro p{font-size:11px}
+ #dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .cfh-categories{gap:5px}
+ #dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .cfh-categories button{font-size:11px;padding:8px;min-height:39px}
+ #dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .cfh-file{padding:10px;gap:8px}
+ #dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .cfh-file-info strong{font-size:12px}
+ #dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .cfh-file .btn{font-size:11px;padding:7px 10px}
+ #dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .cfh-jumps button{font-size:11px}
+}
+
+/*
+ * ARCTOS / STEP 7 — Visual system
+ *
+ * Purpose: one consistent app palette and interaction treatment. This is
+ * imported LAST so old incremental coloring can be retired progressively
+ * without changing any element IDs, form fields, or data behaviors.
+ *
+ * Navy = navigation and active views; sage = primary action;
+ * Red = errors and destructive controls. Carrier brand tints on MA Plans
+ * remain intentionally untouched.
+ */
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files]{
+  --arctos-navy-950:#091c29;
+  --arctos-navy-900:#102b3a;
+  --arctos-navy-800:#193c50;
+  --arctos-ink:#233d4f;
+  --arctos-muted:#607789;
+  --arctos-surface:#ffffff;
+  --arctos-app:#f3f6f8;
+  --arctos-surface-soft:#f7f9fa;
+  --arctos-border:#d7e2e9;
+  --arctos-border-strong:#b9ccd7;
+  --arctos-sage:#246857;
+  --arctos-sage-hover:#195446;
+  --arctos-sage-soft:#e9f3ef;
+  --arctos-danger:#9d3434;
+  --arctos-danger-soft:#fff3f2;
+  --arctos-focus:#327a92;
+  --arctos-radius:11px;
+}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .cfh-file{border-color:var(--arctos-border);background:var(--arctos-surface);box-shadow:none}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files]{color-scheme:light}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .modal-footer{background:var(--arctos-surface);border-color:var(--arctos-border)}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files]{background:var(--arctos-surface-soft)}
+
+/* One recognizable button hierarchy in all ordinary CRM screens. */
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .btn,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] button.btn{
+  border-radius:var(--arctos-radius);
+  font-family:inherit;
+  font-weight:750;
+  line-height:1.3;
+  box-shadow:none;
+  transition:background-color .13s ease,border-color .13s ease,color .13s ease;
+}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .btn.primary,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] button.btn.primary{
+  background:var(--arctos-sage)!important;
+  border-color:var(--arctos-sage)!important;
+  color:#fff!important;
+}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .btn.primary:hover:not(:disabled){
+  background:var(--arctos-sage-hover)!important;
+  border-color:var(--arctos-sage-hover)!important;
+  filter:none;
+}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .btn.secondary,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] button.btn.secondary{
+  background:#f0f5f7!important;
+  border-color:var(--arctos-border-strong)!important;
+  color:#2c5164!important;
+}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .btn.secondary:hover:not(:disabled){
+  background:#e5eef2!important;
+  border-color:#98b5c2!important;
+  filter:none;
+}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .btn.danger,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] button.btn.danger{
+  background:var(--arctos-danger-soft)!important;
+  border-color:#ddb9b8!important;
+  color:var(--arctos-danger)!important;
+}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .btn.danger:hover:not(:disabled){
+  background:#fae5e5!important;
+  filter:none;
+}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] input:focus-visible,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] select:focus-visible,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] textarea:focus-visible,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] button:focus-visible,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] a:focus-visible,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] summary:focus-visible{
+  outline:3px solid var(--arctos-focus);
+  outline-offset:2px;
+}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] :is(.field input,.field select,.field textarea){
+  background:#fff;color:var(--arctos-ink);border:1px solid var(--arctos-border-strong);
+  border-radius:9px;box-shadow:none;min-height:43px;
+}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] :is(.field input,.field select,.field textarea):focus{
+  border-color:var(--arctos-focus);
+}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] :is(.field input,.field select,.field textarea):disabled{
+  background:#ebf0f3;color:#708391;
+}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .field{color:#456073}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .field :is(input,textarea)::placeholder{color:#758b9a;opacity:1}
+
+/* Keep the existing high-contrast action inside dark hero backgrounds. */
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .cfh-categories button[aria-pressed="true"]{
+  background:var(--arctos-navy-800);border-color:var(--arctos-navy-800);color:#fff;
+}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .cfh-jumps button{border-radius:9px}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .cfh-intro,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-files-hub{box-shadow:none}
+
+/* Eliminate the old rainbow accordion palette. Tiny, low-key left accents
+ * identify a type without relying on color alone; every heading is labelled. */
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs [data-panel] details.field-group,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs [data-panel] .health-record-card{
+  border:1px solid var(--arctos-border)!important;
+  border-radius:11px;
+  background:#fff!important;
+  box-shadow:none!important;
+}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs [data-panel] details.field-group>summary,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs [data-panel] .health-record-card>summary{
+  background:#f1f5f7!important;
+  color:var(--arctos-ink)!important;
+  border-color:var(--arctos-border)!important;
+  box-shadow:none!important;
+  text-shadow:none!important;
+  min-height:46px;
+}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs [data-panel] details.field-group>summary:hover,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs [data-panel] .health-record-card>summary:hover{
+  background:#e8eff3!important;
+}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs [data-panel] details.field-group[open]>summary,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs [data-panel] .health-record-card[open]>summary{
+  background:#e8f0f1!important;
+  border-bottom:1px solid var(--arctos-border)!important;
+}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs [data-panel="information"]>details.field-group>summary,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs [data-panel="medicare"]>details.field-group>summary,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs [data-panel="doctors"] .health-record-card>summary,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs [data-panel="medications"] .health-record-card>summary,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs [data-panel="hospital_indemnity"] .health-record-card>summary{
+  border-left:3px solid #74949e!important;
+}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs [data-panel="medicare"]>details.field-group>summary,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs [data-panel="doctors"] .health-record-card>summary,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs [data-panel="medications"] .health-record-card>summary{
+  border-left-color:#698d84!important;
+}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs [data-panel="hospital_indemnity"] .health-record-card>summary{
+  border-left-color:#82919d!important;
+}
+/* Numbered circles are repeated ornaments in the old client form. */
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs [data-panel="information"]>details.field-group>summary::before,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs [data-panel="medicare"]>details.field-group>summary::before{
+  display:none!important;
+}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs [data-panel="information"]>details.field-group>summary,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs [data-panel="medicare"]>details.field-group>summary{
+  padding-left:15px!important;
+}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs [data-panel] :is(.form-grid,.health-record-body){
+  background:#fff!important;
+}
+/* The four major client tabs use exactly one active treatment. */
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs .client-category{
+  border-color:var(--arctos-border);box-shadow:none;
+}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs .client-category>summary{
+  background:#f7f9fa;color:var(--arctos-ink);
+}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs .client-category[open]>summary{background:#eff4f5}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs .client-category>summary:hover{background:#e7eef1}
+
+/* Consistent search and filters in Work and Notes & Files. */
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .cfh-search input,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .cfh-note-editor input,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .cfh-note-editor textarea{
+  border:1px solid var(--arctos-border-strong);background:#fff;color:var(--arctos-ink);
+  border-radius:9px;box-shadow:none;
+}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .cfh-categories button{border-radius:9px}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .cfh-file{border-radius:var(--arctos-radius)}
+
+/* Athena's Medicare keeps its own functional workflow, now visually aligned
+ * with the same app background, borders and inactive/active control states. */
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] #athena-medicare-host{--at-line:var(--arctos-border);--at-light:#f6f9fa;--at-ink:var(--arctos-ink)}
+
+/* The sign-in screen and Athena custom controls share the same muted,
+ * accessible action meanings without altering their layouts or workflows. */
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] #athena-medicare-host :is(input,select,textarea):focus-visible,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] #athena-medicare-host :is(button,a,summary):focus-visible{outline-color:var(--arctos-focus)}
+
+/* Intentional exceptions: company/carrier colors in MA plan comparisons,
+ * error/success states, and branded bear artwork should not be recolored. */
+@media(max-width:700px){
+  #dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs [data-panel="information"]>details.field-group>summary,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-four-tabs [data-panel="medicare"]>details.field-group>summary{padding-left:12px!important}
+  #dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .cfh-file{box-shadow:none}
+}
+@media(prefers-reduced-motion:reduce){
+  #dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .btn,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] button.btn{transition:none}
+}
+
+/* Arctos: persistent five-action quick toolbar.
+   Desktop/tablet: header right. iPhone: fixed bottom, with menu and safe-area. */
+@media(max-width:1040px) and (min-width:701px){
+}
+/* Compact desktop when the 260px sidebar leaves a narrow content area. */
+@media(min-width:761px) and (max-width:850px){
+}
+@media(max-width:700px){
+  /* This is the phone-only bottom dock; preserve the five actions and menu.
+     The fixed header is already placed at bottom by mobile-bottom-toolbar.css. */
+  #dialog .oc-arctos-client-dialog [data-office-arctos-medical-files]{}
+}
+@media(max-width:365px){
+}
+
+
+
+/* Appointment day cards */
+@media (max-width: 520px) {
+}
+@media (max-width: 760px) {
+}
+@media (max-width: 520px) {
+}
+
+/* Shared appointment-booking availability styling (calendar + quick tool). */
+
+/* Final high-contrast override for all client-record upload actions. */
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .document-upload-card .btn,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .document-upload-card .document-camera,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .document-file-picker,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .document-file-picker span,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] [data-panel] button[class*="upload"],
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] [data-panel] label[class*="camera"],
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] [data-panel] button[class*="camera"],
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] [data-panel] input[type="file"]::file-selector-button { color: #000 !important; }
+
+
+/* Client overview: completed appointment history and inline quick notes. */
+@media(max-width:680px){}
+
+/* Universal file-action legibility: upload and camera/scan labels.
+   These controls use pale button backgrounds, so never inherit white text. */
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .document-upload-card .document-camera,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .document-file-picker,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .document-file-picker span,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .notes-extras-documents label.btn:has(input[type="file"]),
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] label.btn:has(> input[data-multi-files]),
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] label.btn:has(> input[data-multi-camera]) {
+  color: #111827 !important;
+}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .notes-extras-documents label.btn:has(input[type="file"]) {
+  background: #f8fafc !important;
+  border-color: #b8c9d3 !important;
+}
+
+/* Definitive contrast fix for Medicare, Medicaid, and shared client file controls.
+   Previous Medicare theme used white !important and dark backgrounds. */
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] #app .document-upload-card label.btn:has(input[type="file"]),
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] #app .notes-extras-documents label.btn:has(input[type="file"]) {
+  color: #080f18 !important;
+  background: #f8fafc !important;
+  border: 1px solid #9cabb8 !important;
+  -webkit-text-fill-color: #080f18 !important;
+}
+
+/* Old-plan data box on the Coverage tab (also used when creating clients). */
+@media(max-width:620px){}
+
+/* All client-upload lists: high contrast file names, numbers and View/Remove actions.
+   Override older dark-theme rules even in nested Coverage > Health Plan upload controls. */
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-form .document-row,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-form .cfh-file,
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .document-row{
+  background:#f8fafc!important;
+  border-color:#9aabb8!important;
+  color:#111827!important;
+}
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-form .document-row :is(strong,span,small,b,em,a),
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .client-form .cfh-file :is(strong,span,small,b,em,a),
+#dialog .oc-arctos-client-dialog [data-office-arctos-medical-files] .document-row :is(strong,span,small,b,em,a){
+  color:#111827!important;
+  -webkit-text-fill-color:#111827!important;
+  opacity:1!important;
+}
+/* File-list names and numerical details must never inherit the white themed text. */
+
+/* Height & Weight: show additional product / age selector only when relevant. */
+
+/* Original M&M carrier directory in the persistent Contacts quick tool. */
+@media(max-width:620px){
+}
+
+/* Select existing campaign / create new directly from a saved client. */
+
+#dialog .oc-arctos-client-dialog:has([data-office-exact-medical-files-panel]:not([hidden])){width:min(980px,96vw);height:min(820px,92dvh);max-width:96vw;max-height:92dvh;display:grid;grid-template-rows:auto minmax(0,1fr);overflow:hidden}
+#dialog .oc-arctos-client-dialog:has([data-office-exact-medical-files-panel]:not([hidden])) > .oc-client-four-tabs{min-height:0;overflow:hidden;padding:16px;display:flex;flex-direction:column}
+#dialog .oc-arctos-client-dialog:has([data-office-exact-medical-files-panel]:not([hidden])) .oc-client-tabs{flex-shrink:0}
+#dialog .oc-arctos-client-dialog:has([data-office-exact-medical-files-panel]:not([hidden])) [data-office-exact-medical-files-panel]{min-height:0;flex:1;display:flex;flex-direction:column;overflow:hidden}
+#dialog .oc-arctos-client-dialog:has([data-office-exact-medical-files-panel]:not([hidden])) form[data-office-arctos-medical-files]{min-height:0;flex:1;overflow:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+#dialog .oc-arctos-client-dialog:has([data-office-exact-medical-files-panel]:not([hidden])) .office-tab-save-footer{flex-shrink:0;margin:0}
+
+/* Original in-site document preview. */
+.office-file-preview *{box-sizing:border-box}.office-file-preview button,.office-file-preview input,.office-file-preview select,.office-file-preview textarea{font:inherit}.office-file-preview button,.office-file-preview input,.office-file-preview select,.office-file-preview textarea{touch-action:manipulation}.office-file-preview button{cursor:pointer}.office-file-preview button:disabled{cursor:not-allowed;opacity:.55}.office-file-preview h1,.office-file-preview h2,.office-file-preview h3,.office-file-preview h4,.office-file-preview p{overflow-wrap:anywhere}.office-file-preview h1,.office-file-preview h2,.office-file-preview h3{margin-top:0}.office-file-preview h2{font-size:1.15rem}.office-file-preview h3{font-size:1rem}.office-file-preview p{line-height:1.5}.office-file-preview button:focus-visible,.office-file-preview input:focus-visible,.office-file-preview select:focus-visible,.office-file-preview textarea:focus-visible{outline:3px solid #2f82bf;outline-offset:3px}.office-file-preview input,.office-file-preview select,.office-file-preview textarea{min-width:0}.office-file-preview textarea{resize:vertical;min-height:120px}.office-file-preview .btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:40px;padding:9px 13px;border:1px solid transparent;border-radius:10px;font-size:13px;font-weight:800;line-height:1.3}.office-file-preview .btn:hover:not(:disabled){filter:brightness(.96)}
+/* Original Mayer CRM compact toolbar geometry, glyphs and muted icon tiles. */
+/* Native dialogs provide focus isolation. All close paths use the same draft guard. */.office-file-preview .modal-close{width:38px;height:38px;border:1px solid #d4dde5;border-radius:50%;background:#fff;color:#475569;font-size:1.65rem;line-height:1;display:grid;place-items:center;flex:none}.office-file-preview .modal-close:hover{background:#eef2f5}
+.office-file-preview .field{display:grid;gap:6px;min-width:0;font-size:13px;font-weight:700;color:#405568}.office-file-preview .field input,.office-file-preview .field select,.office-file-preview .field textarea{width:100%;min-height:44px;border:1px solid #c4d1dc;border-radius:10px;padding:10px 11px;background:#fff;color:#172033;font-weight:400}.office-file-preview .field input::placeholder,.office-file-preview .field textarea::placeholder{color:#708190;opacity:1}.office-file-preview .field input:disabled,.office-file-preview .field select:disabled{background:#eaf0f4;color:#6c7d8c}.office-file-preview .field-group{border:1px solid #d4dfe7;background:#fff;border-radius:12px;overflow:hidden;margin-bottom:12px}.office-file-preview .field-group>summary{font-size:14px;font-weight:800;padding:15px 16px;cursor:pointer}.office-file-preview .field-group[open]>summary{border-bottom:1px solid #e0e7ed;background:#f2f6f9}.office-file-preview .field-group>.form-grid{padding:16px}
+/* Calendar matches the month grid, today/reschedule queues, controls and day overlays. */
+@media(max-width:1100px){}
+@media(max-width:760px){}
+@media(max-width:720px){.office-file-preview .field-group>.form-grid{padding:12px}}
+@media(max-width:480px){.office-file-preview .field input,.office-file-preview .field select,.office-file-preview .field textarea{font-size:16px}}
+@media(prefers-reduced-motion:reduce){.office-file-preview *,.office-file-preview *::before,.office-file-preview *::after{transition:none!important;scroll-behavior:auto!important}}
+
+/* Client records coordinated soft shades. */
+
+/* Medical tab: visible dark outer rim on BOTH section containers
+   (Doctors & Pharmacies, and Medications), matching Coverage card outlines. */
+
+/* RingCentral Call Data review — visible missed calls grouped by Central day and voicemail inbox. */
+/* Missed Calls and Voicemails: each day is a native, closed-by-default
+   disclosure group. Notes, appointments, and playback stay inside that day. */
+@media(max-width:620px){}
+/* Original Mayer CRM compact toolbar geometry, glyphs and muted icon tiles. */
+/* Native dialogs provide focus isolation. All close paths use the same draft guard. */
+/* Calendar matches the month grid, today/reschedule queues, controls and day overlays. */
+@media(max-width:1100px){}
+@media(max-width:760px){}
+@media(max-width:720px){}
+@media(max-width:480px){}
+@media(prefers-reduced-motion:reduce){}
+
+/* Arctos phase 1: concise, accessible grouped navigation. */
+@media(max-width:760px){
+}
+@media(max-width:760px){}
+@media(max-width:520px){}
+
+/* M&H CRM current single-user client-search layout.
+   Justin Mayer is the only active CRM user at this time, so the Agent filter is unnecessary. */
+
+@supports not selector(:has(*)){
+}@media(max-width:1050px){}@media(max-width:720px){}@media(max-width:460px){}@media(max-width:900px){}@media(max-width:640px){}
+/* Client record uploads: readable labels and action buttons across all file sections. */@media(max-width:700px){}@media(max-width:430px){}
+/* Color-blind-friendly, high-contrast Medicare accordion headers. Loaded after the base Medicare styles. */
+/* Use both color and a numbered marker so the sections never depend on color alone. */
+/* Dark action boxes always use white text for contrast. */
+@media(max-width:700px){
+}@media(max-width:700px){}
+
+@media (max-width: 760px) {
+}
+
+@media (max-width: 430px) {
+}
+
+@media (max-width: 700px) {
+}
+
+@media (max-width: 700px) {
+}
+
+@media (max-width: 700px) {
+}
+
+.mh-file-preview-dialog {
+  width: min(1100px, calc(100vw - 24px));
+  height: min(860px, calc(100vh - 24px));
+  max-width: none;
+  max-height: none;
+  padding: 0;
+  border: 0;
+  border-radius: 16px;
+  background: transparent;
+  box-shadow: 0 24px 70px rgba(15,23,42,.28);
+}
+
+.mh-file-preview-dialog::backdrop {
+  background: rgba(15,23,42,.58);
+}
+
+.mh-file-preview-frame {
+  height: 100%;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  overflow: hidden;
+  border-radius: 16px;
+  background: #f8fafc;
+}
+
+.mh-file-preview-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 12px 14px;
+  border-bottom: 1px solid #dbe3ea;
+  background: #fff;
+}
+
+.mh-file-preview-head > div:first-child {
+  min-width: 0;
+}
+
+.mh-file-preview-head h2 {
+  margin: 0;
+  overflow: hidden;
+  color: #102a43;
+  font-size: 17px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mh-file-preview-head p {
+  margin: 2px 0 0;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.mh-file-preview-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+.mh-file-preview-body {
+  min-height: 0;
+  display: grid;
+  place-items: center;
+  overflow: auto;
+  background: #e9eef3;
+}
+
+.mh-file-preview-body img {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.mh-file-preview-body iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: #fff;
+}
+
+.mh-file-preview-unavailable {
+  max-width: 460px;
+  display: grid;
+  gap: 8px;
+  padding: 26px;
+  text-align: center;
+  color: #334155;
+}
+
+.mh-file-preview-unavailable strong {
+  color: #102a43;
+  font-size: 18px;
+}
+
+@media (max-width: 700px) {
+
+  .mh-file-preview-dialog {
+    width: 100vw;
+    height: 100dvh;
+    border-radius: 0;
+  }
+
+  .mh-file-preview-frame {
+    border-radius: 0;
+  }
+
+  .mh-file-preview-head {
+    align-items: flex-start;
+  }
+
+  .mh-file-preview-actions .btn {
+    display: none;
+  }
+}
+@media(max-width:700px){
+}@media(max-width:700px){}
+@media(max-width:700px){}
+
+/* General doctors notes stay above individual doctor cards. */
+
+/* Distinct, dark outlined Medical sections and individual doctor/medication cards. */
+@media(max-width:700px){}
+@media(max-width:700px){
+}
+
+/* Quiet, readable client search details. No changes to client-record themes. */
+@media(max-width:1150px){}
+
+/* iPhone / narrow-phone result cards: collapsed summary view only. */
+@media(max-width:620px){
+}
+
+/* Very narrow iPhones: keep Name + Phone + State and drop County first. */
+@media(max-width:360px){
+}
+@media(prefers-reduced-motion:reduce){}
+
+/* Search criteria stay simple; sorting appears with the requested results. */
+@media(max-width:900px){}
+@media(max-width:620px){}
+
+/* Deceased archive list, opened from the compact client-summary counter. */
+@media(max-width:760px){}
+
+
+/* Client month-of-birth archive and independent multi-select texting. */
+@media(max-width:620px){
+}
+
+/* Compact client totals use the same muted campaign-counter language without taking over the page. */
+
+/* Full Life + Medicare commission tracker. */
+
+@media(max-width:720px){}
+@media(max-width:620px){}
+@media(max-width:360px){}
+
+/* Deceased is the fourth ORIGINAL compact client counter, not a second oversized row. */
+@media(max-width:620px){
+}
+
+/* Five small client counters; birthday list sits directly after Deceased. */
+@media(max-width:700px){
+}
+@media(max-width:390px){
+}@media(min-width:900px){}@media(max-width:560px){}
+/* Distinct boxes inside Personal & Contact Information. Match the existing Height/Weight card language. */
+@media(min-width:900px){
+}
+@media(max-width:560px){
+}
+@media(max-width:390px){
+}
+
+/* Keep Product Type checkbox labels readable in Client Information without changing panel backgrounds. */@media(max-width:620px){}@media(max-width:390px){}@media(max-width:620px){}
+
+/* Campaigns: restrained slate/sage accents, compact records, native accessible controls. */
+@media(max-width:1080px){}
+@media(max-width:620px){}
+
+/* Make unavailable campaign calendar choices visually distinct on browsers that style native selects. */
+
+/* Campaign dashboard: compact icon counters with isolated outcome views. */
+@media(max-width:760px){}
+@media(max-width:390px){}
+
+/* Persistent selected view: dark fill, white content, double border and a check.
+   aria-pressed is set by the existing campaign controller, not by hover/focus. */
+@media(max-width:760px){}
+@media(forced-colors:active){}
+
+/* Sixth stage: a recorded face-to-face contact, separate from No Answer and Completed. */
+/* Every campaign client retains its own compact, collapsed notes dropdown.
+   Expanded notes span the whole client card, not the narrow name column. */
+@media(max-width:760px){
+}
+@media(max-width:760px){}
+@media(max-width:390px){}@media(max-width:620px){}
+/* One visual campaign box, with separate Open and Delete buttons inside it.
+   Keep the controls as siblings: a button must not be nested in another button. */
+@media(max-width:620px){}
+
+@media(max-width:620px){
+}@media(max-width:620px){}@media(max-width:620px){}@media(max-width:760px){}
+/* Phone-only bottom dock for the existing M&H toolbar. Desktop/tablet layout is unchanged. */
+@media (max-width: 700px) {
+
+  /* Phone toolbar keeps only menu + action icons. Branding remains in the slide-out nav. */
+
+  /* Spread the quick actions evenly from the end of the menu button to the right edge. */
+
+  /* Keep the slide-out navigation above the bottom dock on phones. */
+}
+
+@media (max-width: 390px) {
+}
+@media(max-width:900px){}
+@media(max-width:560px){}
+@media(max-width:620px){}
+@media(max-width:980px){}
+@media(max-width:620px){}
+@media(max-width:620px){}
+
+/* Carrier brand tints — keep plan text black and backgrounds intentionally light. */
+
+/* HealthSpring/Cigna 2027 — soft teal, consistent with the five-carrier picker. */
+
+/* 2027 SB/EOC source ledger and field-by-field confirmation. */
+@media(max-width:540px){}
+
+
+/* Athena's Medicare — independent, responsive review workspace. */
+@media(max-width:1050px){}
+@media(max-width:680px){
+}
+@media print{}
+
+/* Athena Medicare: distinct, subtle colors for each of the nine review sections. */
+
+
+/* Crisp black outlines around each Athena section and its title only. */
+
+
+/* Section 2: individual, distinct Medicare, Medicaid and Medicare.gov panels. */
+@media(max-width:650px){}
+
+/* Athena review supporting-document camera and drag/drop */
+
+/* Shared client Overview notes, deliberately above Athena section one. */
+
+
+/* Section 6: compact, consistent needs checkboxes (desktop and phone). */
+@media(max-width:480px){
+}
+
+
+/* Athena home: explicit, easily scanned unfinished review queue. */
+@media(max-width:480px){}
+
+
+/* Unfinished reviews: two compact client cards per row, actions together at the end. */
+@media(max-width:850px){}
+@media(max-width:480px){}
+
+/* Old plan details are explicitly separated from the current plan in Athena Step 3. */
+@media(max-width:600px){}
+
+/* Arctos client-record simplification: four visible sections; original fields preserved. */
+@media(max-width:720px){
+}
+@media(max-width:380px){}
+
+/* Override legacy per-tab colors, without changing the individual insurance form colors. */
+
+
+/* Coverage cards: dark outlines and distinct soft shades, matching Athena. */
+
+/* Clearly differentiated Medicare accordion headings, with high-contrast colors. */
+
+/* Client Overview: compact annual review completion, expansive synced notes. */
+
+/* Client at a Glance: action buttons replace redundant section navigation. */
+/* Overview note is a closed native accordion on every newly opened record. */
+/* Keep shortcuts compact when 2 actions, or 3 with the Medicare Review link. */
+@media(max-width:630px){
+}
+@media(max-width:380px){
+}
+
+/* Inline confirmation for the reliable Client at a Glance campaign action. */
+
+/* Arctos Step 4: purposeful daily dashboard with on-demand calendar */
+@media(max-width:880px){}
+@media(max-width:620px){
+}
+
+/* Dashboard surface separation: gentle color, clear borders, and readable contrast. */
+
+/* Calm dashboard palette: navy / blue / sage with restrained warm alert accents.
+   Scope to the Dashboard so records and other CRM screens are unchanged. */
+
+/* Today's Schedule: restrained warm yellow, coordinated with blue/sage dashboard. */
+
+/* Arctos Work Queue: one uncluttered view over leads, campaigns, and follow-ups */
+@media(max-width:900px){}
+@media(max-width:630px){
+}
+
+/* Arctos step 6 — one client Notes & Files workspace */
+.cfh-preview-error{color:#a44a43;font-size:12px;padding:10px}
+@media(max-width:650px){
+}
+
+/*
+ * ARCTOS / STEP 7 — Visual system
+ *
+ * Purpose: one consistent app palette and interaction treatment. This is
+ * imported LAST so old incremental coloring can be retired progressively
+ * without changing any element IDs, form fields, or data behaviors.
+ *
+ * Navy = navigation and active views; sage = primary action;
+ * Red = errors and destructive controls. Carrier brand tints on MA Plans
+ * remain intentionally untouched.
+ */
+.mh-file-preview-dialog{color-scheme:light}
+
+/* One recognizable button hierarchy in all ordinary CRM screens. */
+
+/* Keep the existing high-contrast action inside dark hero backgrounds. */
+
+/* Eliminate the old rainbow accordion palette. Tiny, low-key left accents
+ * identify a type without relying on color alone; every heading is labelled. */
+/* Numbered circles are repeated ornaments in the old client form. */
+/* The four major client tabs use exactly one active treatment. */
+
+/* Consistent search and filters in Work and Notes & Files. */
+
+/* Athena's Medicare keeps its own functional workflow, now visually aligned
+ * with the same app background, borders and inactive/active control states. */
+
+/* The sign-in screen and Athena custom controls share the same muted,
+ * accessible action meanings without altering their layouts or workflows. */
+
+/* Intentional exceptions: company/carrier colors in MA plan comparisons,
+ * error/success states, and branded bear artwork should not be recolored. */
+@media(max-width:700px){
+}
+@media(prefers-reduced-motion:reduce){
+}
+
+/* Arctos: persistent five-action quick toolbar.
+   Desktop/tablet: header right. iPhone: fixed bottom, with menu and safe-area. */
+@media(max-width:1040px) and (min-width:701px){
+}
+/* Compact desktop when the 260px sidebar leaves a narrow content area. */
+@media(min-width:761px) and (max-width:850px){
+}
+@media(max-width:700px){
+  /* This is the phone-only bottom dock; preserve the five actions and menu.
+     The fixed header is already placed at bottom by mobile-bottom-toolbar.css. */
+}
+@media(max-width:365px){
+}
+
+
+
+/* Appointment day cards */
+@media (max-width: 520px) {
+}
+@media (max-width: 760px) {
+}
+@media (max-width: 520px) {
+}
+
+/* Shared appointment-booking availability styling (calendar + quick tool). */
+
+/* Final high-contrast override for all client-record upload actions. */
+
+
+/* Client overview: completed appointment history and inline quick notes. */
+@media(max-width:680px){}
+
+/* Universal file-action legibility: upload and camera/scan labels.
+   These controls use pale button backgrounds, so never inherit white text. */
+
+/* Definitive contrast fix for Medicare, Medicaid, and shared client file controls.
+   Previous Medicare theme used white !important and dark backgrounds. */
+
+/* Old-plan data box on the Coverage tab (also used when creating clients). */
+@media(max-width:620px){}
+
+/* All client-upload lists: high contrast file names, numbers and View/Remove actions.
+   Override older dark-theme rules even in nested Coverage > Health Plan upload controls. */
+.client-form :is(.multi-file-row,.document-row,.life-policy-document-row,.cfh-file,.medicare-card-manager,.life-policy-documents,.document-row-actions,.medicare-card-actions,.mh-file-preview-actions) :is(button,.btn,a){
+  color:#111827!important;
+  -webkit-text-fill-color:#111827!important;
+  background:#eaf0f5!important;
+  border:1px solid #9dacb8!important;
+  opacity:1!important;
+  text-shadow:none!important;
+}
+/* File-list names and numerical details must never inherit the white themed text. */
+
+/* Height & Weight: show additional product / age selector only when relevant. */
+
+/* Original M&M carrier directory in the persistent Contacts quick tool. */
+@media(max-width:620px){
+}
+
+/* Select existing campaign / create new directly from a saved client. */

@@ -3,6 +3,8 @@ import { createClient } from "npm:@supabase/supabase-js@2.57.0";
 import { writeOfficeRecord, recordSelection, writeOfficeOverview } from "./office-record-store.ts";
 import { officeCoverageFiles } from "./office-coverage-files.ts";
 import { officeCoverageSoa } from "./office-coverage-soa.ts";
+import { officeClientNotes } from "./office-client-notes.ts";
+import { officeMedicationSearch } from "./office-medication-search.ts";
 const MM_URL="https://aefdewkiqgiwkquklnvr.supabase.co";
 const MM_PUBLIC="sb_publishable_3dEzyrV3AvaxDMQDMTsvKw_mT7M_vqx";
 const SCOPE="platinum";
@@ -11,8 +13,8 @@ const SERVICE_URL=Deno.env.get("SUPABASE_URL")||"";
 const SERVICE_KEY=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")||"";
 const json=(body:unknown,code=200)=>new Response(JSON.stringify(body),{status:code,headers:{"Content-Type":"application/json","Cache-Control":"private, no-store","Vary":"Origin","Access-Control-Allow-Origin":ROOT_ORIGIN,"X-Content-Type-Options":"nosniff"}});
 const uuid=(s:unknown)=>/^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(String(s||""));
-const authorizedChanges=new Set(["first_name","last_name","middle_name","phone","email","date_of_birth","gender","address1","address2","city","county","state","zip_code","status","products","notes","spouse","height_feet","height_inches","weight_lbs","smoker","veteran","drivers_license_expiration","drivers_license_state"]);
-const clientSelection=SCOPE==="platinum"?"id,assigned_agent_id,first_name,last_name,middle_name,phone,email,date_of_birth,gender,address1,address2,city,county,state,zip_code,status,products,notes,spouse,height_feet,height_inches,weight_lbs,smoker,veteran,drivers_license_expiration,drivers_license_state":"id,assigned_agent_id,first_name,last_name,phone,email,date_of_birth,gender,address1,address2,city,county,state,zip_code,status,products,notes,spouse,height_feet,height_inches,weight_lbs,smoker,veteran,drivers_license_expiration,drivers_license_state,doctors_section_notes,old_plan_carrier,old_plan_id,old_plan_member_id,old_plan_year";
+const authorizedChanges=new Set(["first_name","last_name","middle_name","phone","email","date_of_birth","gender","address1","address2","city","county","state","zip_code","status","products","notes","spouse","height_feet","height_inches","weight_lbs","smoker","veteran","drivers_license_expiration","drivers_license_state","doctors_section_notes"]);
+const clientSelection=SCOPE==="platinum"?"id,assigned_agent_id,first_name,last_name,middle_name,phone,email,date_of_birth,gender,address1,address2,city,county,state,zip_code,status,products,notes,spouse,height_feet,height_inches,weight_lbs,smoker,veteran,drivers_license_expiration,drivers_license_state,doctors_section_notes":"id,assigned_agent_id,first_name,last_name,phone,email,date_of_birth,gender,address1,address2,city,county,state,zip_code,status,products,notes,spouse,height_feet,height_inches,weight_lbs,smoker,veteran,drivers_license_expiration,drivers_license_state,doctors_section_notes,old_plan_carrier,old_plan_id,old_plan_member_id,old_plan_year";
 const safeMessage=(e:unknown)=>e instanceof Error?e.message:"Request failed";
 authorizedChanges.add("assigned_agent_id");
 function admin(){if(!SERVICE_URL||!SERVICE_KEY)throw Error("Agency secure connection is not configured");return createClient(SERVICE_URL,SERVICE_KEY,{auth:{persistSession:false,autoRefreshToken:false}})}
@@ -226,8 +228,10 @@ async function perform(action:string,data:any,actor:{id:string;email:string;perm
  if(action==="session")return {connected:true,agency:SCOPE,permissions:{edit:!!actor.permission.can_edit,sensitive:!!actor.permission.can_view_sensitive}};
  if(action==="save_review_checkoff"||action==="add_client_to_campaign")return await writeOfficeOverview({sb,actor,scope:SCOPE,agencyActorId:SCOPE==="arctos"?OFFICE_ARCTOS_ACTORS[actor.id]||null:null,log},action,data);
  if(action==="save_record"||action==="delete_record")return await writeOfficeRecord({sb,actor,scope:SCOPE,log},action,data);
- if(["coverage_documents","coverage_upload_start","coverage_upload_complete","coverage_remove_document"].includes(action))return await officeCoverageFiles({sb,actor,scope:SCOPE,agencyActorId:null,log},action,data);
+ if(["coverage_documents","client_documents","coverage_upload_start","coverage_upload_complete","coverage_remove_document","client_remove_document"].includes(action))return await officeCoverageFiles({sb,actor,scope:SCOPE,agencyActorId:null,log},action,data);
  if(["coverage_soa_context","coverage_soa_request"].includes(action))return await officeCoverageSoa({sb,actor,agencyActorId:null,log},action,data);
+ if(["client_notes","add_client_note","delete_client_note"].includes(action))return await officeClientNotes({sb,actor,scope:SCOPE,agencyActorId:null,log},action,data);
+ if(action==="medication_search")return await officeMedicationSearch({sb},data);
  if(action==="document_url"){
    const clientID=String(data.client_id||""), documentID=String(data.document_id||"");
    if(!uuid(clientID)||!uuid(documentID))throw Error("Invalid client or document");
@@ -351,7 +355,7 @@ async function perform(action:string,data:any,actor:{id:string;email:string;perm
   const existing=await readClient(sb,id);if(!existing)throw Error("Client record not found");
   const fields=data.changes||{};if(!fields || typeof fields!=="object" || Array.isArray(fields))throw Error("Invalid changes");
   const clean:Record<string,any>={};
-  for(const [name,value] of Object.entries(fields)){if(SCOPE==="arctos"&&name==="middle_name")throw Error("This field is not available in Arctos");if(!authorizedChanges.has(name))throw Error("Field is not available in Office CRM");if(value!==null&&typeof value!=="string"&&typeof value!=="number"&&typeof value!=="boolean"&&!Array.isArray(value))throw Error("Invalid field type");if(typeof value==="string"&&value.length>2000)throw Error("Value too long");clean[name]=value;}
+  for(const [name,value] of Object.entries(fields)){if(SCOPE==="arctos"&&name==="middle_name")throw Error("This field is not available in Arctos");if(!authorizedChanges.has(name))throw Error("Field is not available in Office CRM");if(value!==null&&typeof value!=="string"&&typeof value!=="number"&&typeof value!=="boolean"&&!Array.isArray(value))throw Error("Invalid field type");if(typeof value==="string"&&value.length>(name==="doctors_section_notes"?4000:2000))throw Error("Value too long");clean[name]=value;}
   if(!Object.keys(clean).length)throw Error("No changes supplied");
   if("assigned_agent_id" in clean){
    if(!uuid(clean.assigned_agent_id))throw Error("Choose an assigned agent");
