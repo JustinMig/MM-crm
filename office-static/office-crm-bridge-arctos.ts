@@ -1,6 +1,8 @@
 // @ts-nocheck -- Supabase Edge Function is compiled by Deno, not the Next.js TypeScript project.
 import { createClient } from "npm:@supabase/supabase-js@2.57.0";
 import { writeOfficeRecord, recordSelection, writeOfficeOverview } from "./office-record-store.ts";
+import { officeCoverageFiles } from "./office-coverage-files.ts";
+import { officeCoverageSoa } from "./office-coverage-soa.ts";
 const MM_URL="https://aefdewkiqgiwkquklnvr.supabase.co";
 const MM_PUBLIC="sb_publishable_3dEzyrV3AvaxDMQDMTsvKw_mT7M_vqx";
 const SCOPE="arctos";
@@ -224,6 +226,8 @@ async function perform(action:string,data:any,actor:{id:string;email:string;perm
  if(action==="session")return {connected:true,agency:SCOPE,permissions:{edit:!!actor.permission.can_edit,sensitive:!!actor.permission.can_view_sensitive}};
  if(action==="save_review_checkoff"||action==="add_client_to_campaign")return await writeOfficeOverview({sb,actor,scope:SCOPE,agencyActorId:SCOPE==="arctos"?OFFICE_ARCTOS_ACTORS[actor.id]||null:null,log},action,data);
  if(action==="save_record"||action==="delete_record")return await writeOfficeRecord({sb,actor,scope:SCOPE,log},action,data);
+ if(["coverage_documents","coverage_upload_start","coverage_upload_complete","coverage_remove_document"].includes(action))return await officeCoverageFiles({sb,actor,scope:SCOPE,agencyActorId:OFFICE_ARCTOS_ACTORS[actor.id]||null,log},action,data);
+ if(["coverage_soa_context","coverage_soa_request"].includes(action))return await officeCoverageSoa({sb,actor,agencyActorId:OFFICE_ARCTOS_ACTORS[actor.id]||null,log},action,data);
  if(action==="document_url"){
    const clientID=String(data.client_id||""), documentID=String(data.document_id||"");
    if(!uuid(clientID)||!uuid(documentID))throw Error("Invalid client or document");

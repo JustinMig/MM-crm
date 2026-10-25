@@ -201,6 +201,8 @@ window.officeClientRecordEnhance=modal=>{
    if(key==='overview'){
     if(!exact&&!await saveOverview(flags))ok=false;
     if(!await saveOverview(panel))ok=false;
+   }else if(key==='coverage'&&root.officeSaveExactCoverage){
+    if(!await root.officeSaveExactCoverage())ok=false;
    }else{
     for(const section of panel.querySelectorAll('.office-doctors-notes,.office-old-plan-details'))if(dirty(section)&&!await saveOverview(section))ok=false;
     for(const form of panel.querySelectorAll('[data-office-record-editor]'))if((dirty(form)||form.dataset.newRecord==='true')&&!await saveRecord(form))ok=false;
@@ -214,7 +216,7 @@ window.officeClientRecordEnhance=modal=>{
  for(const [key,label] of [['overview','Overview'],['coverage','Coverage'],['medical','Medical'],['files','Notes & Files']]){
   const panel=root.querySelector('[data-oc-client-panel="'+key+'"]');
   if(panel)panel.insertAdjacentHTML('beforeend','<div class="office-tab-save-footer" data-tab-save-footer="'+key+'"><span data-tab-save-status role="status" aria-live="polite"></span><button type="button" class="primary" data-save-tab="'+key+'">Save '+label+'</button></div>');
-  if(exact&&key==='overview'){const footer=panel.querySelector('[data-tab-save-footer]');footer.classList.add('modal-footer');footer.querySelector('button').classList.add('btn');footer.querySelector('button').textContent='Save Client';}
+  if(exact&&key==='overview'||key==='coverage'&&root.officeSaveExactCoverage){const footer=panel.querySelector('[data-tab-save-footer]');footer.classList.add('modal-footer');footer.querySelector('button').classList.add('btn');footer.querySelector('button').textContent='Save Client';}
  }
  root.addEventListener('submit',event=>{
   const form=event.target.closest('[data-office-record-editor]');
@@ -246,7 +248,7 @@ window.officeClientRecordEnhance=modal=>{
  const tracker=new MutationObserver(()=>{for(const el of controls(root))if(!initials.has(el)&&!el.dataset.protectedInput)initials.set(el,value(el));if(!root.isConnected)tracker.disconnect();});
  tracker.observe(root,{subtree:true,childList:true});
  remember(root);
- root.officeHasUnsavedChanges=()=>hasUnsaved()||[...root.querySelectorAll('[data-protected-input]')].some(el=>el.dataset.initial!==undefined&&el.value!==el.dataset.initial);
+ root.officeHasUnsavedChanges=()=>hasUnsaved()||!!root.officeExactCoverageDirty?.()||[...root.querySelectorAll('[data-protected-input]')].some(el=>el.dataset.initial!==undefined&&el.value!==el.dataset.initial);
  // The identifiers are loaded after this enhancement; use their secure baseline, not their empty loading state.
  for(const el of root.querySelectorAll('[data-protected-input]'))initials.delete(el);
  root.querySelectorAll('details[open]').forEach(el=>el.open=false);

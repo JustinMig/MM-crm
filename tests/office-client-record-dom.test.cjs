@@ -1,59 +1,7 @@
-// Synthetic records only. Exercises the real scripts, form events, and agency save payloads.
+// Synthetic records; real Office scripts and agency bridge payloads.
 const test=require('node:test');
 const assert=require('node:assert/strict');
-const {JSDOM}=require('jsdom');
-const fs=require('node:fs');
-const path=require('node:path');
-const source=name=>fs.readFileSync(path.join(__dirname,'../office-static',name),'utf8');
-const id='11111111-1111-4111-8111-111111111111',doctorId='22222222-2222-4222-8222-222222222222';
-const sleep=()=>new Promise(resolve=>setTimeout(resolve,5));
-async function until(fn){for(let i=0;i<200;i++){if(fn())return;await sleep();}throw Error('Timed out waiting for UI update');}
-async function fixture(agency='arctos',detailErrors={},exact=false){
- const dom=new JSDOM('<div id="office-root"></div>',{url:'https://office.test',runScripts:'outside-only',pretendToBeVisual:true});
- const w=dom.window,requests=[],errors=[];
- const observers=[],NativeObserver=w.MutationObserver;
- w.MutationObserver=class extends NativeObserver{constructor(callback){super(callback);observers.push(this);}};
- const nativeClose=w.close.bind(w);w.close=()=>{observers.forEach(observer=>observer.disconnect());nativeClose();};
- w.addEventListener('error',event=>errors.push(event.error?.message||event.message));
- w.sessionStorage.setItem('office_login_session',JSON.stringify({access_token:'synthetic-session'}));
- w.confirm=()=>true;
- const client={id,assigned_agent_id:id,first_name:'Sample',last_name:'Client',phone:'555-0100',email:'sample@example.test',status:'active',products:['medicare'],date_of_birth:'1950-01-01',height_feet:6,height_inches:2,weight_lbs:200,veteran:false,smoker:false,drivers_license_state:'MS',drivers_license_expiration:'2030-01-01',notes:'Saved overview note',doctors_section_notes:'Saved doctor notes'};
- const details={medicare_details:[{client_id:id,part_a_date:'2015-01-01',part_b_date:'2015-02-01',medicaid_level:'QMB',sunfire_code:'SAVED-SUNFIRE',notes:'Saved Medicare notes'}],client_doctors:[{id:doctorId,client_id:id,doctor_name:'Sample Doctor',specialty:'Cardiology',phone:'555-0111',notes:'Saved doctor note',updated_at:'2026-01-01T00:00:00Z'}],client_pharmacies:[{client_id:id,pharmacy_name:'Sample Pharmacy',pharmacy_location:'Sample City',pharmacy_name_2:'Second Pharmacy',pharmacy_location_2:'Other City'}],client_medications:[],health_plans:[{id:'33333333-3333-4333-8333-333333333333',carrier:'Sample Health',premium:0,status:'active',notes:'Plan note'}],life_policies:[],hospital_indemnity_plans:[],retirement_accounts:[],client_notes:[],documents:[],athena_medicare_reviews:[]};
- const secure={identifiers:{ssn:'111-22-3333',medicare_number:'TEST-MEDICARE',medicaid_number:'TEST-MEDICAID',drivers_license_number:'TEST-LICENSE'},banking:{bank_name:'Test Bank',account_number:'000111',routing_number:'000222'},medicare_gov:{username:'test-user',password:'test-password'}};
- let failNext=false;
- w.fetch=async(url,options={})=>{
-  const data=JSON.parse(options.body||'{}');requests.push(structuredClone(data));let result={};
-  if(data.action==='session')result={permissions:{edit:true,sensitive:true},connected:true};
-  else if(data.action==='search')result={clients:[client]};
-  else if(data.action==='client')result={client:structuredClone(client),details:structuredClone(details),detail_errors:detailErrors};
-  else if(data.action==='secure_client')result={kind:data.kind,data:structuredClone(secure[data.kind]||{})};
-  else if(data.action==='save_sensitive'){Object.assign(secure[data.kind],data.values);result={saved:true};}
-  else if(data.action==='save_client'){Object.assign(client,data.changes);result={saved:true};}
-  else if(data.action==='add_note')result={saved:true};
-  else if(data.action==='save_review_checkoff'||data.action==='add_client_to_campaign')result={saved:true};
-  else if(data.action==='save_record'){
-   if(failNext){failNext=false;return new Response(JSON.stringify({error:'Synthetic save failure'}),{status:400});}
-   let row=(details[data.table]||[]).find(row=>data.record_id?row.id===data.record_id:row.client_id===id);
-   if(!row){row={id:data.record_id||'44444444-4444-4444-8444-444444444444',client_id:id};(details[data.table]??=[]).push(row);}
-   Object.assign(row,data.changes);row.updated_at=new Date().toISOString();result={saved:true,record:structuredClone(row)};
-  }else if(data.action==='delete_record'){details[data.table]=details[data.table].filter(row=>row.id!==data.record_id);result={saved:true};}
-  else if(data.action==='appointments')result={appointments:[]};
-  else if(data.action==='campaigns')result={campaigns:[]};
-  else if(data.action==='campaign_agents')result={agents:[{id,full_name:'Sample Agent'},{id:doctorId,full_name:'Second Agent'}]};
-  return new Response(JSON.stringify(result));
- };
- if(exact){w.eval(source('arctos-overview-template.js'));w.eval(source('office-arctos-overview.js'));}
- w.eval(source('office-live.js'));w.eval(source('office-client-record.js'));w.eval(source('arctos-client-parity.js'));
- const q=selector=>w.document.querySelector(selector),all=selector=>[...w.document.querySelectorAll(selector)];
- await until(()=>q('[data-tab="clients"]'));q('[data-tab="clients"]').click();
- q('#clientSearch').value='Sample';q('#clientSearch').dispatchEvent(new w.KeyboardEvent('keydown',{key:'Enter',bubbles:true}));
- await until(()=>q('[data-client^="'+agency+':"]'));q('[data-client^="'+agency+':"]').click();
- await until(()=>q('[data-office-record-editor="sunfire"]'));
- await until(()=>q('[data-protected-input="ssn"]')?.value==='111-22-3333');
- const fill=(element,value)=>{element.value=value;element.dispatchEvent(new w.Event('input',{bubbles:true}));};
- const submit=form=>form.dispatchEvent(new w.Event('submit',{bubbles:true,cancelable:true}));
- return {w,dom,q,all,requests,client,details,secure,errors,fill,submit,fail:()=>failNext=true};
-}
+const {fixture,until,id,doctorId,sleep,source}=require('./helpers/office-client-fixture.cjs');
 test('Actual client scripts load saved values and section saves preserve other edits',async()=>{
  const f=await fixture();try{
   const {q,all,requests,fill}=f;
@@ -72,15 +20,15 @@ test('Actual client scripts load saved values and section saves preserve other e
 });
 test('Sunfire and Medicaid load and save independently without changing Medicare dates',async()=>{
  const f=await fixture();try{
-  const {q,fill,submit}=f,sunfire=q('[data-office-record-editor="sunfire"]');
-  assert.equal(sunfire.querySelector('[name="sunfire_code"]').value,'SAVED-SUNFIRE');
-  fill(sunfire.querySelector('[name="sunfire_code"]'),'UPDATED-SUNFIRE');submit(sunfire);
-  await until(()=>sunfire.querySelector('[data-section-status]').textContent==='Saved successfully.');
+  const {q,fill}=f,sunfire=q('[name="sunfire_code"]');
+  assert.equal(sunfire.value,'SAVED-SUNFIRE');
+  fill(sunfire,'UPDATED-SUNFIRE');q('[data-save-tab="coverage"]').click();
+  await until(()=>q('[data-tab-save-footer="coverage"]').dataset.saving==='false');
   assert.deepEqual(f.requests.filter(x=>x.action==='save_record').at(-1).changes,{sunfire_code:'UPDATED-SUNFIRE'});
   assert.equal(f.details.medicare_details[0].part_a_date,'2015-01-01');assert.equal(f.details.medicare_details[0].medicaid_level,'QMB');
-  const medicaid=q('[data-office-record-editor="medicaid"]');
-  assert.deepEqual([...medicaid.querySelector('select').options].map(x=>x.value),['','None','QMB','QMB+','SLMB','SLMB+','QI','QDWI','FBDE']);
-  fill(medicaid.querySelector('select'),'SLMB');submit(medicaid);await until(()=>medicaid.querySelector('[data-section-status]').textContent==='Saved successfully.');
+  const medicaid=q('[name="medicaid_level"]');
+  assert.deepEqual([...medicaid.options].map(x=>x.value),['','None','QMB','QMB+','SLMB','SLMB+','QI','QDWI','FBDE']);
+  fill(medicaid,'SLMB');q('[data-save-tab="coverage"]').click();await until(()=>q('[data-tab-save-footer="coverage"]').dataset.saving==='false');
   assert.equal(f.details.medicare_details[0].sunfire_code,'UPDATED-SUNFIRE');
   assert.deepEqual(f.errors,[]);
  }finally{f.dom.window.close();}
@@ -114,11 +62,11 @@ test('Doctors, medication and individual pharmacy records collapse; add opens; s
 });
 test('Policy sections have real editable records and missing reads do not render blank destructive editors',async()=>{
  const f=await fixture('platinum',{client_doctors:'Unavailable'});try{
-  for(const section of ['health_plans','life_policies','hospital_indemnity_plans','retirement_accounts'])assert.ok(f.q('[data-office-add-record="'+section+'"]'));
+  for(const selector of ['[name="health_carrier"]','[data-add-life-policy]','[data-add-health-record="hospital_indemnity"]','[name="retirement_carrier"]'])assert.ok(f.q(selector));
   assert.equal(f.q('[data-office-record-editor="client_doctors"]'),null);
   assert.match(f.q('[data-client-category="doctors"]').textContent,/could not load/);
-  f.q('[data-office-add-record="hospital_indemnity_plans"]').click();
-  assert.ok(f.q('[data-office-record-editor="hospital_indemnity_plans"] [name="ambulance_benefit"]'));
+  f.q('[data-add-health-record="hospital_indemnity"]').click();
+  assert.ok(f.q('[name="indemnity_0_admission_benefit"]'));
   assert.deepEqual(f.errors,[]);
  }finally{f.dom.window.close();}
 });
@@ -130,7 +78,7 @@ test('Protected fields are cleared through direct editing, without separate clea
   assert.equal(await ssn.closest('.parity-sensitive-editor').officeSaveProtected(),true);
   assert.equal(f.secure.identifiers.ssn,'999-88-7777');assert.equal(medicare.value,'');
   assert.equal(f.secure.identifiers.medicare_number,'TEST-MEDICARE');
-  assert.equal(await medicare.closest('.parity-sensitive-editor').officeSaveProtected(),true);
+  f.q('[data-save-tab="coverage"]').click();await until(()=>f.q('[data-tab-save-footer="coverage"]').dataset.saving==='false');
   assert.equal(f.secure.identifiers.medicare_number,'');
   assert.deepEqual(f.errors,[]);
  }finally{f.dom.window.close();}
@@ -201,7 +149,7 @@ test('Permanent tab Save includes closed editors, protected edits, assignment an
   q('[data-save-tab="overview"]').click();
   await until(()=>q('[data-tab-save-footer="overview"]').dataset.saving==='false');
   assert.equal(f.client.first_name,'Changed Name');assert.equal(f.client.assigned_agent_id,doctorId);assert.equal(f.secure.identifiers.ssn,'999-88-7777');
-  fill(q('[data-office-record-editor="sunfire"] [name="sunfire_code"]'),'TAB-SAVE-SUNFIRE');fill(q('[data-protected-input="medicare_number"]'),'UPDATED-MEDICARE');
+  fill(q('[name="sunfire_code"]'),'TAB-SAVE-SUNFIRE');fill(q('[data-protected-input="medicare_number"]'),'UPDATED-MEDICARE');
   q('[data-save-tab="coverage"]').click();await until(()=>q('[data-tab-save-footer="coverage"]').dataset.saving==='false');
   assert.equal(f.details.medicare_details[0].sunfire_code,'TAB-SAVE-SUNFIRE');assert.equal(f.secure.identifiers.medicare_number,'UPDATED-MEDICARE');
   fill(q('[data-office-record-editor="client_doctors"] [name="phone"]'),'555-tab-save');fill(q('[data-office-record-editor="client_pharmacies"] [name="pharmacy_location"]'),'Tab Saved City');
@@ -263,4 +211,112 @@ test('Rendered Overview preserves the generated Arctos DOM structure rather than
   const actual=f.q('[data-office-exact-overview]');
   assert.deepEqual([...actual.childNodes].map(shape).filter(Boolean),[...reference.childNodes].map(shape).filter(Boolean));
  }finally{f.dom.window.close();}
+});
+test('Coverage copies the Arctos category headers and retains the agency-bound editors',async()=>{
+ const f=await fixture();try{
+  const template=f.dom.window.document.createElement('template');template.innerHTML=f.dom.window.officeArctosCoverageMarkup;
+  const panel=f.q('[data-office-arctos-coverage]');assert.ok(panel);
+  for(const category of template.content.querySelectorAll('[data-client-category]')){
+   const actual=panel.querySelector('[data-client-category="'+category.dataset.clientCategory+'"]');
+   assert.equal(actual.querySelector(':scope > summary').outerHTML,category.querySelector(':scope > summary').outerHTML);
+   assert.equal(actual.open,false);
+  }
+  assert.ok(panel.querySelector('[name="sunfire_code"]'));
+  assert.ok(panel.querySelector('[data-health-list="hospital_indemnity"]'));
+  assert.ok(panel.querySelector('[data-save-tab="coverage"]'));
+ }finally{f.dom.window.close();}
+});
+test('Every Coverage field, option, section and document control follows the rendered Arctos template',async()=>{
+ const f=await fixture('arctos',{},true,{details:{medicare_details:[],health_plans:[],life_policies:[],hospital_indemnity_plans:[],retirement_accounts:[],documents:[]}});try{
+  const reference=f.w.document.createElement('div');reference.innerHTML=f.w.officeArctosCoverageMarkup;
+  const shape=node=>{
+   if(node.nodeType===3)return node.textContent.trim()||null;
+   if(node.nodeType!==1)return null;
+   return {tag:node.tagName,classes:node.className,name:node.getAttribute('name'),type:node.getAttribute('type'),placeholder:node.getAttribute('placeholder'),children:node.matches('[role=status],[data-indemnity-status]')?[]:[...node.childNodes].map(shape).filter(Boolean)};
+  };
+  const form=f.q('[data-office-exact-coverage]');
+  assert.deepEqual([...form.childNodes].map(shape).filter(Boolean),[...reference.childNodes].map(shape).filter(Boolean));
+  assert.equal(form.querySelector('.office-record-editor'),null);
+  assert.equal(form.querySelector('.parity-sensitive-editor'),null);
+  assert.equal(form.querySelector('input[type=date]'),null);
+  assert.deepEqual(f.errors,[]);
+ }finally{f.w.close();}
+});
+for(const agency of ['arctos','platinum'])test(agency+' copied Coverage saves real policy fields and preserves hidden history and other agency fields',async()=>{
+ const f=await fixture(agency,{},true,{details:{hospital_indemnity_plans:[{id:doctorId,client_id:id,carrier:'Old HIP',premium:10,status:'active',ambulance_benefit:500}],retirement_accounts:[{id:'44444444-4444-4444-8444-444444444444',client_id:id,carrier:'Annuity',account_value:1000,account_type:'Existing type'}]}});try{
+  const {q,fill}=f;
+  fill(q('[name=part_a_date]'),'03/01/2015');fill(q('[name=health_plan_type]'),'Supplement');fill(q('[name=health_premium]'),'15');fill(q('[name=medicare_notes]'),'Updated Medicare note');fill(q('[name=indemnity_0_daily_benefit]'),'125');fill(q('[name=retirement_value]'),'2500');
+  q('[data-save-tab=coverage]').click();await until(()=>q('[data-tab-save-footer=coverage]').dataset.saving==='false');
+  assert.match(q('[data-tab-save-footer=coverage]').textContent,/All changes/);
+  assert.equal(f.details.medicare_details[0].part_a_date,'2015-03-01');assert.equal(f.details.medicare_details[0].notes,'Updated Medicare note');
+  assert.equal(f.details.health_plans[0].plan_type,'Supplement');assert.equal(f.details.health_plans[0].premium,'15');assert.equal(f.details.health_plans[0].notes,'Plan note');
+  assert.equal(f.details.hospital_indemnity_plans[0].daily_benefit,'125');assert.equal(f.details.hospital_indemnity_plans[0].ambulance_benefit,500);
+  assert.equal(f.details.retirement_accounts[0].account_value,'2500');assert.equal(f.details.retirement_accounts[0].account_type,'Existing type');
+  assert.equal(q('[name=ssn]').value,'111-22-3333');assert.deepEqual(f.errors,[]);
+ }finally{f.w.close();}
+});
+test('Copied life and HIP Add/Remove controls keep identities through failures and repeated saves',async()=>{
+ const f=await fixture();try{
+  const {q,fill}=f;q('[data-add-life-policy]').click();q('[data-add-health-record=hospital_indemnity]').click();
+  fill(q('[name=life_policy_1_carrier]'),'Other');q('[name=life_policy_1_carrier]').dispatchEvent(new f.w.Event('change',{bubbles:true}));fill(q('[name=life_policy_1_carrier_other]'),'Custom Insurer');fill(q('[name=life_policy_1_policy_number]'),'TEST-POLICY');fill(q('[name=life_policy_1_premium]'),'42');fill(q('[name=indemnity_0_carrier]'),'HIP Insurer');
+  f.fail();q('[data-save-tab=coverage]').click();await until(()=>q('[data-tab-save-footer=coverage]').dataset.saving==='false');
+  assert.match(q('[data-tab-save-footer=coverage]').textContent,/Synthetic save failure/);assert.equal(q('[name=life_policy_1_premium]').value,'42');
+  q('[data-save-tab=coverage]').click();await until(()=>q('[data-tab-save-footer=coverage]').dataset.saving==='false');
+  assert.equal(f.details.life_policies.length,1);assert.equal(f.details.life_policies[0].carrier,'Custom Insurer');assert.ok(q('[name=life_policy_0_id]').value);assert.equal(f.details.hospital_indemnity_plans.length,1);
+  q('[data-save-tab=coverage]').click();await until(()=>q('[data-tab-save-footer=coverage]').dataset.saving==='false');assert.equal(f.details.life_policies.length,1);
+  q('[data-add-life-policy]').click();fill(q('[name=life_policy_1_policy_number]'),'SECOND');
+  q('[data-save-tab=coverage]').click();await until(()=>q('[data-tab-save-footer=coverage]').dataset.saving==='false');assert.equal(f.details.life_policies.length,2);
+  q('[data-life-policy-card][data-policy-index="1"] [data-remove-life-policy]').click();q('[data-save-tab=coverage]').click();await until(()=>q('[data-tab-save-footer=coverage]').dataset.saving==='false');assert.equal(f.details.life_policies.length,1);
+  assert.deepEqual(f.errors,[]);
+ }finally{f.w.close();}
+});
+test('Coverage uses Arctos manual dates and rejects impossible dates without erasing protected identifiers',async()=>{
+ const f=await fixture();try{
+  f.fill(f.q('[name=part_b_date]'),'02/31/2027');f.fill(f.q('[name=medicare_number]'),'NEW-MEDICARE');f.q('[data-save-tab=coverage]').click();await until(()=>f.q('[data-tab-save-footer=coverage]').dataset.saving==='false');
+  assert.match(f.q('[data-tab-save-footer=coverage]').textContent,/valid date/);assert.equal(f.details.medicare_details[0].part_b_date,'2015-02-01');assert.equal(f.secure.identifiers.medicare_number,'TEST-MEDICARE');
+  f.fill(f.q('[name=part_b_date]'),'03/01/2027');f.fill(f.q('[name=medicare_gov_verification_type]'),'text');f.q('[name=medicare_gov_verification_type]').dispatchEvent(new f.w.Event('change',{bubbles:true}));f.fill(f.q('[name=medicare_gov_verification_phone]'),'555-0123');
+  f.q('[data-save-tab=coverage]').click();await until(()=>f.q('[data-tab-save-footer=coverage]').dataset.saving==='false');assert.equal(f.secure.identifiers.medicare_number,'NEW-MEDICARE');assert.equal(f.secure.identifiers.medicaid_number,'TEST-MEDICAID');assert.equal(f.secure.identifiers.drivers_license_number,'TEST-LICENSE');assert.equal(f.secure.medicare_gov.verification_destination,'555-0123');
+  assert.deepEqual(f.errors,[]);
+ }finally{f.w.close();}
+});
+test('Copied card uploads and existing policy files use the authorized agency file bridge',async()=>{
+ const documentId='99999999-9999-4999-8999-999999999999';
+ const f=await fixture('arctos',{},true,{details:{documents:[{id:documentId,client_id:id,category:'medicare_card',file_name:'Saved Card.pdf'}]}});try{
+  const {q,w}=f;await until(()=>q('[data-office-coverage-view]'));q('[data-office-coverage-view]').click();await until(()=>f.opened.some(url=>url.includes('storage/v1/object/sign/')));
+  const picker=q('[data-card-manager=medicare_card] [data-multi-files]');Object.defineProperty(picker,'files',{configurable:true,value:[new w.File(['synthetic PDF'],'New Card.pdf',{type:'application/pdf'})]});picker.dispatchEvent(new w.Event('change',{bubbles:true}));
+  assert.equal(q('.oc-arctos-client-dialog').officeHasUnsavedChanges(),true);
+  q('[data-save-tab=coverage]').click();await until(()=>q('[data-tab-save-footer=coverage]').dataset.saving==='false');assert.equal(f.details.documents.length,2);assert.ok(f.requests.some(request=>request.action==='coverage_upload_start'));assert.ok(f.requests.some(request=>request.action==='coverage_upload_complete'));assert.deepEqual(f.errors,[]);
+ }finally{f.w.close();}
+});
+test('Coverage cannot save unloaded data and does not enable editing for a viewer',async()=>{
+ const f=await fixture('arctos',{medicare_details:'Unavailable'},true,{edit:false});try{
+  for(const input of f.all('[data-office-exact-coverage] input,[data-office-exact-coverage] select,[data-office-exact-coverage] textarea'))assert.equal(input.disabled,true);
+  assert.equal(f.q('[data-save-tab=coverage]').disabled,true);
+  await assert.rejects(f.q('.oc-arctos-client-dialog').officeSaveExactCoverage(),/not authorized/);
+  assert.equal(f.requests.some(request=>request.action==='save_record'||request.action==='save_sensitive'),false);
+  assert.deepEqual(f.errors,[]);
+ }finally{f.w.close();}
+});
+test('SOA actions open the actual Arctos signing dialogs inside Office instead of redirecting to another CRM',async()=>{
+ const f=await fixture('arctos',{},true);try{
+  f.q('[data-text-soa]').click();await until(()=>f.q('.mh-soa-dialog'));
+  assert.equal(f.q('.mh-soa-dialog h2').textContent,'Text Scope of Appointment');
+  assert.ok(f.q('.mh-soa-dialog [data-appointment]'));assert.ok(f.q('.mh-soa-dialog [data-year]'));assert.equal(f.all('.mh-soa-dialog [data-product]').length,6);
+  assert.equal(f.opened.length,0);assert.equal(f.requests.some(request=>request.action==='coverage_soa_request'),false);
+  f.q('.mh-soa-dialog [data-cancel]').click();
+  f.q('[data-sign-soa]').click();await until(()=>f.q('.mh-soa-dialog canvas'));
+  assert.equal(f.q('.mh-soa-dialog h2').textContent,'Scope of Appointment');assert.ok(f.q('.mh-soa-dialog [data-soa-ack]'));
+  f.q('.mh-soa-dialog [data-save]').click();
+  await until(()=>f.q('.mh-soa-dialog [data-status]').textContent.length>0);
+  assert.match(f.q('.mh-soa-dialog [data-status]').textContent,/acknowledgement|sign before/);
+  assert.equal(f.requests.some(request=>request.action==='coverage_upload_start'),false);assert.deepEqual(f.errors,[]);
+ }finally{f.w.close();}
+});
+test('A failed identifier load cannot clear saved Medicare/Medicaid values during a Coverage save',async()=>{
+ const f=await fixture('arctos',{},true,{failSecure:'identifiers'});try{
+  assert.equal(f.q('[name=medicare_number]').disabled,true);assert.equal(f.q('[name=medicaid_number]').disabled,true);
+  f.fill(f.q('[name=sunfire_code]'),'SAVE-OTHER-FIELD');f.q('[data-save-tab=coverage]').click();await until(()=>f.q('[data-tab-save-footer=coverage]').dataset.saving==='false');
+  assert.equal(f.details.medicare_details[0].sunfire_code,'SAVE-OTHER-FIELD');assert.equal(f.secure.identifiers.medicare_number,'TEST-MEDICARE');assert.equal(f.secure.identifiers.medicaid_number,'TEST-MEDICAID');
+  assert.equal(f.requests.some(request=>request.action==='save_sensitive'),false);assert.deepEqual(f.errors,[]);
+ }finally{f.w.close();}
 });

@@ -38,7 +38,7 @@ export async function writeOfficeOverview({sb,actor,scope,agencyActorId=null,log
  throw Error('Unsupported overview operation');
 }
 export function recordFields(scope,table){return [...(common[table]||[]),...(scope==='platinum'?platinum[table]||[]:[])];}
-export function recordSelection(scope,table){return [singletons.has(table)?'client_id':'id,client_id','updated_at',...recordFields(scope,table)].join(',');}
+export function recordSelection(scope,table){return [singletons.has(table)?'client_id':'id,client_id','created_at','updated_at',...recordFields(scope,table)].join(',');}
 export async function writeOfficeRecord(context,action,data){
  const {sb,actor,scope,log}=context,table=String(data.table||''),clientId=String(data.client_id||''),recordId=data.record_id?String(data.record_id):null;
  if(!actor.permission.can_edit)throw Error('Editing is not authorized');
