@@ -30,7 +30,12 @@ async function fixture(agency='arctos',detailErrors={},exact=false,options={}){
   const data=JSON.parse(options.body||'{}');requests.push(structuredClone(data));let result={};
   if(failOperation===data.action){failOperation=null;return new Response(JSON.stringify({error:'Synthetic '+data.action+' failure'}),{status:400});}
   if(data.action==='session')result={permissions:{edit:fixtureOptions.edit!==false,sensitive:fixtureOptions.sensitive!==false},connected:true};
-  else if(data.action==='search')result={clients:[client]};
+  else if(data.action==='search'){const which=String(url).includes('bogusfmvdrlvxscopgaw')?'arctos':'platinum',rows=fixtureOptions.lookupRecords?.[which]||[client],term=String(data.search||'').toLowerCase();result={clients:rows.filter(row=>(!data.exclude_deceased||row.status!=='deceased')&&[row.first_name,row.last_name,row.phone].join(' ').toLowerCase().includes(term))};}
+  else if(data.action==='client_lookup'){
+   const which=String(url).includes('bogusfmvdrlvxscopgaw')?'arctos':'platinum',records=fixtureOptions.lookupRecords?.[which]||[client],month=fixtureOptions.lookupMonth||'2026-10',birthdays=records.filter(row=>row.status!=='deceased'&&String(row.date_of_birth||'').slice(5,7)===month.slice(-2)).map(row=>({...row,birthday_day:Number(row.date_of_birth.slice(-2))})),deceased=records.filter(row=>row.status==='deceased');
+   if(data.view==='stats')result={birthdays:birthdays.length,deceased:deceased.length,month_key:month,month_label:'October 2026'};
+   else {const rows=data.view==='birthdays'?birthdays:deceased,offset=data.offset||0;result={clients:structuredClone(rows.slice(offset,offset+(data.limit||200))),total:rows.length,offset,month_key:month,month_label:'October 2026'};}
+  }
   else if(data.action==='client')result={client:structuredClone(client),details:structuredClone(details),detail_errors:detailErrors};
   else if(data.action==='secure_client'){
    if(fixtureOptions.failSecure===data.kind)return new Response(JSON.stringify({error:'Synthetic protected read failure'}),{status:400});
@@ -69,10 +74,12 @@ async function fixture(agency='arctos',detailErrors={},exact=false,options={}){
  w.eval(source('office-live.js'));w.eval(source('office-client-record.js'));w.eval(source('arctos-client-parity.js'));
  const q=selector=>w.document.querySelector(selector),all=selector=>[...w.document.querySelectorAll(selector)];
  await until(()=>q('[data-tab="clients"]'));q('[data-tab="clients"]').click();
- q('#clientSearch').value='Sample';q('#clientSearch').dispatchEvent(new w.KeyboardEvent('keydown',{key:'Enter',bubbles:true}));
- await until(()=>q('[data-client^="'+agency+':"]'));q('[data-client^="'+agency+':"]').click();
- await until(()=>q('[data-office-exact-coverage] [name="sunfire_code"]'));
- if(options.sensitive!==false&&options.failSecure!=='identifiers')await until(()=>q('[data-protected-input="ssn"]')?.value===String(secure.identifiers.ssn||''));
+ if(options.openRecord!==false){
+  q('#clientSearch').value='Sample';q('#clientSearch').dispatchEvent(new w.KeyboardEvent('keydown',{key:'Enter',bubbles:true}));
+  await until(()=>q('[data-client^="'+agency+':"]'));q('[data-client^="'+agency+':"]').click();
+  await until(()=>q('[data-office-exact-coverage] [name="sunfire_code"]'));
+  if(options.sensitive!==false&&options.failSecure!=='identifiers')await until(()=>q('[data-protected-input="ssn"]')?.value===String(secure.identifiers.ssn||''));
+ }
  const fill=(element,value)=>{element.value=value;element.dispatchEvent(new w.Event('input',{bubbles:true}));};
  const submit=form=>form.dispatchEvent(new w.Event('submit',{bubbles:true,cancelable:true}));
  return {w,dom,q,all,requests,client,details,secure,errors,fill,submit,opened,fail:()=>failNext=true,failAction:action=>failOperation=action};

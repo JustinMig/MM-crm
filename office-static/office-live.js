@@ -5,6 +5,7 @@ var ENDPOINTS={arctos:"https://bogusfmvdrlvxscopgaw.supabase.co/functions/v1/off
 var LABEL={arctos:"Arctos",platinum:"Platinum Financial",office:"Office Staff"};
 var AGENT={arctos:"Justin",platinum:"Isaiah",office:"Sheena"};
 var access=null,agency="all",tab="dashboard",activeClient=null,selectedCampaign=null;
+var clientLookupView="search",clientLookupTicket=0,clientLookupController=null,clientLookupPaging={},clientLookupStatsTicket=0,clientLookupStatsCache=null,clientLookupMonthLabel="";
 var connected={},clients=[],campaigns=[],appointments=[],savedSearch="",screen=document.getElementById("office-root"),mobile=false;
 var officePhoneData={calls:[],texts:[],voicemails:[]},officePhoneSection="missed",officePhoneLoading=false;
 var officePhoneMatchCache=new Map(),officePhoneMatchBusy=0,officePhoneMatchQueue=[];
@@ -65,7 +66,7 @@ function shell(){
  document.getElementById("officeNewAppointment").addEventListener("click",()=>ocOpenAppointmentForm());
  document.getElementById("officeNewClient").addEventListener("click",()=>ocOpenNewClientForm());
  document.getElementById("mobileNav").addEventListener("click",()=>document.getElementById("officeSidebar").classList.toggle("open"));
- document.getElementById("filterAgency").addEventListener("change",e=>{agency=e.target.value;render();if(tab==="clients"&&savedSearch)searchClients(savedSearch);else if(["calendar","campaigns","dashboard"].includes(tab))loadTab()});
+ document.getElementById("filterAgency").addEventListener("change",e=>{agency=e.target.value;if(tab==="clients")clientLookupStatsCache=null;render();if(tab==="clients"){if(clientLookupView!=="search")void loadClientLookupView(clientLookupView);else if(savedSearch)void searchClients(savedSearch);}else if(["calendar","campaigns","dashboard"].includes(tab))loadTab()});
  document.querySelectorAll("[data-tab]").forEach(b=>b.addEventListener("click",()=>{tab=b.dataset.tab;if(tab==="campaigns")resetCampaignPicker();if(tab==="leads")resetLeadPicker();document.getElementById("officeSidebar").classList.remove("open");shell();render();loadTab()}));
 }
 function toast(v){const e=document.getElementById("alert");if(!e)return;e.textContent=v;e.classList.add("show");setTimeout(()=>e.classList.remove("show"),3500)}
@@ -74,7 +75,7 @@ function available(){return Object.keys(ENDPOINTS).filter(a=>connected[a]&&(agen
 function render(){
  let body="";
  if(tab==="dashboard")body=head("Office Dashboard","One secure workspace for your agencies.")+'<div class="office-grid"><div class="metric"><small>Connected Agencies</small><b>'+["arctos","platinum"].filter(a=>!!connected[a]).length+'</b></div><div class="metric"><small>Appointments in View</small><b>'+appointments.length+'</b></div><div class="metric"><small>Agency Campaigns</small><b>'+campaigns.length+'</b></div></div><div class="panel"><div class="panel-header"><h2>Quick Actions</h2></div><div class="quick-actions"><button class="quick-action" data-open="clients"><span>⌕</span>Find client</button><button class="quick-action" data-open="calendar"><span>▣</span>View calendar</button><button class="quick-action" data-open="campaigns"><span>◉</span>Work campaigns</button></div></div>';
- if(tab==="clients")body=head("Client Directory","Search both agencies without copying their client records.")+'<section class="panel"><div class="table-toolbar"><div class="search-field"><span>⌕</span><input id="clientSearch" placeholder="Enter first name, last name, or phone…" value="'+esc(savedSearch)+'"></div><span class="muted" id="countClients">Search to find clients</span></div><div class="table-wrap" id="clientResults"><div class="empty">Enter at least two characters to search your client records.</div></div></section>';
+ if(tab==="clients")body=head("Client Directory","Search both agencies without copying their client records.")+officeClientLookupMarkup();
  if(tab==="phone")body=head("Phone","Office telephone calls, text messages and RingCentral voicemails.")+
  '<section class="panel office-phone-panel"><div class="panel-header"><h2>Phone Communications</h2><button type="button" class="outline" id="officePhoneRefresh">Refresh</button></div>'+
  '<p class="muted office-phone-tip">View available phone messages and call history for the Office CRM. Tap a date to open its calls. Numbers do not need a saved client record to appear.</p>'+
@@ -90,8 +91,14 @@ function render(){
  let cAgent=document.getElementById("campaignAgent");if(cAgent)cAgent.addEventListener("change",e=>chooseCampaignAgent(e.target.value));
  let lAgency=document.getElementById("leadAgency");if(lAgency)lAgency.addEventListener("change",e=>chooseLeadAgency(e.target.value));
  let lAgent=document.getElementById("leadAgent");if(lAgent)lAgent.addEventListener("change",e=>chooseLeadAgent(e.target.value));
- let field=document.getElementById("clientSearch");if(field)field.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();searchClients(field.value)}});
- if(field)field.addEventListener("input",e=>{savedSearch=e.target.value;if(savedSearch.trim().length>=2){clearTimeout(window.searchTimeout);window.searchTimeout=setTimeout(()=>searchClients(savedSearch),330)}});
+ let field=document.getElementById("clientSearch"),searchForm=document.getElementById("officeClientSearch");
+ if(searchForm)searchForm.addEventListener("submit",e=>{e.preventDefault();clearTimeout(window.searchTimeout);void searchClients(field.value);});
+ if(field)field.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();clearTimeout(window.searchTimeout);void searchClients(field.value);}});
+ if(field)field.addEventListener("input",e=>{savedSearch=e.target.value;clearTimeout(window.searchTimeout);if(savedSearch.trim().length>=2)window.searchTimeout=setTimeout(()=>searchClients(savedSearch),330);});
+ document.querySelectorAll('[data-office-client-view]').forEach(button=>button.onclick=()=>{clearTimeout(window.searchTimeout);const view=button.dataset.officeClientView;if(clientLookupView===view)returnToClientSearch();else void loadClientLookupView(view);});
+ const back=document.getElementById('clientLookupBack');if(back)back.onclick=returnToClientSearch;
+ const more=document.getElementById('clientLookupMore');if(more)more.onclick=()=>void loadClientLookupView(clientLookupView,true);
+ if(tab==="clients"){updateClientLookupControls();void loadClientLookupStats();}
  let find=document.getElementById("notesFindClient");if(find)find.onclick=()=>{tab="clients";shell();render()};
  if(tab==="phone")officePhoneWire();
 }
@@ -393,22 +400,61 @@ async function loadTab(){
  if(tab==="campaigns"){showCampaignControls();return}
  if(tab==="leads"){showLeadControls();return}
  if(tab==="notes"){mountNotes();return}
- if(tab==="clients"&&savedSearch)await searchClients(savedSearch);
+ if(tab==="clients"){if(clientLookupView!=="search")await loadClientLookupView(clientLookupView);else if(savedSearch)await searchClients(savedSearch);}
+}
+function officeClientLookupMarkup(){
+ const icons={deceased:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18M5 9h14M7 21h10"/></svg>',birthdays:'<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M4 14h16M12 10V5M9 5a1.4 1.4 0 0 1 3 0m0 0a1.4 1.4 0 0 1 3 0"/></svg>'};
+ return '<section class="office-client-lookup"><section class="client-summary-grid" aria-label="Client record filters">'+['birthdays','deceased'].map(kind=>'<button type="button" class="client-summary-card is-'+kind+'" data-office-client-view="'+kind+'" aria-expanded="false" aria-controls="clientResults" title="'+(kind==='birthdays'?'Open birthdays this month':'Open deceased client records')+'"><span class="client-summary-icon">'+icons[kind]+'</span><strong data-office-client-count="'+kind+'">—</strong><span class="client-summary-label">'+(kind==='birthdays'?'Birthdays':'Deceased Clients')+'</span></button>').join('')+'</section><p id="clientLookupStatsStatus" class="muted" role="status"></p><section class="panel"><form id="officeClientSearch" class="office-client-search"><label class="search-field"><span aria-hidden="true">⌕</span><input id="clientSearch" aria-label="Search clients" enterkeyhint="search" placeholder="Enter first name, last name, or phone…" value="'+esc(savedSearch)+'"></label><button type="submit" class="primary" id="clientSearchButton">Search</button></form><header id="clientLookupArchive" class="client-deceased-head" hidden><div><h2 id="clientLookupTitle"></h2><p id="clientLookupDescription"></p></div><button type="button" class="outline" id="clientLookupBack">← Back to Client Search</button></header><p class="muted" id="countClients" role="status">Search to find clients</p><div class="table-wrap" id="clientResults"><div class="empty">Enter at least two characters to search your client records.</div></div><div class="office-client-more"><button type="button" class="outline" id="clientLookupMore" hidden>Load More</button></div></section></section>';
+}
+function updateClientLookupControls(){
+ const form=document.getElementById('officeClientSearch'),archive=document.getElementById('clientLookupArchive'),more=document.getElementById('clientLookupMore');if(!form||!archive)return;
+ form.hidden=clientLookupView!=='search';archive.hidden=clientLookupView==='search';if(more)more.hidden=true;
+ document.querySelectorAll('[data-office-client-view]').forEach(button=>button.setAttribute('aria-expanded',String(button.dataset.officeClientView===clientLookupView)));
+ const title=document.getElementById('clientLookupTitle'),description=document.getElementById('clientLookupDescription');
+ title.textContent=clientLookupView==='birthdays'?(clientLookupMonthLabel||new Intl.DateTimeFormat('en-US',{timeZone:'America/Chicago',month:'long',year:'numeric'}).format(new Date()))+' Birthdays':'Deceased Clients';
+ description.textContent=clientLookupView==='birthdays'?'Clients celebrating birthdays this month. Deceased clients are excluded.':'Archived client records remain intact, including coverage history, documents and files.';
+}
+async function loadClientLookupStats(){
+ const active=available(),key=active.join(',')+'|'+new Intl.DateTimeFormat('en-US',{timeZone:'America/Chicago',month:'2-digit',year:'numeric'}).format(new Date()),ticket=++clientLookupStatsTicket;
+ if(clientLookupStatsCache?.key===key&&Date.now()-clientLookupStatsCache.time<30000){paintClientLookupStats(clientLookupStatsCache.data);return;}
+ const results=await Promise.allSettled(active.map(a=>request(a,'client_lookup',{view:'stats'})));
+ if(tab!=='clients'||ticket!==clientLookupStatsTicket||active.join(',')!==available().join(','))return;
+ const data={birthdays:0,deceased:0,errors:[]};results.forEach((result,i)=>{if(result.status==='fulfilled'){data.birthdays+=Number(result.value.birthdays)||0;data.deceased+=Number(result.value.deceased)||0;clientLookupMonthLabel=result.value.month_label||clientLookupMonthLabel;}else data.errors.push(LABEL[active[i]]);});
+ if(!data.errors.length)clientLookupStatsCache={key,time:Date.now(),data};paintClientLookupStats(data);
+}
+function paintClientLookupStats(data){
+ for(const key of ['birthdays','deceased']){const count=document.querySelector('[data-office-client-count="'+key+'"]');if(count)count.textContent=data.errors.length?data[key]+'+':String(data[key]);}
+ const message=document.getElementById('clientLookupStatsStatus');if(message)message.textContent=data.errors.length?'Counts are unavailable for '+data.errors.join(' and ')+'. Open a list to retry.':'';
+}
+function returnToClientSearch(){clientLookupView='search';clientLookupController?.abort();clientLookupTicket++;updateClientLookupControls();void searchClients(document.getElementById('clientSearch')?.value||savedSearch);}
+function paintClientLookupRows(error=''){
+ const element=document.getElementById('clientResults');if(!element)return;
+ const sorted=clients.slice().sort((a,b)=>(clientLookupView==='birthdays'?Number(a.birthday_day||String(a.date_of_birth||'').slice(-2))-Number(b.birthday_day||String(b.date_of_birth||'').slice(-2)):0)||String(a.last_name||'').localeCompare(String(b.last_name||''))||String(a.first_name||'').localeCompare(String(b.first_name||'')));
+ const html=clientLookupView==='birthdays'?'<div class="client-birthday-list">'+sorted.map(c=>'<div class="client-birthday-row"><button type="button" class="client-birthday-client" data-client="'+esc(c.agency)+':'+esc(c.id)+'"><span class="birthday-day">'+esc(c.birthday_day||String(c.date_of_birth||'').slice(-2))+'</span><span class="birthday-client-name"><strong>'+esc([c.first_name,c.last_name].filter(Boolean).join(' ')||'Client')+'</strong><small>'+esc(c.phone||'No phone saved')+'</small></span>'+tag(c.agency)+'<span class="birthday-arrow" aria-hidden="true">›</span></button></div>').join('')+'</div>':'<table class="data-table"><thead><tr><th>Client</th><th>Agency</th><th>Agent</th><th>Phone</th><th>Status</th><th></th></tr></thead><tbody>'+sorted.map(c=>'<tr><td><b>'+esc([c.first_name,c.last_name].filter(Boolean).join(' '))+'</b><div class="muted">'+esc(c.city||'')+'</div></td><td>'+tag(c.agency)+'</td><td>'+esc(AGENT[c.agency])+'</td><td>'+esc(c.phone||'')+'</td><td>'+status(c.status)+'</td><td><button class="link-btn" data-client="'+esc(c.agency)+':'+esc(c.id)+'">Open →</button></td></tr>').join('')+'</tbody></table>';
+ element.innerHTML=(clients.length?html:'<div class="empty">'+(clientLookupView==='birthdays'?'No clients with birthdays this month.':clientLookupView==='deceased'?'No deceased clients found.':'No matching records found.')+'</div>')+(error?'<div class="auth-warn" role="alert">'+esc(error)+'</div>':'');
+ element.querySelectorAll('[data-client]').forEach(button=>button.onclick=()=>{const [agency,id]=button.dataset.client.split(':');void openClient(agency,id);});
+ const count=document.getElementById('countClients');if(count){const total=Object.values(clientLookupPaging).reduce((sum,page)=>sum+(page.total||0),0);count.textContent=clientLookupView==='search'?clients.length+' matching clients':clients.length+(total>clients.length?' of '+total:'')+(clientLookupView==='birthdays'?' birthday clients':' deceased clients');}
+ const more=document.getElementById('clientLookupMore');if(more){more.hidden=clientLookupView==='search'||!Object.values(clientLookupPaging).some(page=>page.failed||page.offset<page.total);more.disabled=false;more.textContent=Object.values(clientLookupPaging).some(page=>page.failed)?'Retry / Load More':'Load More';}
+}
+async function loadClientLookupView(view,append=false){
+ if(!append)void loadClientLookupStats();
+ if(!['birthdays','deceased'].includes(view))return;clearTimeout(window.searchTimeout);clientLookupController?.abort();clientLookupController=new AbortController();const signal=clientLookupController.signal,ticket=++clientLookupTicket;
+ clientLookupView=view;updateClientLookupControls();const element=document.getElementById('clientResults');if(!element||tab!=='clients')return;
+ if(!append){clients=[];clientLookupPaging={};element.innerHTML='<div class="loading-state">Loading '+(view==='birthdays'?'birthdays':'deceased clients')+'…</div>';}
+ const active=available().filter(a=>!append||!clientLookupPaging[a]||clientLookupPaging[a].failed||clientLookupPaging[a].offset<clientLookupPaging[a].total),problems=[];
+ const results=await Promise.allSettled(active.map(a=>request(a,'client_lookup',{view,offset:append?clientLookupPaging[a]?.offset||0:0,limit:200},false,{signal})));
+ if(signal.aborted||ticket!==clientLookupTicket||tab!=='clients'||clientLookupView!==view)return;
+ results.forEach((result,i)=>{const a=active[i];if(result.status==='fulfilled'){const rows=result.value.clients||[],previous=append?clientLookupPaging[a]?.offset||0:0;clientLookupPaging[a]={offset:previous+rows.length,total:result.value.total||0,failed:false};clientLookupMonthLabel=result.value.month_label||clientLookupMonthLabel;for(const c of rows)if(!clients.some(row=>row.id===c.id&&row.agency===a))clients.push({...c,agency:a});}else{clientLookupPaging[a]={...(clientLookupPaging[a]||{offset:0,total:0}),failed:true};problems.push(LABEL[a]+': '+result.reason.message);}});
+ updateClientLookupControls();paintClientLookupRows(problems.join('; '));
 }
 async function searchClients(s){
- savedSearch=s;const element=document.getElementById("clientResults");if(!element||tab!=="clients")return;
- if(s.trim().length<2){element.innerHTML='<div class="empty">Enter at least two characters.</div>';return}
- element.innerHTML='<div class="loading-state">Searching authorized agency records…</div>';
- const active=available();
- let results=await Promise.allSettled(active.map(a=>request(a,"search",{search:s})));
- clients=results.flatMap((r,i)=>r.status==="fulfilled"?r.value.clients.map(c=>({...c,agency:active[i]})):[]);
- if(!document.getElementById("clientResults")||tab!=="clients"||s!==savedSearch)return;
- let err=results.filter(r=>r.status==="rejected").map(r=>r.reason.message).join("; ");
- let html='<table class="data-table"><thead><tr><th>Client</th><th>Agency</th><th>Agent</th><th>Phone</th><th>Status</th><th></th></tr></thead><tbody>'+
- clients.map(c=>'<tr><td><b>'+esc((c.first_name||"")+" "+(c.last_name||""))+'</b><div class="muted">'+esc(c.city||"")+'</div></td><td>'+tag(c.agency)+'</td><td>'+esc(AGENT[c.agency])+'</td><td>'+esc(c.phone||"")+'</td><td>'+status(c.status)+'</td><td><button class="link-btn" data-client="'+esc(c.agency)+":"+esc(c.id)+'">Open →</button></td></tr>').join("")+'</tbody></table>';
- element.innerHTML=(clients.length?html:'<div class="empty">No matching records found.</div>')+(err?'<div class="auth-warn">'+esc(err)+'</div>':'');
- document.getElementById("countClients").textContent=clients.length+" matching clients";
- element.querySelectorAll("[data-client]").forEach(b=>b.onclick=()=>{let [a,id]=b.dataset.client.split(":");openClient(a,id)});
+ clearTimeout(window.searchTimeout);savedSearch=s;clientLookupView='search';clientLookupController?.abort();clientLookupController=new AbortController();const signal=clientLookupController.signal,ticket=++clientLookupTicket;
+ updateClientLookupControls();const element=document.getElementById('clientResults');if(!element||tab!=='clients')return;
+ if(s.trim().length<2){clients=[];element.innerHTML='<div class="empty">Enter at least two characters.</div>';document.getElementById('countClients').textContent='Search to find clients';return;}
+ element.innerHTML='<div class="loading-state">Searching authorized agency records…</div>';const active=available();
+ const results=await Promise.allSettled(active.map(a=>request(a,'search',{search:s,exclude_deceased:true},false,{signal})));
+ if(signal.aborted||ticket!==clientLookupTicket||!document.getElementById('clientResults')||tab!=='clients'||s!==savedSearch)return;
+ clients=results.flatMap((r,i)=>r.status==='fulfilled'?(r.value.clients||[]).map(c=>({...c,agency:active[i]})):[]);clientLookupPaging={};paintClientLookupRows(results.filter(r=>r.status==='rejected').map(r=>r.reason.message).join('; '));
 }
 
 /* Office Calendar: local-date handling keeps date-only appointments on the right day. */

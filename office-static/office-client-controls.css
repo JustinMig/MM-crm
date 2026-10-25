@@ -1,0 +1,800 @@
+/* Arctos lookup cards and Save action, bounded to Office client controls. */
+/* RingCentral Call Data review — visible missed calls grouped by Central day and voicemail inbox. */
+/* Missed Calls and Voicemails: each day is a native, closed-by-default
+   disclosure group. Notes, appointments, and playback stay inside that day. */
+@media(max-width:620px){}
+/* Original Mayer CRM compact toolbar geometry, glyphs and muted icon tiles. */
+/* Native dialogs provide focus isolation. All close paths use the same draft guard. */
+/* Calendar matches the month grid, today/reschedule queues, controls and day overlays. */
+@media(max-width:1100px){}
+@media(max-width:760px){}
+@media(max-width:720px){}
+@media(max-width:480px){}
+@media(prefers-reduced-motion:reduce){}
+
+/* Arctos phase 1: concise, accessible grouped navigation. */
+@media(max-width:760px){
+}
+@media(max-width:760px){}
+@media(max-width:520px){}
+
+/* M&H CRM current single-user client-search layout.
+   Justin Mayer is the only active CRM user at this time, so the Agent filter is unnecessary. */
+
+@supports not selector(:has(*)){
+}@media(max-width:1050px){}@media(max-width:720px){}@media(max-width:460px){}@media(max-width:900px){}@media(max-width:640px){}
+/* Client record uploads: readable labels and action buttons across all file sections. */@media(max-width:700px){}@media(max-width:430px){}
+/* Color-blind-friendly, high-contrast Medicare accordion headers. Loaded after the base Medicare styles. */
+/* Use both color and a numbered marker so the sections never depend on color alone. */
+/* Dark action boxes always use white text for contrast. */
+@media(max-width:700px){
+}@media(max-width:700px){}
+
+#main .office-client-lookup .client-product-status-box .client-deceased-choice {
+  margin: 0;
+  padding: 10px 12px;
+  border-left: 1px solid rgba(244,114,114,.35);
+  border-color: rgba(244,114,114,.32);
+  background: rgba(127,29,29,.12);
+}
+
+#main .office-client-lookup .client-product-status-box .client-deceased-choice:hover {
+  border-color: rgba(248,113,113,.65);
+  background: rgba(153,27,27,.20);
+}
+
+#main .office-client-lookup .client-product-status-box .client-deceased-choice:has(input:checked) {
+  border-color: rgba(248,113,113,.75);
+  background: rgba(153,27,27,.30);
+  box-shadow: inset 0 0 0 1px rgba(248,113,113,.10);
+}
+
+#main .office-client-lookup .client-product-status-box .client-deceased-choice input:checked {
+  border-color: #ef7777;
+  background: #a93232;
+  box-shadow: 0 0 0 3px rgba(239,119,119,.14);
+}
+
+@media (max-width: 760px) {
+
+  #main .office-client-lookup .client-product-status-box .client-deceased-choice {
+    min-height: 46px;
+    padding: 9px 8px;
+  }
+}
+
+@media (max-width: 430px) {
+}
+
+@media (max-width: 700px) {
+}
+
+@media (max-width: 700px) {
+}
+
+@media (max-width: 700px) {
+}
+
+@media (max-width: 700px) {
+}
+@media(max-width:700px){
+}@media(max-width:700px){}
+@media(max-width:700px){}
+
+/* General doctors notes stay above individual doctor cards. */
+
+/* Distinct, dark outlined Medical sections and individual doctor/medication cards. */
+@media(max-width:700px){}
+@media(max-width:700px){
+}
+
+/* Quiet, readable client search details. No changes to client-record themes. */
+@media(max-width:1150px){}
+
+/* iPhone / narrow-phone result cards: collapsed summary view only. */
+@media(max-width:620px){
+}
+
+/* Very narrow iPhones: keep Name + Phone + State and drop County first. */
+@media(max-width:360px){
+}
+@media(prefers-reduced-motion:reduce){}
+
+/* Search criteria stay simple; sorting appears with the requested results. */
+@media(max-width:900px){}
+@media(max-width:620px){}
+
+/* Deceased archive list, opened from the compact client-summary counter. */
+#main .office-client-lookup .client-deceased-archive{border:2px solid #765b66;border-radius:14px;background:#fdfafb;padding:18px;margin-bottom:18px}
+#main .office-client-lookup .client-deceased-head{display:flex;justify-content:space-between;align-items:center;gap:15px;border-bottom:1px solid #d4bcc4;margin-bottom:16px;padding-bottom:14px}
+#main .office-client-lookup .client-deceased-head h2{font-size:20px;font-weight:850;color:#492e39;margin:0 0 5px}
+#main .office-client-lookup .client-deceased-head p{font-size:13px;line-height:1.5;color:#6e5560;margin:0}
+#main .office-client-lookup .client-deceased-archive .client-result{border-color:#cfb8bf}
+#main .office-client-lookup .client-deceased-archive .client-result:hover{border-color:#896873}
+@media(max-width:760px){#main .office-client-lookup .client-deceased-head{align-items:stretch;flex-direction:column}}
+
+
+/* Client month-of-birth archive and independent multi-select texting. */
+#main .office-client-lookup .client-birthday-archive{
+ border:2px solid #d8be94;border-radius:14px;background:#fffcf7;
+ padding:16px;margin:0 0 18px;min-width:0
+}
+#main .office-client-lookup .client-birthday-archive .client-deceased-head{border-bottom-color:#e4d5bb}
+#main .office-client-lookup .client-birthday-archive .client-deceased-head h2{color:#654a2f}
+#main .office-client-lookup .client-birthday-archive .client-deceased-head p{color:#726653}
+#main .office-client-lookup .client-birthday-tools{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:6px 0 12px}
+#main .office-client-lookup .client-birthday-tools [hidden]{display:none!important}
+#main .office-client-lookup .client-birthday-list{display:grid;gap:7px}
+#main .office-client-lookup .client-birthday-row{display:flex;align-items:center;gap:9px;min-width:0}
+#main .office-client-lookup .client-birthday-client{
+ flex:1 1 auto;display:flex;gap:12px;align-items:center;text-align:left;
+ min-width:0;min-height:54px;padding:9px 12px;
+ border:1px solid #e1d2b6;border-radius:10px;background:#fff;color:#2b4355;
+ font:inherit;cursor:pointer
+}
+#main .office-client-lookup .client-birthday-client:hover{background:#fcf5e9;border-color:#c7a773}
+@media(max-width:620px){
+ #main .office-client-lookup .client-birthday-archive{padding:11px}
+}
+
+/* Compact client totals use the same muted campaign-counter language without taking over the page. */
+#main .office-client-lookup .client-summary-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin:0 0 10px;max-width:900px}
+#main .office-client-lookup .client-summary-card{position:relative;min-width:0;min-height:64px;border:1px solid #d6e0e6;border-radius:9px;padding:5px 6px;display:grid;grid-template-columns:25px auto;grid-template-rows:auto auto;align-items:center;justify-content:center;column-gap:7px;row-gap:1px;text-align:left;box-shadow:0 1px 2px rgba(15,23,42,.025);overflow:hidden}
+#main .office-client-lookup .client-summary-icon{grid-row:1/3;width:24px;height:24px;border-radius:7px;display:grid;place-items:center}
+#main .office-client-lookup .client-summary-icon svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+#main .office-client-lookup .client-summary-card strong{align-self:end;font-size:.94rem;line-height:1;color:#243c4d;font-variant-numeric:tabular-nums}
+#main .office-client-lookup .client-summary-label{align-self:start;max-width:100%;font-size:.5rem;font-weight:900;line-height:1.05;color:#657681;text-transform:uppercase;letter-spacing:.01em;white-space:normal;overflow-wrap:anywhere}
+#main .office-client-lookup .client-summary-card.is-total{background:#eef6fb;border-color:#cbdde8}#main .office-client-lookup .client-summary-card.is-total .client-summary-icon{background:#d8eaf5;color:#376b89}
+#main .office-client-lookup .client-summary-card.is-medicare{background:#edf7f0;border-color:#c9dfcf}#main .office-client-lookup .client-summary-card.is-medicare .client-summary-icon{background:#d8ebde;color:#44725a}
+#main .office-client-lookup .client-summary-card.is-life{background:#faeeee;border-color:#e7c8cb}#main .office-client-lookup .client-summary-card.is-life .client-summary-icon{background:#f1dadd;color:#8a4f59}
+#main .office-client-lookup .client-summary-grid.is-loading .client-summary-card strong{opacity:.45}#main .office-client-lookup .client-summary-grid[data-error=true] .client-summary-card{border-style:dashed}
+
+/* Full Life + Medicare commission tracker. */
+
+@media(max-width:720px){}
+@media(max-width:620px){#main .office-client-lookup .client-summary-grid{gap:3px;margin-bottom:8px}#main .office-client-lookup .client-summary-card{min-height:54px;padding:4px 3px;border-radius:8px;grid-template-columns:20px auto;column-gap:4px}#main .office-client-lookup .client-summary-icon{width:20px;height:20px;border-radius:6px}#main .office-client-lookup .client-summary-icon svg{width:11px;height:11px}#main .office-client-lookup .client-summary-card strong{font-size:.8rem}#main .office-client-lookup .client-summary-label{font-size:.4rem;line-height:1}}
+@media(max-width:360px){#main .office-client-lookup .client-summary-card{min-height:50px}#main .office-client-lookup .client-summary-card strong{font-size:.74rem}#main .office-client-lookup .client-summary-label{font-size:.37rem}}
+
+/* Deceased is the fourth ORIGINAL compact client counter, not a second oversized row. */
+#main .office-client-lookup .client-summary-grid .client-summary-card.is-deceased{
+  appearance:none;font:inherit;cursor:pointer;color:#243c4d;background:#f5eef0;
+  border:1px solid #d9c7ce;text-align:left;
+}
+#main .office-client-lookup .client-summary-grid .client-summary-card.is-deceased .client-summary-icon{background:#e9d9df;color:#805264}
+#main .office-client-lookup .client-summary-grid .client-summary-card.is-deceased:hover,#main .office-client-lookup .client-summary-grid .client-summary-card.is-deceased.is-selected{background:#f0e3e8;border-color:#9a7884}
+#main .office-client-lookup .client-summary-grid .client-summary-card.is-deceased:focus-visible{outline:3px solid #65879b;outline-offset:2px}
+@media(max-width:620px){
+  #main .office-client-lookup .client-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr));max-width:100%}
+  #main .office-client-lookup .client-summary-grid .client-summary-card{min-height:58px}
+  #main .office-client-lookup .client-summary-grid .client-summary-label{font-size:.55rem}
+  #main .office-client-lookup .client-summary-grid .client-summary-card strong{font-size:.92rem}
+}
+
+/* Five small client counters; birthday list sits directly after Deceased. */
+#main .office-client-lookup .client-summary-grid{grid-template-columns:repeat(5,minmax(0,1fr));max-width:1040px}
+#main .office-client-lookup .client-summary-grid .client-summary-card.is-birthdays{
+ cursor:pointer;font:inherit;background:#fff6e9;border:1px solid #ecd8b2;color:#665037;
+}
+#main .office-client-lookup .client-summary-grid .client-summary-card.is-birthdays .client-summary-icon{
+ background:#f7e7c9;color:#956c37;
+}
+#main .office-client-lookup .client-summary-grid .client-summary-card.is-birthdays:hover,#main .office-client-lookup .client-summary-grid .client-summary-card.is-birthdays.is-selected{
+ background:#f9edd9;border-color:#bf9764;
+}
+#main .office-client-lookup .client-summary-grid .client-summary-card.is-birthdays:focus-visible{outline:3px solid #6791ad;outline-offset:2px}
+@media(max-width:700px){
+ #main .office-client-lookup .client-summary-grid{grid-template-columns:repeat(3,minmax(0,1fr));max-width:100%}
+ #main .office-client-lookup .client-summary-grid .client-summary-card{min-height:57px}
+}
+@media(max-width:390px){
+ #main .office-client-lookup .client-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}@media(min-width:900px){}@media(max-width:560px){}
+/* Distinct boxes inside Personal & Contact Information. Match the existing Height/Weight card language. */
+@media(min-width:900px){
+}
+@media(max-width:560px){
+}
+@media(max-width:390px){
+}
+
+/* Keep Product Type checkbox labels readable in Client Information without changing panel backgrounds. */@media(max-width:620px){}@media(max-width:390px){}@media(max-width:620px){}
+
+/* Campaigns: restrained slate/sage accents, compact records, native accessible controls. */
+@media(max-width:1080px){}
+@media(max-width:620px){}
+
+/* Make unavailable campaign calendar choices visually distinct on browsers that style native selects. */
+
+/* Campaign dashboard: compact icon counters with isolated outcome views. */
+@media(max-width:760px){}
+@media(max-width:390px){}
+
+/* Persistent selected view: dark fill, white content, double border and a check.
+   aria-pressed is set by the existing campaign controller, not by hover/focus. */
+@media(max-width:760px){}
+@media(forced-colors:active){}
+
+/* Sixth stage: a recorded face-to-face contact, separate from No Answer and Completed. */
+/* Every campaign client retains its own compact, collapsed notes dropdown.
+   Expanded notes span the whole client card, not the narrow name column. */
+@media(max-width:760px){
+}
+@media(max-width:760px){}
+@media(max-width:390px){}@media(max-width:620px){}
+/* One visual campaign box, with separate Open and Delete buttons inside it.
+   Keep the controls as siblings: a button must not be nested in another button. */
+@media(max-width:620px){}
+
+@media(max-width:620px){
+}@media(max-width:620px){}@media(max-width:620px){}@media(max-width:760px){}
+/* Phone-only bottom dock for the existing M&H toolbar. Desktop/tablet layout is unchanged. */
+@media (max-width: 700px) {
+
+  /* Phone toolbar keeps only menu + action icons. Branding remains in the slide-out nav. */
+
+  /* Spread the quick actions evenly from the end of the menu button to the right edge. */
+
+  /* Keep the slide-out navigation above the bottom dock on phones. */
+}
+
+@media (max-width: 390px) {
+}
+@media(max-width:900px){}
+@media(max-width:560px){}
+@media(max-width:620px){}
+@media(max-width:980px){}
+@media(max-width:620px){}
+@media(max-width:620px){}
+
+/* Carrier brand tints — keep plan text black and backgrounds intentionally light. */
+
+/* HealthSpring/Cigna 2027 — soft teal, consistent with the five-carrier picker. */
+
+/* 2027 SB/EOC source ledger and field-by-field confirmation. */
+@media(max-width:540px){}
+
+
+/* Athena's Medicare — independent, responsive review workspace. */
+@media(max-width:1050px){}
+@media(max-width:680px){
+}
+@media print{}
+
+/* Athena Medicare: distinct, subtle colors for each of the nine review sections. */
+
+
+/* Crisp black outlines around each Athena section and its title only. */
+
+
+/* Section 2: individual, distinct Medicare, Medicaid and Medicare.gov panels. */
+@media(max-width:650px){}
+
+/* Athena review supporting-document camera and drag/drop */
+
+/* Shared client Overview notes, deliberately above Athena section one. */
+
+
+/* Section 6: compact, consistent needs checkboxes (desktop and phone). */
+@media(max-width:480px){
+}
+
+
+/* Athena home: explicit, easily scanned unfinished review queue. */
+@media(max-width:480px){}
+
+
+/* Unfinished reviews: two compact client cards per row, actions together at the end. */
+@media(max-width:850px){}
+@media(max-width:480px){}
+
+/* Old plan details are explicitly separated from the current plan in Athena Step 3. */
+@media(max-width:600px){}
+
+/* Arctos client-record simplification: four visible sections; original fields preserved. */
+@media(max-width:720px){
+}
+@media(max-width:380px){}
+
+/* Override legacy per-tab colors, without changing the individual insurance form colors. */
+
+
+/* Coverage cards: dark outlines and distinct soft shades, matching Athena. */
+
+/* Clearly differentiated Medicare accordion headings, with high-contrast colors. */
+
+/* Client Overview: compact annual review completion, expansive synced notes. */
+
+/* Client at a Glance: action buttons replace redundant section navigation. */
+/* Overview note is a closed native accordion on every newly opened record. */
+/* Keep shortcuts compact when 2 actions, or 3 with the Medicare Review link. */
+@media(max-width:630px){
+}
+@media(max-width:380px){
+}
+
+/* Inline confirmation for the reliable Client at a Glance campaign action. */
+
+/* Arctos Step 4: purposeful daily dashboard with on-demand calendar */
+@media(max-width:880px){}
+@media(max-width:620px){
+}
+
+/* Dashboard surface separation: gentle color, clear borders, and readable contrast. */
+
+/* Calm dashboard palette: navy / blue / sage with restrained warm alert accents.
+   Scope to the Dashboard so records and other CRM screens are unchanged. */
+
+/* Today's Schedule: restrained warm yellow, coordinated with blue/sage dashboard. */
+
+/* Arctos Work Queue: one uncluttered view over leads, campaigns, and follow-ups */
+@media(max-width:900px){}
+@media(max-width:630px){
+}
+
+/* Arctos step 6 — one client Notes & Files workspace */
+@media(max-width:650px){
+}
+
+/*
+ * ARCTOS / STEP 7 — Visual system
+ *
+ * Purpose: one consistent app palette and interaction treatment. This is
+ * imported LAST so old incremental coloring can be retired progressively
+ * without changing any element IDs, form fields, or data behaviors.
+ *
+ * Navy = navigation and active views; sage = primary action;
+ * Red = errors and destructive controls. Carrier brand tints on MA Plans
+ * remain intentionally untouched.
+ */
+
+/* One recognizable button hierarchy in all ordinary CRM screens. */
+
+/* Keep the existing high-contrast action inside dark hero backgrounds. */
+
+/* Eliminate the old rainbow accordion palette. Tiny, low-key left accents
+ * identify a type without relying on color alone; every heading is labelled. */
+/* Numbered circles are repeated ornaments in the old client form. */
+/* The four major client tabs use exactly one active treatment. */
+
+/* Consistent search and filters in Work and Notes & Files. */
+
+/* Athena's Medicare keeps its own functional workflow, now visually aligned
+ * with the same app background, borders and inactive/active control states. */
+
+/* The sign-in screen and Athena custom controls share the same muted,
+ * accessible action meanings without altering their layouts or workflows. */
+
+/* Intentional exceptions: company/carrier colors in MA plan comparisons,
+ * error/success states, and branded bear artwork should not be recolored. */
+@media(max-width:700px){
+}
+@media(prefers-reduced-motion:reduce){
+}
+
+/* Arctos: persistent five-action quick toolbar.
+   Desktop/tablet: header right. iPhone: fixed bottom, with menu and safe-area. */
+@media(max-width:1040px) and (min-width:701px){
+}
+/* Compact desktop when the 260px sidebar leaves a narrow content area. */
+@media(min-width:761px) and (max-width:850px){
+}
+@media(max-width:700px){
+  /* This is the phone-only bottom dock; preserve the five actions and menu.
+     The fixed header is already placed at bottom by mobile-bottom-toolbar.css. */
+}
+@media(max-width:365px){
+}
+
+
+
+/* Appointment day cards */
+@media (max-width: 520px) {
+}
+@media (max-width: 760px) {
+}
+@media (max-width: 520px) {
+}
+
+/* Shared appointment-booking availability styling (calendar + quick tool). */
+
+/* Final high-contrast override for all client-record upload actions. */
+
+
+/* Client overview: completed appointment history and inline quick notes. */
+@media(max-width:680px){}
+
+/* Universal file-action legibility: upload and camera/scan labels.
+   These controls use pale button backgrounds, so never inherit white text. */
+
+/* Definitive contrast fix for Medicare, Medicaid, and shared client file controls.
+   Previous Medicare theme used white !important and dark backgrounds. */
+
+/* Old-plan data box on the Coverage tab (also used when creating clients). */
+@media(max-width:620px){}
+
+/* All client-upload lists: high contrast file names, numbers and View/Remove actions.
+   Override older dark-theme rules even in nested Coverage > Health Plan upload controls. */
+/* File-list names and numerical details must never inherit the white themed text. */
+
+/* Height & Weight: show additional product / age selector only when relevant. */
+
+/* Original M&M carrier directory in the persistent Contacts quick tool. */
+@media(max-width:620px){
+}
+
+/* Select existing campaign / create new directly from a saved client. */
+
+/* RingCentral Call Data review — visible missed calls grouped by Central day and voicemail inbox. */
+/* Missed Calls and Voicemails: each day is a native, closed-by-default
+   disclosure group. Notes, appointments, and playback stay inside that day. */
+@media(max-width:620px){}#dialog .oc-arctos-client-dialog .office-tab-save-footer .footer-actions > button.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:40px;padding:9px 13px;border:1px solid transparent;border-radius:10px;font-size:13px;font-weight:800;line-height:1.3}#dialog .oc-arctos-client-dialog .office-tab-save-footer .footer-actions > button.btn:hover:not(:disabled){filter:brightness(.96)}
+/* Original Mayer CRM compact toolbar geometry, glyphs and muted icon tiles. */
+/* Native dialogs provide focus isolation. All close paths use the same draft guard. */
+/* Calendar matches the month grid, today/reschedule queues, controls and day overlays. */
+@media(max-width:1100px){}
+@media(max-width:760px){}
+@media(max-width:720px){}
+@media(max-width:480px){}
+@media(prefers-reduced-motion:reduce){}
+
+/* Arctos phase 1: concise, accessible grouped navigation. */
+@media(max-width:760px){
+}
+@media(max-width:760px){}
+@media(max-width:520px){}
+
+/* M&H CRM current single-user client-search layout.
+   Justin Mayer is the only active CRM user at this time, so the Agent filter is unnecessary. */
+
+@supports not selector(:has(*)){
+}@media(max-width:1050px){}@media(max-width:720px){}@media(max-width:460px){}@media(max-width:900px){}@media(max-width:640px){}
+/* Client record uploads: readable labels and action buttons across all file sections. */@media(max-width:700px){}@media(max-width:430px){}
+/* Color-blind-friendly, high-contrast Medicare accordion headers. Loaded after the base Medicare styles. */
+/* Use both color and a numbered marker so the sections never depend on color alone. */
+/* Dark action boxes always use white text for contrast. */
+@media(max-width:700px){
+}@media(max-width:700px){}
+
+@media (max-width: 760px) {
+}
+
+@media (max-width: 430px) {
+}
+
+@media (max-width: 700px) {
+}
+
+@media (max-width: 700px) {
+}
+
+@media (max-width: 700px) {
+}
+
+@media (max-width: 700px) {
+}
+@media(max-width:700px){
+}@media(max-width:700px){}
+@media(max-width:700px){}
+
+/* General doctors notes stay above individual doctor cards. */
+
+/* Distinct, dark outlined Medical sections and individual doctor/medication cards. */
+@media(max-width:700px){}
+@media(max-width:700px){
+}
+
+/* Quiet, readable client search details. No changes to client-record themes. */
+@media(max-width:1150px){}
+
+/* iPhone / narrow-phone result cards: collapsed summary view only. */
+@media(max-width:620px){
+}
+
+/* Very narrow iPhones: keep Name + Phone + State and drop County first. */
+@media(max-width:360px){
+}
+@media(prefers-reduced-motion:reduce){}
+
+/* Search criteria stay simple; sorting appears with the requested results. */
+@media(max-width:900px){}
+@media(max-width:620px){}
+
+/* Deceased archive list, opened from the compact client-summary counter. */
+@media(max-width:760px){}
+
+
+/* Client month-of-birth archive and independent multi-select texting. */
+@media(max-width:620px){
+}
+
+/* Compact client totals use the same muted campaign-counter language without taking over the page. */
+
+/* Full Life + Medicare commission tracker. */
+
+@media(max-width:720px){}
+@media(max-width:620px){}
+@media(max-width:360px){}
+
+/* Deceased is the fourth ORIGINAL compact client counter, not a second oversized row. */
+@media(max-width:620px){
+}
+
+/* Five small client counters; birthday list sits directly after Deceased. */
+@media(max-width:700px){
+}
+@media(max-width:390px){
+}@media(min-width:900px){}@media(max-width:560px){}
+/* Distinct boxes inside Personal & Contact Information. Match the existing Height/Weight card language. */
+@media(min-width:900px){
+}
+@media(max-width:560px){
+}
+@media(max-width:390px){
+}
+
+/* Keep Product Type checkbox labels readable in Client Information without changing panel backgrounds. */@media(max-width:620px){}@media(max-width:390px){}@media(max-width:620px){}
+
+/* Campaigns: restrained slate/sage accents, compact records, native accessible controls. */
+@media(max-width:1080px){}
+@media(max-width:620px){}
+
+/* Make unavailable campaign calendar choices visually distinct on browsers that style native selects. */
+
+/* Campaign dashboard: compact icon counters with isolated outcome views. */
+@media(max-width:760px){}
+@media(max-width:390px){}
+
+/* Persistent selected view: dark fill, white content, double border and a check.
+   aria-pressed is set by the existing campaign controller, not by hover/focus. */
+@media(max-width:760px){}
+@media(forced-colors:active){}
+
+/* Sixth stage: a recorded face-to-face contact, separate from No Answer and Completed. */
+/* Every campaign client retains its own compact, collapsed notes dropdown.
+   Expanded notes span the whole client card, not the narrow name column. */
+@media(max-width:760px){
+}
+@media(max-width:760px){}
+@media(max-width:390px){}@media(max-width:620px){}
+/* One visual campaign box, with separate Open and Delete buttons inside it.
+   Keep the controls as siblings: a button must not be nested in another button. */
+@media(max-width:620px){}
+
+@media(max-width:620px){
+}@media(max-width:620px){}@media(max-width:620px){}@media(max-width:760px){}
+/* Phone-only bottom dock for the existing M&H toolbar. Desktop/tablet layout is unchanged. */
+@media (max-width: 700px) {
+
+  /* Phone toolbar keeps only menu + action icons. Branding remains in the slide-out nav. */
+
+  /* Spread the quick actions evenly from the end of the menu button to the right edge. */
+
+  /* Keep the slide-out navigation above the bottom dock on phones. */
+}
+
+@media (max-width: 390px) {
+}
+@media(max-width:900px){}
+@media(max-width:560px){}
+@media(max-width:620px){}
+@media(max-width:980px){}
+@media(max-width:620px){}
+@media(max-width:620px){}
+
+/* Carrier brand tints — keep plan text black and backgrounds intentionally light. */
+
+/* HealthSpring/Cigna 2027 — soft teal, consistent with the five-carrier picker. */
+
+/* 2027 SB/EOC source ledger and field-by-field confirmation. */
+@media(max-width:540px){}
+
+
+/* Athena's Medicare — independent, responsive review workspace. */
+@media(max-width:1050px){}
+@media(max-width:680px){
+}
+@media print{}
+
+/* Athena Medicare: distinct, subtle colors for each of the nine review sections. */
+
+
+/* Crisp black outlines around each Athena section and its title only. */
+
+
+/* Section 2: individual, distinct Medicare, Medicaid and Medicare.gov panels. */
+@media(max-width:650px){}
+
+/* Athena review supporting-document camera and drag/drop */
+
+/* Shared client Overview notes, deliberately above Athena section one. */
+
+
+/* Section 6: compact, consistent needs checkboxes (desktop and phone). */
+@media(max-width:480px){
+}
+
+
+/* Athena home: explicit, easily scanned unfinished review queue. */
+@media(max-width:480px){}
+
+
+/* Unfinished reviews: two compact client cards per row, actions together at the end. */
+@media(max-width:850px){}
+@media(max-width:480px){}
+
+/* Old plan details are explicitly separated from the current plan in Athena Step 3. */
+@media(max-width:600px){}
+
+/* Arctos client-record simplification: four visible sections; original fields preserved. */
+@media(max-width:720px){
+}
+@media(max-width:380px){}
+
+/* Override legacy per-tab colors, without changing the individual insurance form colors. */
+
+
+/* Coverage cards: dark outlines and distinct soft shades, matching Athena. */
+
+/* Clearly differentiated Medicare accordion headings, with high-contrast colors. */
+
+/* Client Overview: compact annual review completion, expansive synced notes. */
+
+/* Client at a Glance: action buttons replace redundant section navigation. */
+/* Overview note is a closed native accordion on every newly opened record. */
+/* Keep shortcuts compact when 2 actions, or 3 with the Medicare Review link. */
+@media(max-width:630px){
+}
+@media(max-width:380px){
+}
+
+/* Inline confirmation for the reliable Client at a Glance campaign action. */
+
+/* Arctos Step 4: purposeful daily dashboard with on-demand calendar */
+@media(max-width:880px){}
+@media(max-width:620px){
+}
+
+/* Dashboard surface separation: gentle color, clear borders, and readable contrast. */
+
+/* Calm dashboard palette: navy / blue / sage with restrained warm alert accents.
+   Scope to the Dashboard so records and other CRM screens are unchanged. */
+
+/* Today's Schedule: restrained warm yellow, coordinated with blue/sage dashboard. */
+
+/* Arctos Work Queue: one uncluttered view over leads, campaigns, and follow-ups */
+@media(max-width:900px){}
+@media(max-width:630px){
+}
+
+/* Arctos step 6 — one client Notes & Files workspace */
+@media(max-width:650px){
+}
+
+/*
+ * ARCTOS / STEP 7 — Visual system
+ *
+ * Purpose: one consistent app palette and interaction treatment. This is
+ * imported LAST so old incremental coloring can be retired progressively
+ * without changing any element IDs, form fields, or data behaviors.
+ *
+ * Navy = navigation and active views; sage = primary action;
+ * Red = errors and destructive controls. Carrier brand tints on MA Plans
+ * remain intentionally untouched.
+ */
+
+/* One recognizable button hierarchy in all ordinary CRM screens. */
+#dialog .oc-arctos-client-dialog .office-tab-save-footer .footer-actions > button.btn,#dialog .oc-arctos-client-dialog .office-tab-save-footer .footer-actions > button.btn{
+  border-radius:var(--arctos-radius);
+  font-family:inherit;
+  font-weight:750;
+  line-height:1.3;
+  box-shadow:none;
+  transition:background-color .13s ease,border-color .13s ease,color .13s ease;
+}
+#dialog .oc-arctos-client-dialog .office-tab-save-footer .footer-actions > button.btn.primary,#dialog .oc-arctos-client-dialog .office-tab-save-footer .footer-actions > button.btn.primary{
+  background:var(--arctos-sage)!important;
+  border-color:var(--arctos-sage)!important;
+  color:#fff!important;
+}
+#dialog .oc-arctos-client-dialog .office-tab-save-footer .footer-actions > button.btn.primary:hover:not(:disabled){
+  background:var(--arctos-sage-hover)!important;
+  border-color:var(--arctos-sage-hover)!important;
+  filter:none;
+}
+
+/* Keep the existing high-contrast action inside dark hero backgrounds. */
+
+/* Eliminate the old rainbow accordion palette. Tiny, low-key left accents
+ * identify a type without relying on color alone; every heading is labelled. */
+/* Numbered circles are repeated ornaments in the old client form. */
+/* The four major client tabs use exactly one active treatment. */
+
+/* Consistent search and filters in Work and Notes & Files. */
+
+/* Athena's Medicare keeps its own functional workflow, now visually aligned
+ * with the same app background, borders and inactive/active control states. */
+
+/* The sign-in screen and Athena custom controls share the same muted,
+ * accessible action meanings without altering their layouts or workflows. */
+
+/* Intentional exceptions: company/carrier colors in MA plan comparisons,
+ * error/success states, and branded bear artwork should not be recolored. */
+@media(max-width:700px){
+}
+@media(prefers-reduced-motion:reduce){
+  #dialog .oc-arctos-client-dialog .office-tab-save-footer .footer-actions > button.btn,#dialog .oc-arctos-client-dialog .office-tab-save-footer .footer-actions > button.btn{transition:none}
+}
+
+/* Arctos: persistent five-action quick toolbar.
+   Desktop/tablet: header right. iPhone: fixed bottom, with menu and safe-area. */
+@media(max-width:1040px) and (min-width:701px){
+}
+/* Compact desktop when the 260px sidebar leaves a narrow content area. */
+@media(min-width:761px) and (max-width:850px){
+}
+@media(max-width:700px){
+  /* This is the phone-only bottom dock; preserve the five actions and menu.
+     The fixed header is already placed at bottom by mobile-bottom-toolbar.css. */
+}
+@media(max-width:365px){
+}
+
+
+
+/* Appointment day cards */
+@media (max-width: 520px) {
+}
+@media (max-width: 760px) {
+}
+@media (max-width: 520px) {
+}
+
+/* Shared appointment-booking availability styling (calendar + quick tool). */
+
+/* Final high-contrast override for all client-record upload actions. */
+
+
+/* Client overview: completed appointment history and inline quick notes. */
+@media(max-width:680px){}
+
+/* Universal file-action legibility: upload and camera/scan labels.
+   These controls use pale button backgrounds, so never inherit white text. */
+
+/* Definitive contrast fix for Medicare, Medicaid, and shared client file controls.
+   Previous Medicare theme used white !important and dark backgrounds. */
+
+/* Old-plan data box on the Coverage tab (also used when creating clients). */
+@media(max-width:620px){}
+
+/* All client-upload lists: high contrast file names, numbers and View/Remove actions.
+   Override older dark-theme rules even in nested Coverage > Health Plan upload controls. */
+/* File-list names and numerical details must never inherit the white themed text. */
+
+/* Height & Weight: show additional product / age selector only when relevant. */
+
+/* Original M&M carrier directory in the persistent Contacts quick tool. */
+@media(max-width:620px){
+}
+
+/* Select existing campaign / create new directly from a saved client. */
+
+#main .office-client-lookup .client-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr));max-width:360px}
+#main .office-client-lookup button.client-summary-card{font-family:inherit;cursor:pointer}
+#main .office-client-lookup .office-client-search{display:flex;gap:10px;align-items:stretch;margin-bottom:12px}
+#main .office-client-lookup .office-client-search .search-field{flex:1;min-width:0}
+#main .office-client-lookup .office-client-search input{width:100%;min-width:0}
+#main .office-client-lookup .office-client-more{display:flex;justify-content:center;margin-top:14px}
+#main .office-client-lookup [hidden]{display:none!important}
+#main .office-client-lookup #clientLookupStatsStatus:empty{display:none}
+#main .office-client-lookup #clientLookupArchive{color:#233d50}
+#main .office-client-lookup .client-birthday-client .agency-tag{margin-left:auto}
+#dialog .oc-arctos-client-dialog:has(#editClient){width:min(980px,96vw);height:min(820px,92dvh);max-width:96vw;max-height:92dvh;display:grid;grid-template-rows:auto minmax(0,1fr);overflow:hidden}
+#dialog .oc-arctos-client-dialog:has(#editClient)>.oc-client-four-tabs{min-height:0;overflow:hidden;padding:16px;display:flex;flex-direction:column}
+#dialog .oc-arctos-client-dialog:has(#editClient) .oc-client-tabs{flex-shrink:0}
+#dialog .oc-arctos-client-dialog:has(#editClient) [data-oc-client-panel]:not([hidden]){display:flex;flex-direction:column;min-height:0;flex:1;overflow:hidden}
+#dialog .oc-arctos-client-dialog:has(#editClient) [data-oc-client-panel]>form{min-height:0;flex:1;overflow:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+#dialog .oc-arctos-client-dialog:has(#editClient) .office-tab-save-footer{--arctos-sage:#246857;--arctos-sage-hover:#195446;position:static;flex-shrink:0;border-top:1px solid #d7e0e7;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;background:#fff;margin:0;box-shadow:none}
+#dialog .oc-arctos-client-dialog:has(#editClient) .office-tab-save-footer .footer-actions{display:flex;gap:8px;flex-shrink:0}
+#dialog .oc-arctos-client-dialog:has(#editClient) .office-tab-save-footer [data-tab-save-status]{color:#64748b;min-width:0;font-size:12px}
+#dialog .oc-arctos-client-dialog button[hidden]{display:none!important}
+@media(max-width:720px){#dialog .oc-arctos-client-dialog:has(#editClient) .office-tab-save-footer{padding:10px 12px max(10px,env(safe-area-inset-bottom));gap:7px}#dialog .oc-arctos-client-dialog:has(#editClient) .office-tab-save-footer .footer-actions{gap:6px}}

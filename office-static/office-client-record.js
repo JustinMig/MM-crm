@@ -219,9 +219,10 @@ window.officeClientRecordEnhance=modal=>{
  };
  for(const [key,label] of [['overview','Overview'],['coverage','Coverage'],['medical','Medical'],['files','Notes & Files']]){
   const panel=root.querySelector('[data-oc-client-panel="'+key+'"]');
-  if(panel)panel.insertAdjacentHTML('beforeend','<div class="office-tab-save-footer" data-tab-save-footer="'+key+'"><span data-tab-save-status role="status" aria-live="polite"></span><button type="button" class="primary" data-save-tab="'+key+'">Save '+label+'</button></div>');
-  if(exact&&key==='overview'||key==='coverage'&&root.officeSaveExactCoverage||['medical','files'].includes(key)&&root.officeSaveExactMedical){const footer=panel.querySelector('[data-tab-save-footer]');footer.classList.add('modal-footer');footer.querySelector('button').classList.add('btn');footer.querySelector('button').textContent='Save Client';}
+  if(panel)panel.insertAdjacentHTML('beforeend','<footer class="office-tab-save-footer modal-footer" data-tab-save-footer="'+key+'"><span data-tab-save-status role="status" aria-live="polite"></span><div class="footer-actions"><button type="button" class="btn primary" data-save-tab="'+key+'">Save Info</button></div></footer>');
  }
+ // The tab footer owns record saves; compatibility handlers retain their buttons without showing extra actions.
+ root.querySelectorAll('[data-save-overview],[data-office-save-list],[data-save-protected],.office-record-editor button[type="submit"],#newClientNote button[type="submit"]').forEach(button=>{button.hidden=true;button.tabIndex=-1;});
  root.addEventListener('submit',event=>{
   const form=event.target.closest('[data-office-record-editor]');
   if(form){event.preventDefault();event.stopImmediatePropagation();void saveRecord(form);}

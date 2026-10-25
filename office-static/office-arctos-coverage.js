@@ -219,7 +219,7 @@ window.officeArctosCoverageMount=modal=>{
      const url=new URL(start.upload_url),origin=current.agency==='arctos'?'https://bogusfmvdrlvxscopgaw.supabase.co':'https://sggzshbdfgkyyvxbebul.supabase.co';
      if(url.origin!==origin||!url.pathname.startsWith('/storage/v1/object/upload/sign/'))throw Error('The secure upload destination was not recognized.');
      const response=await fetch(url.href,{method:'PUT',headers:{'Content-Type':mime,'Cache-Control':'3600'},body:item.file});
-     if(!response.ok)throw Error('File upload failed. Keep this record open and select Save Client to retry.');
+     if(!response.ok)throw Error('File upload failed. Keep this record open and select Save Info to retry.');
     }
     const result=start.saved?start:await api.request(current.agency,'coverage_upload_complete',data);
     if(!result.saved)throw Error('File upload was not confirmed.');documents.push(result.document);queue.items.splice(queue.items.indexOf(item),1);renderFiles(queue);

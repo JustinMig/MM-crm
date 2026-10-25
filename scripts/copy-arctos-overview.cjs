@@ -16,7 +16,7 @@ run('client-personal-underwriting.js','function markup','const baseGetClient','i
 const intake=read('client-intake-sections.js').replace(/^import .*;$/gm,'');
 w.eval(intake.slice(0,intake.indexOf('const originalOpen'))+'\norganizePersonalContact(document.querySelector("form"));');
 const overview=form.querySelector('[data-client-group-panel=overview]');
-fs.writeFileSync(path.join(out,'arctos-overview-template.js'),'/* Generated from the live Arctos client Overview. See arctos-overview-source.json. */\nwindow.officeArctosOverviewMarkup='+JSON.stringify(overview.innerHTML)+';\n');
+fs.writeFileSync(path.join(out,'arctos-overview-template.js'),'/* Generated from the live Arctos client Overview. See arctos-overview-source.json. */\nwindow.officeArctosOverviewMarkup='+JSON.stringify(overview.innerHTML.replaceAll('Save Client','Save Info'))+';\n');
 // Preserve source declaration values, media queries and cascade order. Prefix
 // selectors so these copied styles cannot affect any other Office screen.
 const scope='#dialog .oc-arctos-client-dialog [data-office-arctos-overview]';

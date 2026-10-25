@@ -1,0 +1,8 @@
+{
+  "migration": "office_client_birthday_lookup",
+  "projects": [
+    "arctos",
+    "platinum"
+  ],
+  "sql": "create or replace function public.office_client_birthdays(p_month integer)\nreturns table(id uuid,first_name text,last_name text,phone text,date_of_birth date,assigned_agent_id uuid,status text,birthday_day integer)\nlanguage sql stable security invoker\nset search_path = pg_catalog, public\nas $function$\n select c.id,c.first_name,c.last_name,c.phone,c.date_of_birth,c.assigned_agent_id,c.status::text,extract(day from c.date_of_birth)::integer\n from public.clients c\n where p_month between 1 and 12 and c.date_of_birth is not null\n and c.status is distinct from 'deceased'\n and extract(month from c.date_of_birth)=p_month\n order by extract(day from c.date_of_birth),lower(c.last_name),lower(c.first_name),c.id\n$function$;\nrevoke all on function public.office_client_birthdays(integer) from public,anon,authenticated;\ngrant execute on function public.office_client_birthdays(integer) to service_role;"
+}

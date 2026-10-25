@@ -5,6 +5,7 @@ import { officeCoverageFiles } from "./office-coverage-files.ts";
 import { officeCoverageSoa } from "./office-coverage-soa.ts";
 import { officeClientNotes } from "./office-client-notes.ts";
 import { officeMedicationSearch } from "./office-medication-search.ts";
+import { officeClientLookup } from "./office-client-lookup.ts";
 const MM_URL="https://aefdewkiqgiwkquklnvr.supabase.co";
 const MM_PUBLIC="sb_publishable_3dEzyrV3AvaxDMQDMTsvKw_mT7M_vqx";
 const SCOPE="arctos";
@@ -232,6 +233,7 @@ async function perform(action:string,data:any,actor:{id:string;email:string;perm
  if(["coverage_soa_context","coverage_soa_request"].includes(action))return await officeCoverageSoa({sb,actor,agencyActorId:OFFICE_ARCTOS_ACTORS[actor.id]||null,log},action,data);
  if(["client_notes","add_client_note","delete_client_note"].includes(action))return await officeClientNotes({sb,actor,scope:SCOPE,agencyActorId:OFFICE_ARCTOS_ACTORS[actor.id]||null,log},action,data);
  if(action==="medication_search")return await officeMedicationSearch({sb},data);
+ if(action==="client_lookup")return await officeClientLookup({sb},data);
  if(action==="document_url"){
    const clientID=String(data.client_id||""), documentID=String(data.document_id||"");
    if(!uuid(clientID)||!uuid(documentID))throw Error("Invalid client or document");
@@ -264,6 +266,7 @@ async function perform(action:string,data:any,actor:{id:string;email:string;perm
   const value=word.replace(/['%_]/g,"").trim();
   if(value.length<2)return {clients:[]};
   let qry=sb.from("clients").select("id,first_name,last_name,phone,date_of_birth,city,state,status,assigned_agent_id,products");
+  if(data.exclude_deceased===true)qry=qry.neq("status","deceased");
   const parts=value.split(/\s+/);
   if(parts.length>1)qry=qry.ilike("first_name","%"+parts[0]+"%").ilike("last_name","%"+parts.slice(1).join(" ")+"%");
   else qry=qry.or("first_name.ilike.%"+value+"%,last_name.ilike.%"+value+"%,phone.ilike.%"+value+"%");

@@ -7,7 +7,7 @@ test('Both copied tabs retain every Arctos field, option, heading and file-hub c
   const shape=host=>[...host.querySelectorAll('h3,summary,input,select,textarea,button')].filter(el=>!el.matches('button[data-tab],button[data-save-tab]')).map(el=>[el.tagName,el.name||'',el.type||'',el.matches('h3,summary,button')?el.textContent.replace(/\s+/g,' ').trim():el.closest('label')?.querySelector('span')?.textContent?.trim()||'',el.tagName==='SELECT'?[...el.options].map(o=>[o.value,o.textContent]):null]);
   for(const key of ['medical','files']){const ref=f.w.document.createElement('div');ref.innerHTML=f.w.officeArctosMedicalFilesMarkup[key];assert.deepEqual(shape(f.q('[data-office-arctos-medical-files="'+key+'"]')),shape(ref));}
   assert.equal(f.q('[data-office-arctos-medical-files] .office-record-editor'),null);assert.equal(f.q('[data-office-arctos-medical-files] #newClientNote'),null);
-  assert.equal(f.q('[data-save-tab="medical"]').textContent,'Save Client');assert.equal(f.q('[data-save-tab="files"]').textContent,'Save Client');assert.deepEqual(f.errors,[]);
+  assert.equal(f.q('[data-save-tab="medical"]').textContent,'Save Info');assert.equal(f.q('[data-save-tab="files"]').textContent,'Save Info');assert.deepEqual(f.errors,[]);
  }finally{f.w.close();}
 });
 for(const agency of ['arctos','platinum'])test(agency+' saves the copied doctor, medication, pharmacy and section-note fields without replacing other records',async()=>{
