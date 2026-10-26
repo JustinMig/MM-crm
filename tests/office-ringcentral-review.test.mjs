@@ -5,7 +5,7 @@ import {readFileSync} from 'node:fs'
 const read=(path)=>readFileSync(new URL('../'+path,import.meta.url),'utf8')
 const panel=read('app/(crm)/notifications/NotificationsCallsPanel.tsx')
 const actions=read('app/(crm)/notifications/OfficeRingCentralActions.tsx')
-const sync=read('app/api/ringcentral/sync/route.ts')
+const sync=read('lib/office-ringcentral-sync.ts')
 const source=read('lib/ringcentral.ts')
 const voice=read('app/api/ringcentral/voicemails/[id]/route.ts')
 const calendar=read('app/(crm)/dashboard/DashboardCalendar.tsx')

@@ -13,7 +13,8 @@
     "test:smoke": "node --test tests/production-smoke.test.mjs",
     "test:office-client": "node --test tests/office-client-parity.test.mjs tests/office-client-editing.test.mjs tests/office-record-store.test.mjs tests/office-coverage-files.test.mjs tests/office-coverage-soa.test.mjs tests/office-platinum-soa-endpoint.test.mjs tests/office-client-record-dom.test.cjs tests/office-medical-files-dom.test.cjs tests/office-client-notes.test.mjs tests/office-medication-search.test.mjs tests/office-client-lookup.test.mjs tests/office-client-controls-dom.test.cjs",
     "typecheck": "tsc --noEmit",
-    "check": "npm run test && npm run typecheck && npm run build && npm run test:smoke"
+    "check": "npm run test && npm run typecheck && npm run build && npm run test:smoke",
+    "test:office-phone": "node --test tests/office-phone-sync.test.cjs tests/office-ringcentral-review.test.mjs tests/office-phone-navigation.test.mjs tests/ringcentral-calling.test.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.0",

@@ -8,6 +8,7 @@ var access=null,agency="all",tab="dashboard",activeClient=null,selectedCampaign=
 var clientLookupView="search",clientLookupTicket=0,clientLookupController=null,clientLookupPaging={},clientLookupStatsTicket=0,clientLookupStatsCache=null,clientLookupMonthLabel="";
 var connected={},clients=[],campaigns=[],appointments=[],savedSearch="",screen=document.getElementById("office-root"),mobile=false;
 var officePhoneData={calls:[],texts:[],voicemails:[]},officePhoneSection="missed",officePhoneLoading=false;
+var officePhoneSyncMessage="",officePhoneLastSync=0,officePhoneRequestId=0;
 var officePhoneMatchCache=new Map(),officePhoneMatchBusy=0,officePhoneMatchQueue=[];
 var officePhoneAudioUrls=new Set(),officePhoneOpenDays=new Set();
 var campaignAgency="",campaignAgent="",campaignAgents=[],campaignSelectionResults=[],campaignLoading=false,campaignError="",campaignRequestId=0;
@@ -49,6 +50,8 @@ async function checkConnections(){
  connected.office={permissions:{edit:true}};
 }
 function showLogin(message=""){
+ officePhoneRequestId++;officePhoneLoading=false;officePhoneLastSync=0;officePhoneSyncMessage="";
+ officePhoneData={calls:[],texts:[],voicemails:[]};
  officePhoneMatchCache.clear();officePhoneMatchQueue.length=0;
  for(const url of officePhoneAudioUrls)URL.revokeObjectURL(url);
  officePhoneAudioUrls.clear();
@@ -249,7 +252,7 @@ function officePhoneWire(){
   let b=e.target.closest("[data-phone-section]");
   if(!b)return;officePhoneSection=b.dataset.phoneSection;officePhonePaint();
  });
- document.getElementById("officePhoneRefresh").addEventListener("click",()=>officePhoneLoad());
+ document.getElementById("officePhoneRefresh").addEventListener("click",()=>officePhoneLoad(true));
  list.addEventListener("click",async e=>{
   const b=e.target.closest("[data-phone-action]");if(!b)return;
   const kind=b.dataset.phoneKind,id=b.dataset.phoneId,action=b.dataset.phoneAction;
@@ -323,22 +326,53 @@ async function officePhoneRPC(fn,args,once=false){
  if(!response.ok)throw Error(result.message||result.error||"Could not load phone data.");
  return result;
 }
-async function officePhoneLoad(){
+async function officePhoneSync(once=false){
+ const response=await fetch("https://crm.mayerig.com/api/office-ringcentral/sync",{
+  method:"POST",cache:"no-store",headers:headers(),signal:AbortSignal.timeout(65000)
+ });
+ if(response.status===401&&!once){await refresh();return officePhoneSync(true)}
+ const result=await response.json().catch(()=>({}));
+ if(!response.ok)throw Error(result.error||"RingCentral could not be synced.");
+ return result;
+}
+async function officePhoneReadFeed(requestId){
+ const result=await officePhoneRPC("office_phone_feed",{});
+ if(requestId!==officePhoneRequestId)return false;
+ officePhoneData={calls:Array.isArray(result.calls)?result.calls:[],
+  texts:Array.isArray(result.texts)?result.texts:[],
+  voicemails:Array.isArray(result.voicemails)?result.voicemails:[]};
+ if(tab==="phone")officePhonePaint();
+ return true;
+}
+async function officePhoneLoad(force=false){
  if(officePhoneLoading||tab!=="phone")return;
  officePhoneLoading=true;
+ const requestId=++officePhoneRequestId;
  const statusNode=document.getElementById("officePhoneStatus");
  const button=document.getElementById("officePhoneRefresh");
  if(button)button.disabled=true;
  if(statusNode)statusNode.textContent="Loading calls, texts and voicemails from your Office CRM records…";
  try{
-  const result=await officePhoneRPC("office_phone_feed",{});
-  officePhoneData={calls:Array.isArray(result.calls)?result.calls:[],
-   texts:Array.isArray(result.texts)?result.texts:[],
-   voicemails:Array.isArray(result.voicemails)?result.voicemails:[]};
-  if(tab==="phone")officePhonePaint();
+  if(!await officePhoneReadFeed(requestId))return;
+  if(force||Date.now()-officePhoneLastSync>=5*60*1000){
+   officePhoneSyncMessage="Checking RingCentral for new calls and voicemails…";
+   if(tab==="phone")officePhonePaint();
+   try{
+    const result=await officePhoneSync();
+    if(requestId!==officePhoneRequestId)return;
+    officePhoneLastSync=Date.now();
+    officePhoneSyncMessage=result.voicemail_warning?"Voicemail sync needs attention: "+result.voicemail_warning:
+     "RingCentral checked just now · "+Number(result.voicemails||0)+" voicemails synced.";
+    if(!await officePhoneReadFeed(requestId))return;
+   }catch(error){
+    if(requestId!==officePhoneRequestId)return;
+    officePhoneSyncMessage="RingCentral sync failed: "+(error.name==="TimeoutError"?"The connection timed out. Try Refresh again.":error.message)+" Saved records are still available.";
+   }
+   if(tab==="phone")officePhonePaint();
+  }
  }catch(error){
-  if(statusNode?.isConnected)statusNode.textContent="Unable to load phone activity: "+error.message;
- }finally{officePhoneLoading=false;if(button?.isConnected)button.disabled=false}
+  if(requestId===officePhoneRequestId&&statusNode?.isConnected)statusNode.textContent="Unable to load phone activity: "+error.message;
+ }finally{if(requestId===officePhoneRequestId){officePhoneLoading=false;if(button?.isConnected)button.disabled=false}}
 }
 function officePhonePaint(){
  officePhoneResetAudio();
@@ -350,8 +384,8 @@ function officePhonePaint(){
  ).join("");
  const items=officePhoneItems(officePhoneSection).sort((a,b)=>new Date(b.at)-new Date(a.at));
  if(statusNode)statusNode.textContent=items.length+" "+(officePhoneSection==="texts"?"messages":"phone records")+
-  " available. Choose a day to open it. Data reflects the latest available RingCentral and text synchronization.";
- if(!items.length){list.innerHTML='<div class="empty">No records in this section yet. Use Refresh to check the saved phone data. New RingCentral activity becomes available after it is synced in the original M&amp;M CRM.</div>';return;}
+  " available. Choose a day to open it. "+officePhoneSyncMessage;
+ if(!items.length){list.innerHTML='<div class="empty">No saved records in this section yet. Refresh checks RingCentral for new calls and voicemails.</div>';return;}
  const days=new Map();
  for(const item of items){const date=officePhoneDay(item.at);if(!days.has(date))days.set(date,[]);days.get(date).push(item)}
  list.innerHTML=[...days].map(([date,items])=>
