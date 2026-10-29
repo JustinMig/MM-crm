@@ -244,6 +244,7 @@ export default function CampaignDetailClient({ campaign, initialRows, agents, ap
 }) {
   const [rows, setRows] = useState(initialRows)
   const [filter, setFilter] = useState<Filter>('open')
+  const [clientSearch, setClientSearch] = useState('')
   const [ownerFilter, setOwnerFilter] = useState(canViewAll ? 'all' : viewerId)
   const [workMode, setWorkMode] = useState(false)
   const [visibleLimit, setVisibleLimit] = useState(PAGE_SIZE)
@@ -265,7 +266,7 @@ export default function CampaignDetailClient({ campaign, initialRows, agents, ap
 
   useEffect(() => {
     setVisibleLimit(PAGE_SIZE)
-  }, [filter, ownerFilter, workMode])
+  }, [filter, ownerFilter, workMode, clientSearch])
 
   const ownerRows = useMemo(
     () => rows.filter((row) => ownerFilter === 'all' || row.assigned_agent_id === ownerFilter),
@@ -308,11 +309,20 @@ export default function CampaignDetailClient({ campaign, initialRows, agents, ap
   }, [ownerRows])
 
   const visibleRows = useMemo(() => sortedRows.filter((row) => {
+    const query = clientSearch.trim().toLowerCase()
+    if (query) {
+      const name = clientName(row.client).toLowerCase()
+      const nameMatch = query.split(/\s+/).every((part) => name.includes(part))
+      const digits = query.replace(/\D/g, '')
+      const phoneMatch = /^[\d\s()+.\-]+$/.test(query) && digits.length > 0 &&
+        String(row.client?.phone || '').replace(/\D/g, '').includes(digits)
+      if (!nameMatch && !phoneMatch) return false
+    }
     if (filter === 'all') return true
     if (filter === 'open') return !RESOLVED.has(row.status)
     if (filter === 'resolved') return RESOLVED.has(row.status)
     return row.status === filter
-  }), [sortedRows, filter])
+  }), [sortedRows, filter, clientSearch])
 
   const displayRows = useMemo(() => visibleRows.slice(0, visibleLimit), [visibleRows, visibleLimit])
 
@@ -561,6 +571,19 @@ export default function CampaignDetailClient({ campaign, initialRows, agents, ap
 
         {message ? <div className="notice campaign-message">{message}</div> : null}
 
+        <div className="campaign-client-search" role="search" aria-label="Search clients in this campaign">
+          <label htmlFor="campaign-client-search">Find a client in this campaign</label>
+          <div className="campaign-client-search-controls">
+            <input id="campaign-client-search" type="search" value={clientSearch} placeholder="Search by name or phone number…" autoComplete="off" onChange={(event) => {
+              setClientSearch(event.target.value)
+              setFilter('all')
+              setWorkMode(false)
+            }} />
+            {clientSearch ? <button type="button" className="campaign-quiet-button" onClick={() => setClientSearch('')}>Clear search</button> : null}
+          </div>
+          {clientSearch.trim() ? <span role="status" aria-live="polite">{visibleRows.length} matching client{visibleRows.length === 1 ? '' : 's'}</span> : null}
+        </div>
+
         {workMode ? (
           nextRow ? (
             <section className="campaign-work-panel">
@@ -580,7 +603,7 @@ export default function CampaignDetailClient({ campaign, initialRows, agents, ap
             </div>
 
             {!visibleRows.length ? (
-              <section className="campaign-empty-state"><strong>No clients match this view.</strong><span>Choose another filter to see the rest of the campaign.</span></section>
+              <section className="campaign-empty-state"><strong>No clients match this view.</strong><span>Try another name or phone number, clear the search, or choose another filter.</span></section>
             ) : (
               <section className="campaign-client-table">
                 <div className="campaign-table-heading" aria-hidden="true"><span>Client</span><span>Status</span><span>Activity / next action</span><span>Actions</span></div>
@@ -634,6 +657,7 @@ export default function CampaignDetailClient({ campaign, initialRows, agents, ap
       ) : null}
 
       <style jsx global>{`
+        .campaign-client-search{display:grid;gap:6px;margin:14px 0;color:#34495a}.campaign-client-search>label{font-size:.78rem;font-weight:800}.campaign-client-search-controls{display:flex;gap:8px;flex-wrap:wrap}.campaign-client-search-controls input{flex:1 1 220px;min-width:0;min-height:44px;border:1px solid #cbd7df;border-radius:8px;background:#fff;color:#172033;padding:10px 12px;font:inherit;font-size:.9rem}.campaign-client-search-controls input:focus{outline:2px solid #627f92;outline-offset:2px}.campaign-client-search>span{font-size:.75rem;color:#526575}
         .campaign-detail-shell{max-width:1500px;margin:0 auto}.campaign-detail-titlebar{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;padding:2px 0 16px;border-bottom:1px solid #dde4e8}.campaign-detail-titlecopy{min-width:0}.campaign-breadcrumb,.campaign-topic-text,.campaign-breadcrumb-separator{font-size:.72rem;font-weight:800;color:#71808d;text-decoration:none;text-transform:uppercase;letter-spacing:.05em}.campaign-breadcrumb:hover{color:#31485b}.campaign-breadcrumb-separator{padding:0 6px;color:#a0aab3}.campaign-detail-titlecopy h1{margin:7px 0 3px;font-size:clamp(1.55rem,2.3vw,2.2rem);line-height:1.08;letter-spacing:-.025em;color:#172033}.campaign-detail-titlecopy p{margin:0;color:#71808d;font-size:.84rem}.campaign-heading-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.campaign-quiet-button,.campaign-work-button{appearance:none;border-radius:8px;min-height:36px;padding:8px 12px;font:inherit;font-size:.78rem;font-weight:800;text-decoration:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center}.campaign-quiet-button{border:1px solid #d5dde3;background:#fff;color:#4f6170}.campaign-quiet-button:hover{background:#f7f9fa;color:#31485b}.campaign-work-button{border:1px solid #526d82;background:#526d82;color:#fff}.campaign-work-button:hover{background:#405b70}.campaign-work-button:disabled,.campaign-quiet-button:disabled{opacity:.55;cursor:default}
         .campaign-control-strip{display:flex;align-items:stretch;gap:0;margin:14px 0 13px;background:#fff;border:1px solid #dfe5e9;border-radius:10px;overflow:hidden;min-height:58px}.campaign-progress-compact{flex:1 1 230px;min-width:210px;padding:10px 14px;display:flex;flex-direction:column;justify-content:center;border-right:1px solid #e5eaed}.campaign-progress-label{display:flex;align-items:baseline;gap:6px;margin-bottom:7px}.campaign-progress-label strong{font-size:1.1rem;color:#344f49}.campaign-progress-label span{font-size:.68rem;font-weight:800;color:#7a8791;text-transform:uppercase;letter-spacing:.04em}.campaign-progress-track{height:4px;background:#e9eeec;border-radius:999px;overflow:hidden}.campaign-progress-track>span{display:block;height:100%;background:#7f9c96}.campaign-stat-inline{min-width:91px;padding:9px 12px;display:flex;flex-direction:column;justify-content:center;border-right:1px solid #e5eaed}.campaign-stat-inline strong{font-size:1rem;color:#273947}.campaign-stat-inline span{margin-top:2px;font-size:.62rem;font-weight:800;color:#7a8791;text-transform:uppercase;letter-spacing:.025em;white-space:nowrap}.campaign-agent-select{min-width:165px;padding:7px 10px;display:flex;flex-direction:column;justify-content:center;gap:3px}.campaign-agent-select>span{font-size:.6rem;font-weight:800;color:#7a8791;text-transform:uppercase}.campaign-agent-select select{border:0;background:transparent;color:#34495a;font:inherit;font-size:.76rem;font-weight:800;outline:none;max-width:180px}.campaign-message{margin:0 0 12px}
         .campaign-list-toolbar{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;margin:4px 0 8px;border-bottom:1px solid #dfe5e9}.campaign-filter-tabs{display:flex;gap:22px;overflow-x:auto;scrollbar-width:none}.campaign-filter-tabs::-webkit-scrollbar{display:none}.campaign-filter-tabs button{appearance:none;border:0;border-bottom:2px solid transparent;background:transparent;color:#70808d;padding:9px 0 8px;font:inherit;font-size:.73rem;font-weight:800;white-space:nowrap;cursor:pointer}.campaign-filter-tabs button:hover{color:#405768}.campaign-filter-tabs button.active{color:#263f53;border-bottom-color:#627f92}.campaign-visible-count{padding-bottom:9px;color:#8a96a0;font-size:.7rem;white-space:nowrap}.campaign-client-table{background:#fff;border:1px solid #dfe5e9;border-radius:10px;overflow:hidden}.campaign-table-heading{display:grid;grid-template-columns:minmax(220px,1.25fr) minmax(145px,.7fr) minmax(250px,1.3fr) minmax(190px,.8fr);gap:16px;padding:8px 14px;background:#f8fafb;border-bottom:1px solid #e4e9ec;color:#83909a;font-size:.6rem;font-weight:900;text-transform:uppercase;letter-spacing:.045em}.campaign-client-row{display:grid;grid-template-columns:minmax(220px,1.25fr) minmax(145px,.7fr) minmax(250px,1.3fr) minmax(190px,.8fr);gap:16px;align-items:start;padding:13px 14px;border-bottom:1px solid #e7ebee;background:#fff;content-visibility:auto;contain-intrinsic-size:112px}.campaign-client-row:last-of-type{border-bottom:0}.campaign-client-row:hover{background:#fbfcfd}.campaign-client-row-focus{content-visibility:visible;border:1px solid #9eb0bd!important;border-left:3px solid #627f92!important;border-radius:8px;background:#fbfcfd!important;box-shadow:0 6px 18px rgba(28,48,65,.06)}.campaign-person-cell,.campaign-status-cell,.campaign-activity-cell,.campaign-action-cell{min-width:0}.campaign-person-title-line{display:flex;align-items:center;gap:7px;flex-wrap:wrap}.campaign-client-name{color:#1d3447;text-decoration:none;font-size:.94rem;font-weight:900;line-height:1.2}.campaign-client-name:hover{text-decoration:underline}.campaign-client-phone{margin-top:3px;color:#3f5668;font-size:.82rem;font-weight:800}.campaign-person-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:4px;color:#7a8791;font-size:.7rem}.campaign-person-meta span{color:#b3bcc3}.campaign-owner-line{margin-top:5px;color:#806a53;font-size:.66rem;font-weight:800}.campaign-status-cell{display:flex;flex-direction:column;align-items:flex-start;gap:7px}.campaign-status,.campaign-due{display:inline-flex;align-items:center;border-radius:999px;padding:4px 7px;border:1px solid #d9e1e6;background:#f7f9fa;color:#566873;font-size:.63rem;font-weight:900;white-space:nowrap}.campaign-due.overdue{background:#fbefef;border-color:#e6c8c8;color:#774747}.campaign-due.today{background:#fff8e6;border-color:#e9d99f;color:#796119}.status-follow_up{background:#fff8e6;border-color:#e9d99f;color:#796119}.status-completed{background:#edf6ef;border-color:#c8dfcd;color:#3c6949}.status-spoke{background:#eef4f8;border-color:#cad9e2;color:#3f6076}.status-attempted{background:#f1f4f6;color:#596a76}.status-not_interested,.status-do_not_call,.status-unreachable{background:#f6f0f0;color:#705454}.campaign-status-meta{display:flex;flex-direction:column;gap:2px;color:#8a969f;font-size:.66rem}.campaign-activity-cell{display:flex;flex-direction:column;gap:5px}.campaign-activity-line{display:flex;align-items:baseline;gap:7px;min-width:0}.campaign-activity-line>span,.campaign-next-line>span{flex:0 0 68px;color:#8a969f;font-size:.62rem;font-weight:800;text-transform:uppercase}.campaign-activity-line strong,.campaign-next-line strong{min-width:0;color:#435766;font-size:.72rem;font-weight:800;overflow-wrap:anywhere}.campaign-next-line{display:flex;align-items:flex-start;gap:7px;padding-top:2px}.campaign-next-line strong{color:#526d5c}.campaign-next-line.overdue strong{color:#824b4b}.campaign-note-line{margin-top:2px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#71808d;font-size:.69rem;font-style:italic}.campaign-action-cell{display:flex;flex-direction:column;gap:7px;align-items:flex-start}.campaign-primary-action{width:100%;border:1px solid #b9cbd3;border-radius:7px;background:#edf3f5;color:#31505b;padding:7px 9px;font:inherit;font-size:.68rem;font-weight:900;cursor:pointer}.campaign-primary-action:hover{background:#e3ecef}.campaign-attempt-actions,.campaign-record-actions{display:flex;gap:8px;flex-wrap:wrap}.campaign-attempt-actions button,.campaign-record-actions button,.campaign-record-actions a{appearance:none;border:0;background:transparent;padding:0;color:#687a87;font:inherit;font-size:.66rem;font-weight:800;text-decoration:none;cursor:pointer}.campaign-attempt-actions button:hover,.campaign-record-actions button:hover,.campaign-record-actions a:hover{color:#2f5066;text-decoration:underline}.campaign-record-actions{padding-top:1px}.campaign-record-actions button:last-child{color:#976565}.campaign-attempt-actions button:disabled,.campaign-record-actions button:disabled,.campaign-primary-action:disabled{opacity:.45;cursor:default}.campaign-load-more-row{display:flex;align-items:center;justify-content:center;gap:14px;padding:12px 14px;border-top:1px solid #e5eaed;background:#f8fafb;color:#7b8792;font-size:.7rem}.campaign-load-more-row button{appearance:none;min-height:34px;padding:6px 12px;border:1px solid #cbd7df;border-radius:8px;background:#fff;color:#40586a;font:inherit;font-size:.69rem;font-weight:900;cursor:pointer}.campaign-load-more-row button:hover{background:#edf3f6;color:#263f53}
