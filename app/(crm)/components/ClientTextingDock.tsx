@@ -1,4 +1,5 @@
 'use client'
+import SmsPhotoAttachment, {SmsPhotos,type SmsPhoto} from './SmsPhotoAttachment'
 
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { createPortal } from 'react-dom'
@@ -7,6 +8,7 @@ import { usePathname, useSearchParams } from 'next/navigation'
 type SmsMessage = {
   id: string
   direction: 'outbound' | 'inbound'
+  media_urls?: string[]
   body: string
   status: string
   error_code: string | null
@@ -50,6 +52,8 @@ export default function ClientTextingDock() {
   const [phone, setPhone] = useState('')
   const [clientName, setClientName] = useState('Client')
   const [body, setBody] = useState('')
+  const [photo,setPhoto]=useState<SmsPhoto|null>(null)
+  const [uploading,setUploading]=useState(false)
   const [status, setStatus] = useState('')
   const [sending, setSending] = useState(false)
   const loadingRef = useRef(false)
@@ -116,6 +120,8 @@ export default function ClientTextingDock() {
     setClientName('Client')
     setBody('')
     setStatus('')
+    setPhoto(null)
+    setUploading(false)
     if (!clientId || !openFromDashboard) return
     void (async () => {
       await markRead()
@@ -149,18 +155,19 @@ export default function ClientTextingDock() {
 
   async function send() {
     const text = body.trim()
-    if (!text || sending) return
+    if ((!text&&!photo) || uploading || sending) return
     setSending(true)
     setStatus('Sending…')
     try {
       const response = await fetch(`/api/clients/${clientId}/sms`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ body: text })
+        body: JSON.stringify({ body: text, media_paths:photo?[photo.path]:[] })
       })
       const result = await response.json().catch(() => ({}))
       if (!response.ok) throw new Error(result.error || 'Unable to send text.')
       setBody('')
+      setPhoto(null)
       setStatus('Sent.')
       await load()
     } catch (error) {
@@ -189,14 +196,15 @@ export default function ClientTextingDock() {
             <div style={styles.thread}>
               {messages.length ? messages.map((message) => (
                 <div key={message.id} style={message.direction === 'outbound' ? styles.outbound : styles.inbound}>
-                  <div>{message.body}</div>
+                  <div>{message.body}<SmsPhotos urls={message.media_urls}/></div>
                   <small style={styles.meta}>{new Date(message.created_at).toLocaleString()} · {message.status}{message.error_code ? ` · Error ${message.error_code}` : ''}</small>
                 </div>
               )) : <div style={styles.empty}>No messages yet. Send the first text below.</div>}
             </div>
             <div style={styles.compose}>
+              <SmsPhotoAttachment key={clientId} photo={photo} onChange={setPhoto} onBusy={setUploading} disabled={!phone||sending}/>
               <textarea className="textarea" style={styles.textarea} value={body} onChange={(e) => setBody(e.target.value)} maxLength={1500} placeholder="Type a text message…" disabled={!phone || sending} />
-              <button type="button" className="btn btn-primary" onClick={send} disabled={!phone || !body.trim() || sending}>{sending ? 'Sending…' : 'Send Text'}</button>
+              <button type="button" className="btn btn-primary" onClick={send} disabled={!phone || (!body.trim()&&!photo) || uploading || sending}>{sending ? 'Sending…' : 'Send Text'}</button>
             </div>
             {status ? <div className="field-help" style={styles.status}>{status}</div> : null}
           </section>

@@ -6,11 +6,14 @@ import { normalizeUsPhone, sendTwilioSms } from '@/lib/twilio'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
+import {ownedPhotoPaths,photoUrls} from '@/lib/sms-media'
+
 type Params = Promise<{ id: string }>
 
 type SmsRow = {
   id: string
   direction: string
+  media_paths?: string[]
   body?: string | null
   from_number: string | null
   to_number: string | null
@@ -35,13 +38,13 @@ function messageMatchesClient(row: SmsRow, clientPhone: string) {
 }
 
 async function loadAccessibleClient(id: string) {
-  const { supabase, userId } = await getCrmSession()
+  const { supabase, userId, profile } = await getCrmSession()
   const { data: client } = await supabase
     .from('clients')
     .select('id, first_name, last_name, phone, assigned_agent_id')
     .eq('id', id)
     .maybeSingle()
-  return { client, userId }
+  return { client, userId, profile }
 }
 
 export async function GET(request: NextRequest, { params }: { params: Params }) {
@@ -53,7 +56,7 @@ export async function GET(request: NextRequest, { params }: { params: Params }) 
   const admin = createAdminClient()
   let query = admin
     .from('client_sms_messages')
-    .select('id,direction,body,from_number,to_number,twilio_message_sid,status,error_code,error_message,read_at,created_at,updated_at')
+    .select('id,direction,body,media_paths,from_number,to_number,twilio_message_sid,status,error_code,error_message,read_at,created_at,updated_at')
     .eq('client_id', id)
 
   if (notificationScope) query = query.is('notification_hidden_at', null)
@@ -68,7 +71,7 @@ export async function GET(request: NextRequest, { params }: { params: Params }) 
   const messages = ((data || []) as SmsRow[]).filter((row) => messageMatchesClient(row, clientPhone))
 
   return NextResponse.json({
-    messages,
+    messages: await Promise.all(messages.map(async m=>({...m,media_urls:await photoUrls(admin,m.media_paths||[])}))),
     phone: client.phone || '',
     client_name: [client.first_name, client.last_name].filter(Boolean).join(' ') || 'Client'
   })
@@ -111,15 +114,21 @@ export async function PATCH(_request: NextRequest, { params }: { params: Params 
 
 export async function POST(request: NextRequest, { params }: { params: Params }) {
   const { id } = await params
-  const { client, userId } = await loadAccessibleClient(id)
+  const { client, userId, profile } = await loadAccessibleClient(id)
   if (!client) return NextResponse.json({ error: 'Client not found.' }, { status: 404 })
 
-  const payload = await request.json().catch(() => ({})) as { body?: string }
+  const payload = await request.json().catch(() => ({})) as { body?: string; media_paths?: unknown }
   const body = String(payload.body || '').trim()
   const to = normalizeUsPhone(String(client.phone || ''))
 
   if (!to) return NextResponse.json({ error: 'This client does not have a valid U.S. mobile number.' }, { status: 400 })
-  if (!body) return NextResponse.json({ error: 'Enter a message.' }, { status: 400 })
+  let paths: string[], urls: string[]
+  try {
+    if(!profile?.active||!profile.agency_id)throw Error('Not authorized.')
+    paths=ownedPhotoPaths(payload.media_paths,profile.agency_id,userId)
+    urls=await photoUrls(createAdminClient(),paths,604800)
+  }catch(error){return NextResponse.json({error:error instanceof Error?error.message:'Invalid photo.'},{status:400})}
+  if (!body&&!paths.length) return NextResponse.json({ error: 'Enter a message.' }, { status: 400 })
   if (body.length > 1500) return NextResponse.json({ error: 'Message is too long.' }, { status: 400 })
 
   const admin = createAdminClient()
@@ -129,7 +138,8 @@ export async function POST(request: NextRequest, { params }: { params: Params })
       client_id: id,
       user_id: userId,
       direction: 'outbound',
-      body,
+      body: body||'Photo',
+      media_paths: paths,
       to_number: to,
       status: 'sending',
       read_at: new Date().toISOString()
@@ -140,7 +150,7 @@ export async function POST(request: NextRequest, { params }: { params: Params })
   if (pendingError || !pending) return NextResponse.json({ error: pendingError?.message || 'Unable to create message.' }, { status: 500 })
 
   try {
-    const sent = await sendTwilioSms(to, body)
+    const sent = await sendTwilioSms(to, body, urls)
     const sid = String(sent.sid || '')
     const status = String(sent.status || 'queued')
     const from = String(sent.from || '')

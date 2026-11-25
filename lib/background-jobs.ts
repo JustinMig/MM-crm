@@ -1,3 +1,4 @@
+import {ownedPhotoPaths,photoUrls} from '@/lib/sms-media'
 import 'server-only'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { normalizeUsPhone, sendTwilioSms } from '@/lib/twilio'
@@ -5,6 +6,7 @@ import { normalizeUsPhone, sendTwilioSms } from '@/lib/twilio'
 const SEND_CONCURRENCY = 10
 
 type BulkSmsPayload = {
+  media_paths?: string[]
   client_ids?: string[]
   body?: string
   preflight_failures?: string[]
@@ -38,8 +40,10 @@ export async function processBulkSmsJob(jobId: string) {
     const payload = (claimed.payload || {}) as BulkSmsPayload
     const clientIds = Array.from(new Set(Array.isArray(payload.client_ids) ? payload.client_ids.filter(Boolean) : []))
     const body = String(payload.body || '').trim()
+    const paths=ownedPhotoPaths(payload.media_paths,claimed.agency_id,claimed.created_by)
+    const urls=await photoUrls(admin,paths,604800)
     const failures = Array.isArray(payload.preflight_failures) ? [...payload.preflight_failures] : []
-    if (!clientIds.length || !body) throw new Error('The bulk SMS job is missing recipients or message text.')
+    if (!clientIds.length || (!body&&!paths.length)) throw new Error('The bulk SMS job is missing recipients or message text.')
 
     const { data: clients, error: clientError } = await admin
       .from('clients')
@@ -64,7 +68,8 @@ export async function processBulkSmsJob(jobId: string) {
         client_id: client.id,
         user_id: claimed.created_by,
         direction: 'outbound',
-        body,
+        body: body||'Photo',
+        media_paths: paths,
         to_number: phone,
         status: 'sending',
         read_at: now
@@ -83,7 +88,7 @@ export async function processBulkSmsJob(jobId: string) {
       const results = await Promise.all(batch.map(async ({ client, phone }) => {
         const pendingId = pendingByClient.get(client.id)
         try {
-          const sent = await sendTwilioSms(phone, body)
+          const sent = await sendTwilioSms(phone, body, urls)
           if (pendingId) {
             await admin.from('client_sms_messages').update({
               twilio_message_sid: String(sent.sid || '') || null,

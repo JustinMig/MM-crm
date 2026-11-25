@@ -22,11 +22,12 @@ export function twilioConfig() {
   return { accountSid, authToken, messagingServiceSid, phoneNumber }
 }
 
-export async function sendTwilioSms(to: string, body: string) {
+export async function sendTwilioSms(to: string, body: string, mediaUrls: string[] = []) {
   const { accountSid, authToken, messagingServiceSid } = twilioConfig()
   const form = new URLSearchParams()
   form.set('To', normalizeUsPhone(to))
-  form.set('Body', body)
+  if(body)form.set('Body', body)
+  for(const url of mediaUrls)form.append('MediaUrl',url)
   form.set('MessagingServiceSid', messagingServiceSid)
   form.set('StatusCallback', 'https://crm.mayerig.com/api/twilio/status')
 

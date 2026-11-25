@@ -7,6 +7,8 @@ import { processBulkSmsJob } from '@/lib/background-jobs'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
+import {ownedPhotoPaths,photoUrls} from '@/lib/sms-media'
+
 const MAX_RECIPIENTS = 250
 
 type ClientRow = {
@@ -18,20 +20,22 @@ type ClientRow = {
 
 export async function POST(request: NextRequest) {
   try {
-    const payload = await request.json().catch(() => ({})) as { client_ids?: string[]; body?: string }
+    const payload = await request.json().catch(() => ({})) as { client_ids?: string[]; body?: string; media_paths?: unknown }
     const clientIds = Array.isArray(payload.client_ids)
       ? Array.from(new Set(payload.client_ids.filter(Boolean))).slice(0, MAX_RECIPIENTS)
       : []
     const body = String(payload.body || '').trim()
 
     if (!clientIds.length) return NextResponse.json({ error: 'Choose at least one client.' }, { status: 400 })
-    if (!body) return NextResponse.json({ error: 'Enter a message.' }, { status: 400 })
     if (body.length > 1500) return NextResponse.json({ error: 'Message is too long.' }, { status: 400 })
 
     const { userId, profile } = await getCrmSession()
-    if (!profile?.agency_id) return NextResponse.json({ error: 'Not authorized.' }, { status: 403 })
+    if (!profile?.active||!profile.agency_id) return NextResponse.json({ error: 'Not authorized.' }, { status: 403 })
 
     const admin = createAdminClient()
+    const paths=ownedPhotoPaths(payload.media_paths,profile.agency_id,userId)
+    await photoUrls(admin,paths)
+    if(!body&&!paths.length)return NextResponse.json({error:'Enter a message or attach a photo.'},{status:400})
     const canSeeAgency = canSeeAllClients(profile.role)
     let clientQuery = admin
       .from('clients')
@@ -58,7 +62,7 @@ export async function POST(request: NextRequest) {
         created_by: userId,
         job_type: 'bulk_sms',
         status: 'queued',
-        payload: { client_ids: clients.map((client) => client.id), body, preflight_failures: preflightFailures },
+        payload: { client_ids: clients.map((client) => client.id), body, media_paths:paths, preflight_failures: preflightFailures },
         total_items: clients.length,
         failed_items: preflightFailures.length
       })

@@ -1,4 +1,5 @@
 'use client'
+import SmsPhotoAttachment, {SmsPhotos,type SmsPhoto} from '../components/SmsPhotoAttachment'
 
 import { useEffect, useMemo, useState } from 'react'
 
@@ -33,6 +34,8 @@ export default function MassTextSelected({
 }) {
   const [open, setOpen] = useState(false)
   const [body, setBody] = useState('')
+  const [photo,setPhoto]=useState<SmsPhoto|null>(null)
+  const [uploading,setUploading]=useState(false)
   const [sending, setSending] = useState(false)
   const [result, setResult] = useState('')
   const [job, setJob] = useState<Job | null>(null)
@@ -81,7 +84,7 @@ export default function MassTextSelected({
 
   async function sendMassText() {
     const message = body.trim()
-    if (!message || !selectedClients.length || sending || (job && ['queued','running'].includes(job.status))) return
+    if ((!message&&!photo) || uploading || !selectedClients.length || sending || (job && ['queued','running'].includes(job.status))) return
 
     setSending(true)
     setResult('')
@@ -90,7 +93,7 @@ export default function MassTextSelected({
       const response = await fetch('/api/sms/bulk', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ client_ids: selectedClients.map((client) => client.id), body: message })
+        body: JSON.stringify({ client_ids: selectedClients.map((client) => client.id), body: message, media_paths:photo?[photo.path]:[] })
       })
       const payload = await response.json().catch(() => ({}))
       if (!response.ok) throw new Error(payload?.error || `Queue failed with HTTP ${response.status}.`)
@@ -128,6 +131,7 @@ export default function MassTextSelected({
             </label>
             <div className="subtle" style={{ marginTop: 5, textAlign: 'right' }}>{body.length}/1500</div>
 
+            <SmsPhotoAttachment photo={photo} onChange={setPhoto} onBusy={setUploading} disabled={sending||running}/>
             <details style={{ marginTop: 12 }}>
               <summary style={{ cursor: 'pointer', fontWeight: 800 }}>Recipients ({selectedClients.length})</summary>
               <div style={{ display: 'grid', gap: 6, marginTop: 10, maxHeight: 180, overflow: 'auto' }}>
@@ -147,7 +151,7 @@ export default function MassTextSelected({
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 18, flexWrap: 'wrap' }}>
               <button className="btn btn-secondary" type="button" onClick={closeComposer}>Close</button>
-              <button className="btn btn-primary" type="button" onClick={sendMassText} disabled={sending || running || !body.trim() || selectedClients.length === 0}>
+              <button className="btn btn-primary" type="button" onClick={sendMassText} disabled={sending || running || (!body.trim()&&!photo) || uploading || selectedClients.length === 0}>
                 {sending ? 'Queuing…' : running ? 'Sending in Background…' : `Send to ${selectedClients.length} Client${selectedClients.length === 1 ? '' : 's'}`}
               </button>
             </div>

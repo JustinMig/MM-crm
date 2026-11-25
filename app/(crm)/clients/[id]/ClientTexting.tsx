@@ -1,10 +1,12 @@
 'use client'
+import SmsPhotoAttachment, {SmsPhotos,type SmsPhoto} from '../../components/SmsPhotoAttachment'
 
 import { useCallback, useEffect, useState } from 'react'
 
 type SmsMessage = {
   id: string
   direction: 'outbound' | 'inbound'
+  media_urls?: string[]
   body: string
   from_number: string | null
   to_number: string | null
@@ -17,6 +19,8 @@ type SmsMessage = {
 export default function ClientTexting({ clientId, clientName, phone }: { clientId: string; clientName: string; phone: string }) {
   const [messages, setMessages] = useState<SmsMessage[]>([])
   const [body, setBody] = useState('')
+  const [photo,setPhoto]=useState<SmsPhoto|null>(null)
+  const [uploading,setUploading]=useState(false)
   const [status, setStatus] = useState('')
   const [sending, setSending] = useState(false)
 
@@ -34,18 +38,19 @@ export default function ClientTexting({ clientId, clientName, phone }: { clientI
 
   async function send() {
     const text = body.trim()
-    if (!text || sending) return
+    if ((!text&&!photo) || uploading || sending) return
     setSending(true)
     setStatus('Sending…')
     try {
       const response = await fetch(`/api/clients/${clientId}/sms`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ body: text })
+        body: JSON.stringify({ body: text, media_paths:photo?[photo.path]:[] })
       })
       const result = await response.json()
       if (!response.ok) throw new Error(result.error || 'Unable to send text.')
       setBody('')
+      setPhoto(null)
       setStatus('Text sent to Twilio.')
       await load()
     } catch (error) {
@@ -68,7 +73,7 @@ export default function ClientTexting({ clientId, clientName, phone }: { clientI
       <div className="client-text-thread">
         {messages.length ? messages.map((message) => (
           <div key={message.id} className={`client-text-message ${message.direction}`}>
-            <div>{message.body}</div>
+            <div>{message.body}<SmsPhotos urls={message.media_urls}/></div>
             <small>
               {message.direction === 'outbound' ? 'You' : clientName} · {new Date(message.created_at).toLocaleString()} · {message.status}
               {message.error_code ? ` · Error ${message.error_code}` : ''}
@@ -78,6 +83,7 @@ export default function ClientTexting({ clientId, clientName, phone }: { clientI
       </div>
 
       <div className="client-text-compose">
+        <SmsPhotoAttachment photo={photo} onChange={setPhoto} onBusy={setUploading} disabled={!phone||sending}/>
         <textarea
           className="textarea"
           value={body}
@@ -86,7 +92,7 @@ export default function ClientTexting({ clientId, clientName, phone }: { clientI
           maxLength={1500}
           disabled={!phone || sending}
         />
-        <button type="button" className="btn btn-primary" onClick={send} disabled={!phone || !body.trim() || sending}>{sending ? 'Sending…' : 'Send Text'}</button>
+        <button type="button" className="btn btn-primary" onClick={send} disabled={!phone || (!body.trim()&&!photo) || uploading || sending}>{sending ? 'Sending…' : 'Send Text'}</button>
       </div>
       {status ? <div className="field-help">{status}</div> : null}
       <div className="field-help">Replies will appear here after Twilio's incoming-message webhook is pointed to the CRM.</div>

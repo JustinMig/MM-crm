@@ -1,11 +1,13 @@
 'use client'
 
+import {SmsPhotos} from '../components/SmsPhotoAttachment'
 import Link from 'next/link'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 type SmsMessage = {
   id: string
   direction: 'inbound' | 'outbound'
+  media_urls?: string[]
   body: string
   status: string
   error_code: string | null
@@ -259,7 +261,7 @@ export default function MessagesCenter({ viewerName = '', initialAgent = 'all' }
                     <label key={message.id} style={{ justifySelf: message.direction === 'outbound' ? 'end' : 'start', maxWidth: '86%', display: 'flex', gap: 8, alignItems: 'flex-start', cursor: 'pointer' }}>
                       <input type="checkbox" checked={selectedMessages.has(message.id)} onChange={() => toggleMessageSelected(message.id)} style={{ marginTop: 10 }} />
                       <div style={{ padding: '10px 12px', borderRadius: 12, background: message.direction === 'outbound' ? '#dfeaf3' : '#fff', border: message.direction === 'inbound' ? '1px solid #dbe3ea' : undefined }}>
-                        <div>{message.body}</div>
+                        <div>{message.body}<SmsPhotos urls={message.media_urls}/></div>
                         <small className="subtle" style={{ display: 'block', marginTop: 5 }}>
                           {new Date(message.created_at).toLocaleString()} · {message.direction === 'inbound' ? (message.read_at ? 'Read' : 'Unread') : message.status}
                           {message.error_code ? ` · Error ${message.error_code}` : ''}
