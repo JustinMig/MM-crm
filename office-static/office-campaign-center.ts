@@ -22,6 +22,10 @@ export async function officeCampaignCenter({sb,actor,scope,log},data){
  if(command==='members'){
   const offset=Number(data.offset||0);if(!Number.isSafeInteger(offset)||offset<0||offset>100000)throw Error('Invalid page.');
   let membersQuery=sb.from('campaign_member_results').select('*').eq('campaign_id',campaignId);
+  const category=String(data.category||'active');
+  if(category==='completed')membersQuery=membersQuery.in('contact_status',['completed','appointment']);
+  else if(category==='active')membersQuery=membersQuery.not('contact_status','in','(completed,appointment)');
+  else throw Error('Invalid campaign category.');
   const filter=String(data.filter||'all');
   if(filter==='resolved')membersQuery=membersQuery.in('contact_status',['completed','declined','not_interested','do_not_call','unreachable','appointment']);
   else if(filter==='need')membersQuery=membersQuery.eq('contact_status','not_contacted');

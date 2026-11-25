@@ -4,3 +4,13 @@ function context({edit=true,matched=true}={}){const calls=[];const sb={from(tabl
 test('Server rejects campaign writes for viewers',async()=>{const ctx=context({edit:false});await assert.rejects(officeCampaignCenter(ctx,{agent_id:agent,command:'contact'}),/not authorized/);assert.equal(ctx.calls.some(c=>c.rpc),false);});
 test('Server requires campaign to belong to selected agent before returning clients',async()=>{const ctx=context({matched:false});await assert.rejects(officeCampaignCenter(ctx,{agent_id:agent,command:'members',campaign_id:campaign}),/not found/);const c=ctx.calls.find(c=>c.table==='campaigns');assert.ok(c.filters.some(f=>f[0]==='eq'&&f[1]==='assigned_agent_id'&&f[2]===agent));assert.equal(ctx.calls.some(c=>c.table==='campaign_member_results'),false);});
 test('Contact updates bind staff, scope, member, version and operation to transactional RPC',async()=>{const ctx=context();await officeCampaignCenter(ctx,{agent_id:agent,command:'contact',campaign_id:campaign,member_id:member,operation_id:campaign,version:4,outcome:'no_answer'});const c=ctx.calls.find(c=>c.rpc==='office_campaign_update');assert.equal(c.args.p_staff_id,agent);assert.equal(c.args.p_agent_id,agent);assert.equal(c.args.p_scope,'arctos');assert.equal(c.args.p_member_id,member);assert.equal(c.args.p_expected_version,4);assert.equal(c.args.p_operation_id,campaign);assert.ok(ctx.calls.find(c=>c.table==='campaign_members').filters.some(f=>f[0]==='eq'&&f[1]==='campaign_id'&&f[2]===campaign));});
+
+test('Active and Completed categories filter in the database before pagination',async()=>{
+ for(const category of ['active','completed']){
+  const ctx=context();await officeCampaignCenter(ctx,{agent_id:agent,command:'members',campaign_id:campaign,category,offset:100});
+  const filters=ctx.calls.find(c=>c.table==='campaign_member_results').filters;
+  const i=filters.findIndex(f=>f[0]===(category==='active'?'not':'in')&&f[1]==='contact_status');assert.ok(i>=0);
+  assert.deepEqual(filters[i],category==='active'?['not','contact_status','in','(completed,appointment)']:['in','contact_status',['completed','appointment']]);
+  assert.ok(i<filters.findIndex(f=>f[0]==='range'));assert.ok(filters.some(f=>f[0]==='eq'&&f[1]==='campaign_id'&&f[2]===campaign));
+ }
+});
