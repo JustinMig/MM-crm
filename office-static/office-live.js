@@ -1741,7 +1741,7 @@ screen.addEventListener("submit",async e=>{
 function mountOfficeFullDirectory(){
  const form=document.getElementById('officeClientSearch');if(!form)return;
  const host=document.createElement('section');host.className='panel office-agent-directory';
- host.innerHTML='<h3>All clients by agent</h3><div class="oc-campaign-pickers"><label>Agency<select data-full-agency><option value="">Choose an agency</option>'+['arctos','platinum'].filter(a=>connected[a]).map(a=>'<option value="'+a+'">'+LABEL[a]+'</option>').join('')+'</select></label><label>Agent<select data-full-agent disabled><option value="">Choose an agent</option></select></label><button type="button" class="outline" data-full-load disabled>Show All Clients</button></div><div class="office-sms-toolbar"><button type="button" class="outline" data-full-all disabled>Select All</button><button type="button" class="outline" data-full-none disabled>Deselect All</button><button type="button" class="primary" data-full-text disabled>Text Selected Clients</button></div><p data-full-status role="status"></p><div data-full-list style="max-height:65vh;overflow:auto"></div>';
+ host.innerHTML='<h3>Client directory</h3><div class="oc-campaign-pickers"><label>Agency<select data-full-agency><option value="">Choose an agency</option>'+['arctos','platinum'].filter(a=>connected[a]).map(a=>'<option value="'+a+'">'+LABEL[a]+'</option>').join('')+'</select></label><label>Agent<select data-full-agent disabled><option value="">Choose an agent</option></select></label><button type="button" class="outline" data-full-load disabled>Show All Clients</button></div><div class="office-sms-toolbar"><button type="button" class="outline" data-full-all disabled>Select All</button><button type="button" class="outline" data-full-none disabled>Deselect All</button><button type="button" class="primary" data-full-text disabled>Text Selected Clients</button></div><p data-full-status role="status"></p><div data-full-list style="max-height:65vh;overflow:auto"></div>';
  form.after(host);
  const agencySelect=host.querySelector('[data-full-agency]'),agentSelect=host.querySelector('[data-full-agent]'),load=host.querySelector('[data-full-load]'),send=host.querySelector('[data-full-text]'),status=host.querySelector('[data-full-status]'),list=host.querySelector('[data-full-list]');
  let rows=[],selected=new Set(),ticket=0,canSend=false;
@@ -1762,13 +1762,14 @@ function mountOfficeFullDirectory(){
  agencySelect.onchange=async()=>{
    const current=++ticket;reset();agentSelect.disabled=true;load.disabled=true;agentSelect.innerHTML='<option value="">Choose an agent</option>';
    if(!agencySelect.value)return;
+   const isArctos=agencySelect.value==='arctos';
    status.textContent='Loading agents…';
-   try{const data=await request(agencySelect.value,'directory_agents');if(current!==ticket||!host.isConnected)return;agentSelect.innerHTML+=[...(data.agents||[])].map(a=>'<option value="'+esc(a.id)+'">'+esc(a.full_name)+'</option>').join('');agentSelect.disabled=false;status.textContent='Choose an agent.';}catch(e){status.textContent=e.message;}
+   try{const data=await request(agencySelect.value,'directory_agents');if(current!==ticket||!host.isConnected)return;if(isArctos)agentSelect.innerHTML='<option value="">All agents</option>';agentSelect.innerHTML+=[...(data.agents||[])].map(a=>'<option value="'+esc(a.id)+'">'+esc(a.full_name)+'</option>').join('');agentSelect.disabled=false;if(isArctos){await load.onclick();}else{status.textContent='Choose an agent.';}}catch(e){status.textContent=e.message;}
  };
- agentSelect.onchange=()=>{ticket++;reset();load.disabled=!agentSelect.value;};
+ agentSelect.onchange=()=>{ticket++;reset();load.disabled=!agentSelect.value&&agencySelect.value!=='arctos';if(agencySelect.value==='arctos')return load.onclick();};
  load.onclick=async()=>{
-   const current=++ticket,a=agencySelect.value,id=agentSelect.value;reset();load.disabled=true;status.textContent='Loading every client for this agent…';
-   try{const data=await request(a,'sms_context',{agent_id:id});if(current!==ticket||!host.isConnected)return;rows=data.clients||[];canSend=!!connected[a]?.permissions?.edit;draw();}catch(e){status.textContent=e.message;}finally{if(host.isConnected&&current===ticket)load.disabled=false;}
+   const current=++ticket,a=agencySelect.value,id=agentSelect.value;reset();load.disabled=true;status.textContent='Loading clients…';
+   try{const data=a==='arctos'?await request(a,'client_directory',{agent_id:id||null}):await request(a,'sms_context',{agent_id:id});if(current!==ticket||!host.isConnected)return;rows=data.clients||[];canSend=!!connected[a]?.permissions?.edit;draw();}catch(e){status.textContent=e.message;}finally{if(host.isConnected&&current===ticket)load.disabled=false;}
  };
  host.querySelector('[data-full-all]').onclick=()=>{selected=new Set(rows.filter(eligible).map(c=>c.id));draw();};
  host.querySelector('[data-full-none]').onclick=()=>{selected.clear();draw();};

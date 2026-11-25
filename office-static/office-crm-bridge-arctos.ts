@@ -229,6 +229,20 @@ async function officeProtected(sb:ReturnType<typeof admin>,kind:string,id:string
 
 async function perform(action:string,data:any,actor:{id:string;email:string;permission:any}){
  const sb=admin();
+ if(action==="client_directory"){
+  const agentId=data.agent_id;
+  if(agentId!=null&&!uuid(agentId))throw Error("Invalid agent");
+  const clients=[];
+  for(let offset=0;;offset+=1000){
+   let query=sb.from("clients").select("id,first_name,last_name,phone,assigned_agent_id,status")
+    .or("status.is.null,status.neq.deceased").order("last_name").order("first_name").order("id");
+   if(agentId)query=query.eq("assigned_agent_id",agentId);
+   const page=await q(query.range(offset,offset+999));
+   clients.push(...page);
+   if(page.length<1000)break;
+  }
+  return {clients};
+ }
  if(action==="sms_context"){
   const requested=String(data.client_id||'');
   if(requested&&!uuid(requested))throw Error('Invalid client.');
