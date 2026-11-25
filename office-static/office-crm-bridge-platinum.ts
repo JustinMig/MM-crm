@@ -236,7 +236,7 @@ async function perform(action:string,data:any,actor:{id:string;email:string;perm
   if(requested&&!client)throw Error('Client not found in this agency.');
   const agentId=String(data.agent_id||client?.assigned_agent_id||'');
   if(!uuid(agentId)||client&&client.assigned_agent_id!==agentId)throw Error('Choose the client’s assigned agent.');
-  const agent=await q(sb.from('profiles').select('id,full_name').eq('id',agentId).eq('active',true).in('role',['owner','agent','admin']).maybeSingle());
+  const agent=await q(sb.from('profiles').select('id,full_name').eq('id',agentId).eq('active',true).in('role',['owner','agent']).maybeSingle());
   if(!agent)throw Error('Agent is unavailable.');
   const clients=[];
   for(let offset=0;offset<20000;offset+=1000){const page=await q(sb.from('clients').select('id,first_name,last_name,phone,assigned_agent_id,status').eq('assigned_agent_id',agentId).order('id').range(offset,offset+999));clients.push(...page);if(page.length<1000)break;}
@@ -343,8 +343,7 @@ async function perform(action:string,data:any,actor:{id:string;email:string;perm
   return {leads};
  }
  if(action==="campaign_agents"||action==="directory_agents"){
-  const roles=action==="directory_agents"?["owner","agent","admin"]:["owner","agent"];
-  const agents=await q(sb.from("profiles").select("id,full_name,role").eq("active",true).in("role",roles).order("full_name",{ascending:true}).limit(150));
+  const agents=await q(sb.from("profiles").select("id,full_name,role").eq("active",true).in("role",["owner","agent"]).order("full_name",{ascending:true}).limit(150));
   return {agents};
  }
  if(action==="campaigns"){
