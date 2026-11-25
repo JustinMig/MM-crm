@@ -1,3 +1,4 @@
+import {chunks} from '@/lib/client-list-pages'
 import {ownedPhotoPaths,photoUrls} from '@/lib/sms-media'
 import 'server-only'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -45,13 +46,12 @@ export async function processBulkSmsJob(jobId: string) {
     const failures = Array.isArray(payload.preflight_failures) ? [...payload.preflight_failures] : []
     if (!clientIds.length || (!body&&!paths.length)) throw new Error('The bulk SMS job is missing recipients or message text.')
 
-    const { data: clients, error: clientError } = await admin
-      .from('clients')
-      .select('id,first_name,last_name,phone')
-      .eq('agency_id', claimed.agency_id)
-      .in('id', clientIds)
-    if (clientError) throw new Error(clientError.message)
-
+    const clients:ClientRow[]=[]
+    for(const ids of chunks(clientIds)){
+      const {data,error}=await admin.from('clients').select('id,first_name,last_name,phone').eq('agency_id',claimed.agency_id).in('id',ids)
+      if(error)throw Error(error.message)
+      clients.push(...(data||[]))
+    }
     const recipients = ((clients || []) as ClientRow[]).flatMap((client) => {
       const phone = normalizeUsPhone(String(client.phone || ''))
       if (!phone) {
@@ -62,22 +62,13 @@ export async function processBulkSmsJob(jobId: string) {
     })
 
     const now = new Date().toISOString()
-    const { data: pendingRows, error: pendingError } = recipients.length ? await admin
-      .from('client_sms_messages')
-      .insert(recipients.map(({ client, phone }) => ({
-        client_id: client.id,
-        user_id: claimed.created_by,
-        direction: 'outbound',
-        body: body||'Photo',
-        media_paths: paths,
-        to_number: phone,
-        status: 'sending',
-        read_at: now
-      })))
-      .select('id,client_id') : { data: [], error: null }
-
-    if (pendingError) throw new Error(pendingError.message)
-    const pendingByClient = new Map((pendingRows || []).map((row) => [row.client_id, row.id]))
+    const pendingByClient=new Map<string,string>()
+    for(const batch of chunks(recipients)){
+      const {data,error}=await admin.from('client_sms_messages').insert(batch.map(({client,phone})=>({client_id:client.id,user_id:claimed.created_by,direction:'outbound',body:body||'Photo',media_paths:paths,to_number:phone,status:'sending',read_at:now}))).select('id,client_id')
+      if(error)throw Error(error.message)
+      for(const row of data||[])pendingByClient.set(row.client_id,row.id)
+    }
+    if(pendingByClient.size!==recipients.length)throw Error('Unable to prepare every selected message. No texts were sent.')
 
     let processed = 0
     let succeeded = 0

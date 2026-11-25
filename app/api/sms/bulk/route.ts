@@ -9,7 +9,8 @@ export const dynamic = 'force-dynamic'
 
 import {ownedPhotoPaths,photoUrls} from '@/lib/sms-media'
 
-const MAX_RECIPIENTS = 250
+import {bulkSmsClientIds,chunks} from '@/lib/client-list-pages'
+export const maxDuration=300
 
 type ClientRow = {
   id: string
@@ -21,9 +22,8 @@ type ClientRow = {
 export async function POST(request: NextRequest) {
   try {
     const payload = await request.json().catch(() => ({})) as { client_ids?: string[]; body?: string; media_paths?: unknown }
-    const clientIds = Array.isArray(payload.client_ids)
-      ? Array.from(new Set(payload.client_ids.filter(Boolean))).slice(0, MAX_RECIPIENTS)
-      : []
+    let clientIds:string[]
+    try{clientIds=bulkSmsClientIds(payload.client_ids)}catch(error){return NextResponse.json({error:error instanceof Error?error.message:'Invalid client selection.'},{status:400})}
     const body = String(payload.body || '').trim()
 
     if (!clientIds.length) return NextResponse.json({ error: 'Choose at least one client.' }, { status: 400 })
@@ -37,17 +37,14 @@ export async function POST(request: NextRequest) {
     await photoUrls(admin,paths)
     if(!body&&!paths.length)return NextResponse.json({error:'Enter a message or attach a photo.'},{status:400})
     const canSeeAgency = canSeeAllClients(profile.role)
-    let clientQuery = admin
-      .from('clients')
-      .select('id,first_name,last_name,phone')
-      .eq('agency_id', profile.agency_id)
-      .in('id', clientIds)
-    if (!canSeeAgency) clientQuery = clientQuery.eq('assigned_agent_id', userId)
-
-    const { data: clientData, error: clientError } = await clientQuery
-    if (clientError) return NextResponse.json({ error: clientError.message }, { status: 500 })
-
-    const clients = (clientData || []) as ClientRow[]
+    const clients:ClientRow[]=[]
+    for(const ids of chunks(clientIds)){
+      let clientQuery=admin.from('clients').select('id,first_name,last_name,phone').eq('agency_id',profile.agency_id).in('id',ids)
+      if(!canSeeAgency)clientQuery=clientQuery.eq('assigned_agent_id',userId)
+      const {data,error}=await clientQuery
+      if(error)return NextResponse.json({error:error.message},{status:500})
+      clients.push(...(data||[]))
+    }
     const accessibleIds = new Set(clients.map((client) => client.id))
     const preflightFailures = clientIds
       .filter((id) => !accessibleIds.has(id))

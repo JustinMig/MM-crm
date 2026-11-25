@@ -1,3 +1,4 @@
+import {loadAllClientRows} from '@/lib/client-list-pages'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { getCrmSession } from '@/lib/crm-session'
@@ -145,12 +146,17 @@ export default async function ClientsPage({ searchParams }: { searchParams: Sear
       }
       if (!showAll && age65plus) query = query.lte('date_of_birth', getAgeCutoffDate(65))
 
+      query=query.order('id',{ascending:true})
+      if(showAll){
+        try{const result=await loadAllClientRows(query);clients=result.clients;filteredTotal=result.total}catch(error){errorMessage=error instanceof Error?error.message:'Unable to load all clients.'}
+      }else{
       const from = (page - 1) * pageSize
       query = query.range(from, from + pageSize - 1)
       const result = await query
       clients = result.data || []
       filteredTotal = result.count || 0
       if (!errorMessage) errorMessage = result.error?.message || ''
+      }
     }
   }
 
@@ -231,7 +237,7 @@ export default async function ClientsPage({ searchParams }: { searchParams: Sear
           </div>
           <div style={{ display: 'flex', gap: 10, marginBottom: 14, flexWrap: 'wrap' }}>
             <Link prefetch={false} className="btn btn-secondary" href={`/clients?${new URLSearchParams({ show_all: '1', ...(selectedAgent ? { agent: selectedAgent } : {}), ...(sort !== 'last_name' ? { sort } : {}) }).toString()}`}>Show All</Link>
-            {shouldSearch ? <span className="subtle" style={{ alignSelf: 'center' }}>Results are paged 50 at a time for consistent speed.</span> : null}
+            {shouldSearch ? <span className="subtle" style={{ alignSelf: 'center' }}>{showAll ? `All ${clients.length} clients are shown. Use Select all clients, then Mass Text. Uncheck anyone to exclude.` : 'Results are paged 50 at a time. Choose Show All to select your full client list.'}</span> : null}
           </div>
         </>
       ) : null}
@@ -246,7 +252,7 @@ export default async function ClientsPage({ searchParams }: { searchParams: Sear
           filters={{ q, product, turn65, agent: selectedAgent }}
           errorMessage={errorMessage}
           canBulkDelete={canBulkDelete}
-          pagination={{ page, pageSize, total: filteredTotal, baseParams: paginationBase }}
+          pagination={showAll?null:{ page, pageSize, total: filteredTotal, baseParams: paginationBase }}
         />
       )}
     </>
