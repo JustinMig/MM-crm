@@ -9,3 +9,5 @@
   background: #fff;
   border-radius: 12px;
 }
+
+.office-delete-client{color:#a22424!important;margin-left:12px}.office-delete-client:disabled{opacity:.5}

@@ -5,6 +5,7 @@ import { officeCoverageFiles } from "./office-coverage-files.ts";
 import { officeCoverageSoa } from "./office-coverage-soa.ts";
 import { officeClientNotes } from "./office-client-notes.ts";
 import { officeMedicationSearch } from "./office-medication-search.ts";
+import { deleteOfficeClient } from "./office-client-delete.ts";
 import { officeClientLookup } from "./office-client-lookup.ts";
 const MM_URL="https://aefdewkiqgiwkquklnvr.supabase.co";
 const MM_PUBLIC="sb_publishable_3dEzyrV3AvaxDMQDMTsvKw_mT7M_vqx";
@@ -226,6 +227,7 @@ async function officeProtected(sb:ReturnType<typeof admin>,kind:string,id:string
 
 async function perform(action:string,data:any,actor:{id:string;email:string;permission:any}){
  const sb=admin();
+ if(action==="delete_client")return await deleteOfficeClient({sb,actor,scope:SCOPE,log},data);
  if(action==="session")return {connected:true,agency:SCOPE,permissions:{edit:!!actor.permission.can_edit,sensitive:!!actor.permission.can_view_sensitive}};
  if(action==="save_review_checkoff"||action==="add_client_to_campaign")return await writeOfficeOverview({sb,actor,scope:SCOPE,agencyActorId:SCOPE==="arctos"?OFFICE_ARCTOS_ACTORS[actor.id]||null:null,log},action,data);
  if(action==="save_record"||action==="delete_record")return await writeOfficeRecord({sb,actor,scope:SCOPE,log},action,data);

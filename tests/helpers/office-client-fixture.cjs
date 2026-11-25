@@ -36,6 +36,7 @@ async function fixture(agency='arctos',detailErrors={},exact=false,options={}){
    if(data.view==='stats')result={birthdays:birthdays.length,deceased:deceased.length,month_key:month,month_label:'October 2026'};
    else {const rows=data.view==='birthdays'?birthdays:deceased,offset=data.offset||0;result={clients:structuredClone(rows.slice(offset,offset+(data.limit||200))),total:rows.length,offset,month_key:month,month_label:'October 2026'};}
   }
+  else if(data.action==='delete_client')result={deleted:true,client_id:data.client_id};
   else if(data.action==='client')result={client:structuredClone(client),details:structuredClone(details),detail_errors:detailErrors};
   else if(data.action==='secure_client'){
    if(fixtureOptions.failSecure===data.kind)return new Response(JSON.stringify({error:'Synthetic protected read failure'}),{status:400});
