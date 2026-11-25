@@ -1,0 +1,11 @@
+/* Use the existing M&H shield in both Office CRM brand positions. */
+.brand-mark.office-brand-logo {
+  display: block;
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  padding: 3px;
+  background: #fff;
+  border-radius: 12px;
+}
