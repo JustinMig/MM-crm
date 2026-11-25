@@ -19,13 +19,18 @@ export async function getAuthorizedMhClients(request: Request) {
   const token = authorization.replace(/^Bearer\s+/i, '').trim()
   if (!token) throw bridgeError('Mayer MIG CRM sign-in is required.', 401)
 
+  const pathname = new URL(request.url).pathname
+  const platinum = request.headers.get('x-crm-source') === 'platinum' &&
+    (pathname === '/api/mh-ringcentral/calls' || pathname.startsWith('/api/mh-ringcentral/recordings/'))
+  const isaiah = '8099c3d2-dff1-4a34-8c90-06931f64177e'
+  const projectUrl = platinum ? 'https://sggzshbdfgkyyvxbebul.supabase.co' : MH_SUPABASE_URL
   const authHeaders = {
-    apikey: MH_PUBLISHABLE_KEY,
+    apikey: platinum ? 'sb_publishable_wLDvDmI4pmIcADkUlc6-LQ_RWMoQU1Y' : MH_PUBLISHABLE_KEY,
     Authorization: `Bearer ${token}`,
     Accept: 'application/json'
   }
 
-  const userResponse = await fetch(`${MH_SUPABASE_URL}/auth/v1/user`, {
+  const userResponse = await fetch(`${projectUrl}/auth/v1/user`, {
     headers: authHeaders,
     cache: 'no-store'
   })
@@ -33,7 +38,7 @@ export async function getAuthorizedMhClients(request: Request) {
   if (!userResponse.ok || !user?.id) throw bridgeError('The Mayer MIG CRM session is not valid.', 401)
 
   const profileResponse = await fetch(
-    `${MH_SUPABASE_URL}/rest/v1/profiles?id=eq.${encodeURIComponent(user.id)}&active=eq.true&select=id,active,role&limit=1`,
+    `${projectUrl}/rest/v1/profiles?id=eq.${encodeURIComponent(user.id)}&active=eq.true&select=id,active,role&limit=1`,
     { headers: authHeaders, cache: 'no-store' }
   )
   const profiles = await profileResponse.json().catch(() => []) as Array<{ id?: string; active?: boolean; role?: string }>
@@ -46,10 +51,14 @@ export async function getAuthorizedMhClients(request: Request) {
     throw bridgeError('Owner or administrator access is required for the shared Justin calendar.', 403)
   }
 
+  if (platinum && user.id !== isaiah && !['owner','admin'].includes(profiles[0].role || '')) {
+    throw bridgeError('Isaiah client access is required.', 403)
+  }
+  const agentFilter = platinum ? `&assigned_agent_id=eq.${isaiah}` : ''
   const clients: Array<{ id: string; phone: string | null }> = []
   for (let offset = 0; offset < 10000; offset += 1000) {
     const response = await fetch(
-      `${MH_SUPABASE_URL}/rest/v1/clients?select=id,phone&phone=not.is.null&order=created_at.desc`,
+      `${projectUrl}/rest/v1/clients?select=id,phone&phone=not.is.null&order=created_at.desc,id${agentFilter}`,
       {
         headers: { ...authHeaders, Range: `${offset}-${offset + 999}` },
         cache: 'no-store'
