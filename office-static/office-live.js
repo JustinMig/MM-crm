@@ -990,7 +990,7 @@ async function chooseCampaignAgent(value){
  showCampaignControls();
  if(!agent||!connected[selectedAgency])return;
  try{
-  const data=await request(selectedAgency,"campaigns",{agent_id:agent.id});
+  const data=await request(selectedAgency,"campaign_center",{command:"list",agent_id:agent.id});
   if(callId!==campaignRequestId||tab!=="campaigns")return;
   // Verify the selected agent owns every displayed assignment, even if an API response changes.
   campaignSelectionResults=(Array.isArray(data.campaigns)?data.campaigns:[]).filter(c=>String(c.assigned_agent_id||"")===agent.id).map(c=>({...c,agency:selectedAgency}));
@@ -1005,10 +1005,11 @@ async function chooseCampaignAgent(value){
 function showCampaigns(){
  const el=document.getElementById("campaignResults");if(!el||!campaignAgency||!campaignAgent)return;
  const selected=campaignAgents.find(a=>a.id===campaignAgent);
- const list=campaignSelectionResults;
- el.innerHTML='<div class="oc-campaign-result-heading"><b>'+esc(selected?.full_name||AGENT[campaignAgency]||"Agent")+'</b><span>'+list.length+' campaign'+(list.length===1?"":"s")+'</span></div>'+
- (list.map(c=>'<div class="list-row"><div class="row-main"><div class="avatar">◉</div><div><b>'+esc(c.name)+'</b><small>'+esc(selected?.full_name||AGENT[c.agency])+' · '+esc(c.topic||c.description||"Campaign")+'</small></div></div><div class="row-right">'+tag(c.agency)+'<small><button class="link-btn" data-campaign="'+esc(c.agency)+":"+esc(c.id)+'">Open contacts →</button></small></div></div>').join("")||'<div class="empty">No campaigns are assigned to this agent.</div>');
- el.querySelectorAll("[data-campaign]").forEach(b=>b.onclick=async()=>{let [a,id]=b.dataset.campaign.split(":");await showMembers(a,id)});
+ const selectedAgency=campaignAgency,selectedAgent=campaignAgent;
+ window.officeCampaignCenter.mount({el,esc,request,agency:selectedAgency,agent:selectedAgent,agentName:selected?.full_name||AGENT[selectedAgency],agencyName:LABEL[selectedAgency],canEdit:!!connected[selectedAgency]?.permissions?.edit,campaigns:campaignSelectionResults,openClient,
+ isCurrent:()=>tab==="campaigns"&&campaignAgency===selectedAgency&&campaignAgent===selectedAgent,
+ reload:()=>tab==="campaigns"&&campaignAgency===selectedAgency&&campaignAgent===selectedAgent?chooseCampaignAgent(selectedAgent):Promise.resolve(),
+ addClients:()=>{tab="clients";agency=selectedAgency;shell();render();loadTab();}});
 }
 async function showMembers(a,id){
  const el=document.getElementById("campaignResults");if(!el)return;

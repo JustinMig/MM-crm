@@ -1,4 +1,5 @@
 // @ts-nocheck -- Supabase Edge Function is compiled by Deno, not the Next.js TypeScript project.
+import {officeCampaignCenter} from "./office-campaign-center.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.57.0";
 import { writeOfficeRecord, recordSelection, writeOfficeOverview } from "./office-record-store.ts";
 import { officeCoverageFiles } from "./office-coverage-files.ts";
@@ -228,6 +229,7 @@ async function officeProtected(sb:ReturnType<typeof admin>,kind:string,id:string
 
 async function perform(action:string,data:any,actor:{id:string;email:string;permission:any}){
  const sb=admin();
+ if(action==="campaign_center")return await officeCampaignCenter({sb,actor,scope:SCOPE,log},data);
  if(action==="delete_client")return await deleteOfficeClient({sb,actor,scope:SCOPE,log},data);
  if(action==="session")return {connected:true,agency:SCOPE,permissions:{edit:!!actor.permission.can_edit,sensitive:!!actor.permission.can_view_sensitive}};
  if(action==="save_review_checkoff"||action==="add_client_to_campaign")return await writeOfficeOverview({sb,actor,scope:SCOPE,agencyActorId:SCOPE==="arctos"?OFFICE_ARCTOS_ACTORS[actor.id]||null:null,log},action,data);
