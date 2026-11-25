@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {readFileSync} from 'node:fs'
-const {writeOfficeRecord,recordSelection,writeOfficeOverview}=await import('data:text/javascript;base64,'+readFileSync(new URL('../office-static/office-record-store.ts',import.meta.url)).toString('base64'))
+const {writeOfficeRecord,recordSelection,writeOfficeOverview}=await import('../office-static/office-record-store.ts')
 const id='11111111-1111-4111-8111-111111111111',other='22222222-2222-4222-8222-222222222222',recordId='33333333-3333-4333-8333-333333333333'
 function fixture(scope='arctos'){
  const database={clients:[{id},{id:other}],medicare_details:[{client_id:id,part_a_date:'2010-01-01',medicaid_level:'QMB',sunfire_code:'OLD',medicaid_number:'do-not-touch'}],client_doctors:[{id:recordId,client_id:id,doctor_name:'Test Doctor',phone:'old',updated_at:'old-version'}],client_pharmacies:[],health_plans:[],retirement_accounts:[]},audit=[]

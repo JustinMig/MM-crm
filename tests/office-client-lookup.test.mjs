@@ -1,8 +1,8 @@
 import test from 'node:test';import assert from 'node:assert/strict';import {readFileSync} from 'node:fs';
-const {officeClientLookup,officeBirthdayMonth}=await import('data:text/javascript;base64,'+readFileSync(new URL('../office-static/office-client-lookup.ts',import.meta.url)).toString('base64'));
+const {officeClientLookup,officeBirthdayMonth}=await import('../office-static/office-client-lookup.ts');
 function fixture(){
  const calls=[],rows=Array.from({length:205},(_,i)=>({id:String(i),status:'deceased'}));
- const chain=(rpc,options)=>{let start=0,end=204;const q={select(_fields,opts){options=opts;return q;},eq(key,value){calls.push({filter:[key,value]});return q;},order(key){calls.push({order:key});return q;},range(a,b){start=a;end=b;return q;},then(resolve){return Promise.resolve({data:options?.head?null:rows.slice(start,end+1),count:205,error:null}).then(resolve);}};return q;};
+ const chain=(rpc,options)=>{let start=0,end=204;const q={select(_fields,opts){options=opts;return q;},in(key,value){calls.push({ids:value});return q;},eq(key,value){calls.push({filter:[key,value]});return q;},order(key){calls.push({order:key});return q;},range(a,b){start=a;end=b;return q;},then(resolve){return Promise.resolve({data:options?.head?null:rows.slice(start,end+1),count:205,error:null}).then(resolve);}};return q;};
  const sb={rpc(name,args,options){calls.push({rpc:name,args,options});return chain(true,options);},from(table){calls.push({table});return chain(false);}};return {sb,calls};
 }
 test('Birthdays use the current Central month, including UTC month boundaries',()=>{

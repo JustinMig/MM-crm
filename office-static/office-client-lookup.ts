@@ -1,4 +1,5 @@
 // @ts-nocheck -- Read-only lookup actions behind the existing Office agency authorization.
+import {officeReviewYear,withOfficeReviewStatus} from "./office-review-status.ts";
 const fields='id,first_name,last_name,phone,date_of_birth,city,state,status,assigned_agent_id,products';
 export function officeBirthdayMonth(now=new Date()){
  const parts=new Intl.DateTimeFormat('en-US',{timeZone:'America/Chicago',year:'numeric',month:'2-digit'}).formatToParts(now),get=key=>parts.find(part=>part.type===key).value;
@@ -6,17 +7,17 @@ export function officeBirthdayMonth(now=new Date()){
 }
 export async function officeClientLookup({sb},data,now=new Date()){
  const view=String(data.view||'stats'),month=officeBirthdayMonth(now);
- if(!['stats','birthdays','deceased','t65'].includes(view))throw Error('Invalid client lookup');
+ if(!['stats','birthdays','deceased','t65','medicare_reviews'].includes(view))throw Error('Invalid client lookup');
  const check=result=>{if(result.error)throw Error('Client lookup could not load. Please retry.');return result;};
  if(view==='stats'){
-  const results=await Promise.all([sb.rpc('office_client_birthdays',{p_month:month.month},{count:'exact',head:true}),sb.from('clients').select('id',{count:'exact',head:true}).eq('status','deceased'),sb.rpc('office_client_t65',{}, {count:'exact',head:true})]);results.forEach(check);
-  return {birthdays:results[0].count??0,deceased:results[1].count??0,t65:results[2].count??0,month_key:month.month_key,month_label:month.month_label};
+  const results=await Promise.all([sb.rpc('office_client_birthdays',{p_month:month.month},{count:'exact',head:true}),sb.from('clients').select('id',{count:'exact',head:true}).eq('status','deceased'),sb.rpc('office_client_t65',{}, {count:'exact',head:true}),sb.rpc('office_client_medicare_reviews',{p_year:officeReviewYear(now)},{count:'exact',head:true})]);results.forEach(check);
+  return {birthdays:results[0].count??0,deceased:results[1].count??0,t65:results[2].count??0,medicare_reviews:results[3].count??0,month_key:month.month_key,month_label:month.month_label};
  }
  const offset=Number(data.offset??0),limit=Number(data.limit??200);
  if(!Number.isInteger(offset)||offset<0||offset>1000000||!Number.isInteger(limit)||limit<1||limit>200)throw Error('Invalid client page');
- let query=view==='t65'?sb.rpc('office_client_t65',{}, {count:'exact'}):view==='birthdays'?sb.rpc('office_client_birthdays',{p_month:month.month},{count:'exact'}):sb.from('clients').select(fields,{count:'exact'}).eq('status','deceased');
+ let query=view==='medicare_reviews'?sb.rpc('office_client_medicare_reviews',{p_year:officeReviewYear(now)},{count:'exact'}):view==='t65'?sb.rpc('office_client_t65',{}, {count:'exact'}):view==='birthdays'?sb.rpc('office_client_birthdays',{p_month:month.month},{count:'exact'}):sb.from('clients').select(fields,{count:'exact'}).eq('status','deceased');
  if(view==='t65')query=query.order('birthday_65',{ascending:true});
  if(view==='birthdays')query=query.order('birthday_day',{ascending:true});
  const result=check(await query.order('last_name',{ascending:true}).order('first_name',{ascending:true}).order('id',{ascending:true}).range(offset,offset+limit-1));
- return {clients:result.data||[],total:result.count??(result.data||[]).length,offset,limit,month_key:month.month_key,month_label:month.month_label};
+ return {clients:view==='medicare_reviews'?(result.data||[]):await withOfficeReviewStatus({sb},result.data||[],now),total:result.count??(result.data||[]).length,offset,limit,month_key:month.month_key,month_label:month.month_label};
 }

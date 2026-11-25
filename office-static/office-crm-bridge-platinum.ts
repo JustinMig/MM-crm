@@ -6,6 +6,7 @@ import { officeCoverageSoa } from "./office-coverage-soa.ts";
 import { officeClientNotes } from "./office-client-notes.ts";
 import { officeMedicationSearch } from "./office-medication-search.ts";
 import { deleteOfficeClient } from "./office-client-delete.ts";
+import { withOfficeReviewStatus } from "./office-review-status.ts";
 import { officeClientLookup } from "./office-client-lookup.ts";
 const MM_URL="https://aefdewkiqgiwkquklnvr.supabase.co";
 const MM_PUBLIC="sb_publishable_3dEzyrV3AvaxDMQDMTsvKw_mT7M_vqx";
@@ -273,7 +274,7 @@ async function perform(action:string,data:any,actor:{id:string;email:string;perm
   if(parts.length>1)qry=qry.ilike("first_name","%"+parts[0]+"%").ilike("last_name","%"+parts.slice(1).join(" ")+"%");
   else qry=qry.or("first_name.ilike.%"+value+"%,last_name.ilike.%"+value+"%,phone.ilike.%"+value+"%");
   const clients=await q(qry.order("last_name",{ascending:true}).limit(40));
-  return {clients};
+  return {clients:await withOfficeReviewStatus({sb},clients)};
  }
  if(action==="client"){
   const id=String(data.client_id||""); const client=await readClient(sb,id);

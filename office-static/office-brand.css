@@ -14,3 +14,6 @@
 
 #main .office-client-lookup .client-summary-grid{grid-template-columns:repeat(3,minmax(0,1fr));max-width:540px}.client-summary-card.is-t65{background:#edf4ff;border-color:#9bbbe6}
 @media(max-width:480px){#main .office-client-lookup .client-summary-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}}
+
+#main .office-client-lookup .client-summary-grid{grid-template-columns:repeat(4,minmax(0,1fr));max-width:760px}.client-summary-card.is-medicare_reviews{background:#edf8ed;border-color:#94bd98}
+@media(max-width:600px){#main .office-client-lookup .client-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}

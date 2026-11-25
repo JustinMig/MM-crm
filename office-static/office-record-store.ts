@@ -1,4 +1,5 @@
 // @ts-nocheck -- Compiled by the Supabase Edge runtime.
+import {officeReviewYear} from "./office-review-status.ts";
 // Shared, explicitly allowed client-record writes for both agency bridges.
 const common={
  medicare_details:['part_a_date','part_b_date','medicaid_level','sunfire_code','notes'],
@@ -25,6 +26,7 @@ export async function writeOfficeOverview({sb,actor,scope,agencyActorId=null,log
  if(!await query(sb.from('clients').select('id').eq('id',clientId).maybeSingle()))throw Error('Client not found');
  if(action==='save_review_checkoff'){
   if(!Number.isInteger(data.review_year)||data.review_year<2000||data.review_year>2100||typeof data.completed!=='boolean')throw Error('Invalid review checkoff');
+  if(data.review_year!==officeReviewYear())throw Error('The September review season changed. Reopen this client and retry.');
   await query(sb.from('client_review_manual').upsert({client_id:clientId,review_year:data.review_year,completed:data.completed,completed_at:data.completed?new Date().toISOString():null,updated_by:agencyActorId},{onConflict:'client_id,review_year'}));
   await log('save_review_checkoff','client',clientId,actor.id);return {saved:true};
  }
