@@ -5,6 +5,7 @@ import { writeOfficeRecord, recordSelection, writeOfficeOverview } from "./offic
 import { officeCoverageFiles } from "./office-coverage-files.ts";
 import { officeCoverageSoa } from "./office-coverage-soa.ts";
 import { officeClientNotes } from "./office-client-notes.ts";
+import { backupAgency } from "./office-backup.ts";
 import { officeMedicationSearch } from "./office-medication-search.ts";
 import { deleteOfficeClient } from "./office-client-delete.ts";
 import { withOfficeReviewStatus } from "./office-review-status.ts";
@@ -228,6 +229,7 @@ async function officeProtected(sb:ReturnType<typeof admin>,kind:string,id:string
 
 async function perform(action:string,data:any,actor:{id:string;email:string;permission:any}){
  const sb=admin();
+ if(action==="backup_index"||action==="backup_clients"||action==="backup_identity")return backupAgency({sb,scope:SCOPE,actor,log,officeProtected},action,data);
  if(action==="client_directory"){
   const agentId=data.agent_id;
   if(agentId!=null&&!uuid(agentId))throw Error("Invalid agent");

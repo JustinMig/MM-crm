@@ -1,3 +1,4 @@
+import {officeBackupMessages} from '@/lib/office-backup-messages'
 import {prepareAttachment} from '@/lib/crm-text-attachments'
 import {NextResponse} from 'next/server'
 import {createAdminClient} from '@/lib/supabase/admin'
@@ -18,11 +19,16 @@ export async function POST(request:Request){
   const admin=createAdminClient(),{data:identity,error:authError}=await admin.auth.getUser(bearer)
   if(authError||!identity.user)return NextResponse.json({error:'Office session expired.'},{status:401,headers:cors(request)})
   const actor=identity.user.id
-  const [profile,acl]=await Promise.all([checked(admin.from('profiles').select('agency_id,active,role').eq('id',actor).maybeSingle()),checked(admin.from('office_crm_access').select('active,arctos_access,platinum_access,can_edit').eq('user_id',actor).maybeSingle())])
+  const [profile,acl]=await Promise.all([checked(admin.from('profiles').select('agency_id,active,role').eq('id',actor).maybeSingle()),checked(admin.from('office_crm_access').select('active,arctos_access,platinum_access,can_edit,can_view_sensitive').eq('user_id',actor).maybeSingle())])
   const input=await request.json(),scope=input.agency as keyof typeof OFFICE_SMS_BRIDGES,command=String(input.command||'')
   if(!Object.hasOwn(OFFICE_SMS_BRIDGES,scope)||!profile?.active||!['manager','admin'].includes(profile.role)||!profile.agency_id||!acl?.active||!(scope==='arctos'?acl.arctos_access:acl.platinum_access))return NextResponse.json({error:'Office texting access is not permitted for this agency.'},{status:403,headers:cors(request)})
   if(['send','read','hide'].includes(command)&&!acl.can_edit)return NextResponse.json({error:'Text editing is not permitted.'},{status:403,headers:cors(request)})
   const bridge=async(action:string,data:any={})=>{const response=await fetch(OFFICE_SMS_BRIDGES[scope],{method:'POST',headers:{Authorization:'Bearer '+bearer,'Content-Type':'application/json'},body:JSON.stringify({action,...data}),cache:'no-store',signal:AbortSignal.timeout(20000)});const result=await response.json();if(!response.ok)throw Error(result.error||'Agency texting connection failed.');return result}
+  if(command==='backup_messages'){
+   if(!acl.can_edit||!acl.can_view_sensitive)return NextResponse.json({error:'Full Office access required.'},{status:403,headers:cors(request)})
+   const verified=await bridge('backup_identity',{ids:input.ids})
+   return NextResponse.json(await officeBackupMessages(admin,profile.agency_id,scope,verified),{headers:cors(request)})
+  }
   if(command==='agents')return NextResponse.json(await bridge('campaign_agents'),{headers:cors(request)})
   if(!['directory','conversations','thread','send','read','hide'].includes(command))return NextResponse.json({error:'Invalid texting operation.'},{status:400,headers:cors(request)})
   const remote=await bridge('sms_context',{client_id:input.client_id||null,agent_id:input.agent_id||null})
