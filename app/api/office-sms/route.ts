@@ -1,3 +1,4 @@
+import {prepareAttachment} from '@/lib/crm-text-attachments'
 import {NextResponse} from 'next/server'
 import {createAdminClient} from '@/lib/supabase/admin'
 import {normalizeUsPhone,sendTwilioSms} from '@/lib/twilio'
@@ -51,7 +52,7 @@ export async function POST(request:Request){
   const threadQuery=(fields:string)=>admin.from(table).select(fields).eq(column,threadId)
   if(command==='thread'){
    const offset=Number(input.offset||0);if(!Number.isSafeInteger(offset)||offset<0||offset>50000)throw Error('Invalid message page.')
-   const rows=await checked(threadQuery('id,direction,body,from_number,to_number,twilio_message_sid,status,error_code,error_message,read_at,created_at').order('created_at',{ascending:false}).order('id').range(offset,offset+99))
+   const rows=await checked(threadQuery('id,direction,body,text_attachment,from_number,to_number,twilio_message_sid,status,error_code,error_message,read_at,created_at').order('created_at',{ascending:false}).order('id').range(offset,offset+99))
    return NextResponse.json({client,agent,messages:mergeSmsMessages(rows||[],phone),has_more:rows.length===100,next_offset:offset+rows.length,can_send:!!acl.can_edit&&client.status!=='deceased'},{headers:cors(request)})
   }
   if(command==='read'||command==='hide'){
@@ -60,15 +61,20 @@ export async function POST(request:Request){
    else{const ids=Array.isArray(input.message_ids)?input.message_ids.filter(uuid).slice(0,200):[];if(!ids.length)throw Error('Choose messages to remove from the inbox.');await checked(admin.from(table).update({notification_hidden_at:now,updated_at:now}).eq(column,threadId).in('id',ids))}
    return NextResponse.json({saved:true},{headers:cors(request)})
   }
-  const body=String(input.body||'').trim(),operation=String(input.operation_id||'')
-  if(!uuid(operation)||!body||body.length>1500||client.status==='deceased')return NextResponse.json({error:'Enter a message of 1–1500 characters for an active client.'},{status:400,headers:cors(request)})
-  const existing=await checked(admin.from(table).select('id,body,status,twilio_message_sid,'+column).eq('id',operation).maybeSingle())
-  if(existing){if(existing[column]!==threadId||existing.body!==body)throw Error('Message identifier is already in use.');return NextResponse.json({id:existing.id,status:existing.status,already_saved:true},{headers:cors(request)})}
+  const caption=String(input.body||'').trim(),operation=String(input.operation_id||'')
+  const media=input.attachment_id?await prepareAttachment('office-'+scope,actor,String(input.attachment_id)):{attachment:null,mediaUrl:''}
+  const body=media.attachment?.kind==='file'?[caption,media.attachment.url].filter(Boolean).join('\n'):caption
+  const latest=await checked(threadQuery('direction,body').order('created_at',{ascending:false}).limit(100))
+  const optout=(latest||[]).find((m:any)=>m.direction==='inbound'&&/^(STOP|STOPALL|UNSUBSCRIBE|CANCEL|END|QUIT|START|UNSTOP)$/i.test(String(m.body||'').trim()))
+  if(optout&&!/^(START|UNSTOP)$/i.test(optout.body.trim()))return NextResponse.json({error:'This client has opted out of texts.'},{status:400,headers:cors(request)})
+  if(!uuid(operation)||(!body&&!media.mediaUrl)||caption.length>1500||client.status==='deceased')return NextResponse.json({error:'Enter a message of 1–1500 characters for an active client.'},{status:400,headers:cors(request)})
+  const existing=await checked(admin.from(table).select('id,body,text_attachment,status,twilio_message_sid,'+column).eq('id',operation).maybeSingle())
+  if(existing){if(existing[column]!==threadId||existing.body!==body||(existing.text_attachment?.id||'')!==(media.attachment?.id||''))throw Error('Message identifier is already in use.');return NextResponse.json({id:existing.id,status:existing.status,already_saved:true},{headers:cors(request)})}
   // Claim the identifier before contacting Twilio. A double click or network retry cannot send twice.
-  const pending=await admin.from(table).insert({id:operation,[column]:threadId,user_id:actor,direction:'outbound',body,to_number:phone,status:'sending',read_at:new Date().toISOString()})
+  const pending=await admin.from(table).insert({id:operation,[column]:threadId,user_id:actor,direction:'outbound',body,text_attachment:media.attachment,to_number:phone,status:'sending',read_at:new Date().toISOString()})
   if(pending.error)return NextResponse.json({error:'Message is already being processed. Refresh the conversation before retrying.'},{status:409,headers:cors(request)})
   try{
-   const sent=await sendTwilioSms(normalizeUsPhone(phone),body)
+   const sent=await sendTwilioSms(normalizeUsPhone(phone),body,media.mediaUrl?[media.mediaUrl]:[])
    const saved=await admin.from(table).update({twilio_message_sid:String(sent.sid||'')||null,status:String(sent.status||'queued'),from_number:String(sent.from||'')||null,updated_at:new Date().toISOString()}).eq('id',operation)
    if(saved.error)return NextResponse.json({id:operation,status:'sending',warning:'The message was submitted. Delivery status is still updating; do not send it again.'},{headers:cors(request)})
    return NextResponse.json({id:operation,status:String(sent.status||'queued')},{headers:cors(request)})

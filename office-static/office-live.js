@@ -30,7 +30,7 @@ async function officeSmsRequest(payload,retried=false){
  if(response.status===401&&!retried){await refresh();return officeSmsRequest(payload,true)}
  const data=await response.json().catch(()=>({}));if(!response.ok)throw Error(data.error||'Unable to access office texts.');return data;
 }
-window.officeSms?.configure({request:officeSmsRequest,signedIn:()=>!!access,agencies:()=>['arctos','platinum'].filter(a=>connected[a]),openClient});
+window.officeSms?.configure({request:officeSmsRequest,authHeaders:headers,signedIn:()=>!!access,agencies:()=>['arctos','platinum'].filter(a=>connected[a]),openClient});
 async function refresh(){
  if(!access?.refresh_token)throw Error("Please sign in again");
  let response=await fetch(MM_URL+"/auth/v1/token?grant_type=refresh_token",{method:"POST",headers:{"apikey":PUBLIC_KEY,"Content-Type":"application/json"},body:JSON.stringify({refresh_token:access.refresh_token}),cache:"no-store"});
@@ -113,7 +113,7 @@ function render(){
  const clear=document.getElementById('clientSearchClear');if(clear)clear.onclick=()=>{clearTimeout(window.searchTimeout);savedSearch='';field.value='';void searchClients('');field.focus();};
  const back=document.getElementById('clientLookupBack');if(back)back.onclick=returnToClientSearch;
  const more=document.getElementById('clientLookupMore');if(more)more.onclick=()=>void loadClientLookupView(clientLookupView,true);
- if(tab==="clients"){updateClientLookupControls();void loadClientLookupStats();}
+ if(tab==="clients"){updateClientLookupControls();void loadClientLookupStats();mountOfficeFullDirectory();}
  let find=document.getElementById("notesFindClient");if(find)find.onclick=()=>{tab="clients";shell();render()};
  if(tab==="phone")officePhoneWire();
 }
@@ -1739,3 +1739,44 @@ screen.addEventListener("submit",async e=>{
 });
 (async()=>{try{let s=sessionStorage.getItem("office_login_session");if(s){access=JSON.parse(s);await checkConnections();shell();render();loadTab();return}}catch{}showLogin()})();
 })();
+
+function mountOfficeFullDirectory(){
+ const form=document.getElementById('officeClientSearch');if(!form)return;
+ const host=document.createElement('section');host.className='panel office-agent-directory';
+ host.innerHTML='<h3>All clients by agent</h3><div class="oc-campaign-pickers"><label>Agency<select data-full-agency><option value="">Choose an agency</option>'+['arctos','platinum'].filter(a=>connected[a]).map(a=>'<option value="'+a+'">'+LABEL[a]+'</option>').join('')+'</select></label><label>Agent<select data-full-agent disabled><option value="">Choose an agent</option></select></label><button type="button" class="outline" data-full-load disabled>Show All Clients</button></div><div class="office-sms-toolbar"><button type="button" class="outline" data-full-all disabled>Select All</button><button type="button" class="outline" data-full-none disabled>Deselect All</button><button type="button" class="primary" data-full-text disabled>Text Selected Clients</button></div><p data-full-status role="status"></p><div data-full-list style="max-height:65vh;overflow:auto"></div>';
+ form.after(host);
+ const agencySelect=host.querySelector('[data-full-agency]'),agentSelect=host.querySelector('[data-full-agent]'),load=host.querySelector('[data-full-load]'),send=host.querySelector('[data-full-text]'),status=host.querySelector('[data-full-status]'),list=host.querySelector('[data-full-list]');
+ let rows=[],selected=new Set(),ticket=0,canSend=false;
+ const eligible=c=>String(c.status||'').toLowerCase()!=='deceased'&&/^1?\d{10}$/.test(String(c.phone||'').replace(/\D/g,''))&&c.can_send!==false;
+ function controls(){
+   status.textContent=rows.length+' clients · '+selected.size+' selected';
+   send.disabled=!canSend||!selected.size;
+   host.querySelector('[data-full-all]').disabled=!canSend||!rows.length;
+   host.querySelector('[data-full-none]').disabled=!selected.size;
+ }
+ function draw(){
+   list.innerHTML=rows.map(c=>'<div style="display:flex;align-items:center;gap:12px;padding:10px;border-bottom:1px solid #ddd"><input type="checkbox" data-full-id="'+esc(c.id)+'" aria-label="Select '+esc([c.first_name,c.last_name].join(' '))+'"'+(selected.has(c.id)?' checked':'')+(!canSend||!eligible(c)?' disabled':'')+'><button type="button" class="link-btn" data-full-client="'+esc(c.id)+'">'+esc([c.first_name,c.last_name].filter(Boolean).join(' ')||'Client')+'</button><span>'+esc(c.phone||'No phone')+'</span></div>').join('');
+   list.querySelectorAll('[data-full-id]').forEach(b=>b.onchange=()=>{if(b.checked)selected.add(b.dataset.fullId);else selected.delete(b.dataset.fullId);controls();});
+   list.querySelectorAll('[data-full-client]').forEach(b=>b.onclick=()=>openClient(agencySelect.value,b.dataset.fullClient));
+   controls();
+ }
+ function reset(){rows=[];selected.clear();canSend=false;list.innerHTML='';controls();}
+ agencySelect.onchange=async()=>{
+   const current=++ticket;reset();agentSelect.disabled=true;load.disabled=true;agentSelect.innerHTML='<option value="">Choose an agent</option>';
+   if(!agencySelect.value)return;
+   status.textContent='Loading agents…';
+   try{const data=await officeSmsRequest({command:'agents',agency:agencySelect.value});if(current!==ticket||!host.isConnected)return;agentSelect.innerHTML+=[...(data.agents||[])].map(a=>'<option value="'+esc(a.id)+'">'+esc(a.full_name)+'</option>').join('');agentSelect.disabled=false;status.textContent='Choose an agent.';}catch(e){status.textContent=e.message;}
+ };
+ agentSelect.onchange=()=>{ticket++;reset();load.disabled=!agentSelect.value;};
+ load.onclick=async()=>{
+   const current=++ticket,a=agencySelect.value,id=agentSelect.value;reset();load.disabled=true;status.textContent='Loading every client for this agent…';
+   try{const data=await officeSmsRequest({command:'directory',agency:a,agent_id:id});if(current!==ticket||!host.isConnected)return;rows=data.clients||[];canSend=!!data.can_send;draw();}catch(e){status.textContent=e.message;}finally{if(host.isConnected&&current===ticket)load.disabled=false;}
+ };
+ host.querySelector('[data-full-all]').onclick=()=>{selected=new Set(rows.filter(eligible).map(c=>c.id));draw();};
+ host.querySelector('[data-full-none]').onclick=()=>{selected.clear();draw();};
+ send.onclick=()=>{
+   const a=agencySelect.value,chosen=rows.filter(c=>selected.has(c.id)).map(c=>({...c,agency:a}));
+   if(chosen.length)window.officeSms.bulk({title:'Text Selected Clients',load:async()=>chosen});
+ };
+ if(agency&&agency!=='all'&&connected[agency]){agencySelect.value=agency;void agencySelect.onchange();}
+}

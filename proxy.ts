@@ -14,6 +14,8 @@ export async function proxy(request: NextRequest) {
     request.nextUrl.pathname.startsWith('/api/mh-ringcentral/') ||
     request.nextUrl.pathname.startsWith('/api/office-ringcentral/') ||
     request.nextUrl.pathname === '/api/office-sms' ||
+    request.nextUrl.pathname === '/api/crm-text-attachments' ||
+    request.nextUrl.pathname.startsWith('/f/') ||
     request.nextUrl.pathname.startsWith('/api/mh-calendar/') ||
     request.nextUrl.pathname.startsWith('/api/soa/sign/') ||
     request.nextUrl.pathname.startsWith('/soa/sign/')
