@@ -21,16 +21,16 @@ export async function officeCampaignCenter({sb,actor,scope,log},data){
  if(!campaign)throw Error('Campaign not found for the selected agent.');
  if(command==='members'){
   const offset=Number(data.offset||0);if(!Number.isSafeInteger(offset)||offset<0||offset>100000)throw Error('Invalid page.');
-  let membersQuery=sb.from('campaign_member_results').select('*').eq('campaign_id',campaignId);
+  let membersQuery=sb.from('office_campaign_queue').select('*').eq('campaign_id',campaignId);
   const category=String(data.category||'active');
-  if(category==='completed')membersQuery=membersQuery.in('contact_status',['completed','appointment']);
-  else if(category==='active')membersQuery=membersQuery.not('contact_status','in','(completed,appointment)');
-  else throw Error('Invalid campaign category.');
+  const categories={active:['not_contacted'],completed:['completed'],appointment:['appointment'],voicemail:['voicemail'],no_answer:['no_answer'],busy:['busy'],declined:['declined'],follow_up:['follow_up'],face_to_face:['face_to_face'],other:['attempted','do_not_call','unreachable']};
+  if(!Object.hasOwn(categories,category))throw Error('Invalid campaign category.');
+  membersQuery=membersQuery.in('office_status',categories[category]);
   const filter=String(data.filter||'all');
-  if(filter==='resolved')membersQuery=membersQuery.in('contact_status',['completed','declined','not_interested','do_not_call','unreachable','appointment']);
-  else if(filter==='need')membersQuery=membersQuery.eq('contact_status','not_contacted');
-  else if(filter==='attempted')membersQuery=membersQuery.in('contact_status',['no_answer','voicemail','busy','attempted']);
-  else if(['face_to_face','follow_up'].includes(filter))membersQuery=membersQuery.eq('contact_status',filter);
+  if(filter==='resolved')membersQuery=membersQuery.in('office_status',['completed','declined','not_interested','do_not_call','unreachable','appointment']);
+  else if(filter==='need')membersQuery=membersQuery.eq('office_status','not_contacted');
+  else if(filter==='attempted')membersQuery=membersQuery.in('office_status',['no_answer','voicemail','busy','attempted']);
+  else if(['face_to_face','follow_up'].includes(filter))membersQuery=membersQuery.eq('office_status',filter);
   else if(filter!=='all')throw Error('Invalid contact filter.');
   const search=text(data.search,100).replace(/[^a-zA-Z0-9 @+\-]/g,' ').trim();
   if(search)membersQuery=membersQuery.or(['full_name','phone','county','state','last_note'].map(k=>k+'.ilike.%'+search+'%').join(','));

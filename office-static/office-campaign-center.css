@@ -3,3 +3,5 @@
 @media(max-width:640px){.oc-outreach-heading{align-items:flex-start}.oc-outreach-heading h2{font-size:24px}.oc-outreach-kpis{display:grid;grid-template-columns:1fr 1fr;gap:12px}.oc-outreach-kpis>div{border:0;padding:0;justify-content:space-between}.oc-outreach-create,.oc-outreach-campaign,.oc-outreach-client,.oc-outreach-filters{grid-template-columns:1fr}.oc-outreach-list-head{align-items:flex-start;flex-direction:column}.oc-outreach-actions button{min-height:40px}.oc-outreach-dialog{padding:18px}.oc-outreach-heading button{font-size:14px}}
 
 .oc-outreach-categories{margin:16px 0}.oc-outreach-categories button{min-height:42px}.oc-outreach-filters [hidden]{display:none!important}
+
+.oc-outreach-categories{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:10px}.oc-outreach-categories button{text-align:left;white-space:normal;padding:12px 14px;border-radius:8px}
