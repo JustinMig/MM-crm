@@ -13,6 +13,7 @@ type Params = Promise<{ id: string }>
 type SmsRow = {
   id: string
   direction: string
+  user_id?: string
   media_paths?: string[]
   body?: string | null
   from_number: string | null
@@ -49,14 +50,14 @@ async function loadAccessibleClient(id: string) {
 
 export async function GET(request: NextRequest, { params }: { params: Params }) {
   const { id } = await params
-  const { client } = await loadAccessibleClient(id)
+  const { client, profile } = await loadAccessibleClient(id)
   if (!client) return NextResponse.json({ error: 'Client not found.' }, { status: 404 })
 
   const notificationScope = request.nextUrl.searchParams.get('scope') === 'notifications'
   const admin = createAdminClient()
   let query = admin
     .from('client_sms_messages')
-    .select('id,direction,body,media_paths,from_number,to_number,twilio_message_sid,status,error_code,error_message,read_at,created_at,updated_at')
+    .select('id,user_id,direction,body,media_paths,from_number,to_number,twilio_message_sid,status,error_code,error_message,read_at,created_at,updated_at')
     .eq('client_id', id)
 
   if (notificationScope) query = query.is('notification_hidden_at', null)
@@ -71,7 +72,7 @@ export async function GET(request: NextRequest, { params }: { params: Params }) 
   const messages = ((data || []) as SmsRow[]).filter((row) => messageMatchesClient(row, clientPhone))
 
   return NextResponse.json({
-    messages: await Promise.all(messages.map(async m=>({...m,media_urls:await photoUrls(admin,m.media_paths||[])}))),
+    messages: await Promise.all(messages.map(async m=>({...m,media_urls:await photoUrls(admin,ownedPhotoPaths(m.media_paths||[],profile?.agency_id||'',m.user_id||''))}))),
     phone: client.phone || '',
     client_name: [client.first_name, client.last_name].filter(Boolean).join(' ') || 'Client'
   })
