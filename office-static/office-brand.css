@@ -17,3 +17,5 @@
 
 #main .office-client-lookup .client-summary-grid{grid-template-columns:repeat(4,minmax(0,1fr));max-width:760px}.client-summary-card.is-medicare_reviews{background:#edf8ed;border-color:#94bd98}
 @media(max-width:600px){#main .office-client-lookup .client-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+.oc-agent-tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}.oc-agent-tabs button{border:1px solid #aac0d4;background:#edf3f8;color:#203c54;padding:11px 16px;border-radius:10px;font:inherit;font-weight:700;cursor:pointer}.oc-agent-tabs button.active{background:#173e5d;color:white;border-color:#173e5d}.oc-agent-tabs button:focus-visible{outline:3px solid #bd8e35;outline-offset:2px}.oc-calendar-owner{display:flex;gap:12px;align-items:center;flex-wrap:wrap}.oc-person-day-body{display:grid;gap:10px;padding:16px}

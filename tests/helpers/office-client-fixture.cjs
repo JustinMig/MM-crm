@@ -64,9 +64,9 @@ async function fixture(agency='arctos',detailErrors={},exact=false,options={}){
    if(!row){row={id:data.record_id||'44444444-4444-4444-8444-444444444444',client_id:id};(details[data.table]??=[]).push(row);}
    Object.assign(row,data.changes);row.updated_at=new Date().toISOString();result={saved:true,record:structuredClone(row)};
   }else if(data.action==='delete_record'){details[data.table]=details[data.table].filter(row=>row.id!==data.record_id);result={saved:true};}
-  else if(data.action==='appointments')result={appointments:[]};
+  else if(data.action==='appointments'){const which=String(url).includes('bogusfmvdrlvxscopgaw')?'arctos':String(url).includes('sggzshbdfgkyyvxbebul')?'platinum':'office';result={appointments:structuredClone(fixtureOptions.calendarAppointments?.[which]||[])};}
   else if(data.action==='campaigns')result={campaigns:[]};
-  else if(data.action==='campaign_agents')result={agents:[{id,full_name:'Sample Agent'},{id:doctorId,full_name:'Second Agent'}]};
+  else if(data.action==='campaign_agents'||data.action==='agents'){const which=String(url).includes('bogusfmvdrlvxscopgaw')?'arctos':String(url).includes('sggzshbdfgkyyvxbebul')?'platinum':'office';result={agents:fixtureOptions.calendarAgents?.[which]||[{id,full_name:'Sample Agent'},{id:doctorId,full_name:'Second Agent'}]};}
   return new Response(JSON.stringify(result));
  };
  if(exact){w.eval(source('arctos-overview-template.js'));w.eval(source('office-arctos-overview.js'));}

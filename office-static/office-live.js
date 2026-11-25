@@ -13,6 +13,7 @@ var officePhoneMatchCache=new Map(),officePhoneMatchBusy=0,officePhoneMatchQueue
 var officePhoneAudioUrls=new Set(),officePhoneOpenDays=new Set();
 var campaignAgency="",campaignAgent="",campaignAgents=[],campaignSelectionResults=[],campaignLoading=false,campaignError="",campaignRequestId=0;
 var leadAgency="",leadAgent="",leadAgents=[],leadResults=[],leadLoading=false,leadError="",leadRequestId=0;
+var calendarSelection="office",calendarPeople=[],calendarPeoplePromise=null,calendarPeopleErrors=[];
 var calendarView="month",calendarDate=new Date(),calendarLoading=false,calendarErrors=[],calendarLoaded=false,calendarRequestId=0;
 var esc=v=>String(v==null?"":v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 var dateISO=(offset=0)=>{let d=new Date();d.setDate(d.getDate()+offset);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
@@ -64,14 +65,14 @@ function shell(){
  const connectionTags=["arctos","platinum"].map(a=>'<span class="small-pill '+(connected[a]?"online":"offline")+'">'+esc(LABEL[a])+": "+(connected[a]?"connected":"unavailable")+'</span>').join("");
  screen.innerHTML='<div class="app-shell"><aside class="sidebar" id="officeSidebar"><div class="brand"><img class="brand-mark office-brand-logo" src="/mh-logo.jpg?v=mh-brand-20261125-1" width="44" height="44" alt="M&amp;H Insurance Group"><div><strong>Office CRM</strong><small>Secure Office Workspace</small></div></div><div class="workspace-label">WORKSPACE</div><nav class="navigation">'+
  ['dashboard|▦|Dashboard','clients|⌕|Clients','calendar|▣|Calendar','phone|☎|Phone','campaigns|◉|Campaigns','notes|☰|Notes','leads|◎|Leads','people|♙|Office Staff'].map(x=>{let [id,icon,label]=x.split("|");return '<button type="button" data-tab="'+id+'" class="'+(id===tab?"active":"")+'"><span class="nav-icon">'+icon+'</span> '+label+'</button>'}).join("")+
- '<div class="nav-separator"></div><button type="button" id="logout"><span class="nav-icon">↪</span> Sign Out</button></nav><div class="session-name">Authorized office account</div></aside><div class="shell-right"><header class="topbar"><button class="mobile-nav" id="mobileNav">☰</button><div><b>Office CRM</b><div class="current-indicator">● Authenticated session</div></div><div class="top-actions"><div class="filter-wrap '+(["campaigns","leads","notes","phone"].includes(tab)?"oc-campaign-global-hidden":"")+'"><label>AGENCY</label><select id="filterAgency"><option value="all">All Agencies</option><option value="arctos" '+(agency==="arctos"?"selected":"")+'>Arctos</option><option value="platinum" '+(agency==="platinum"?"selected":"")+'>Platinum Financial</option></select></div><div class="office-top-tools"><button class="primary office-action" type="button" id="officeNewAppointment" title="Set appointment"><span class="office-action-icon">▦</span><span class="office-action-label">Appointment</span></button><button class="secondary office-action" type="button" id="officeNewClient" title="New client"><span class="office-action-icon">＋</span><span class="office-action-label">New Client</span></button></div><button class="outline" id="signoutTop">Sign out</button></div></header><div class="live-banner"><b>SECURE OFFICE CONNECTIONS</b><div class="connection-dots">'+connectionTags+'</div></div><main id="main" class="main-content"></main><footer>Office CRM · Arctos: Justin · Platinum Financial: Isaiah · Office Staff: Sheena</footer></div></div><div id="dialog" class="modal-root"></div><div id="alert" class="toast"></div>';
+ '<div class="nav-separator"></div><button type="button" id="logout"><span class="nav-icon">↪</span> Sign Out</button></nav><div class="session-name">Authorized office account</div></aside><div class="shell-right"><header class="topbar"><button class="mobile-nav" id="mobileNav">☰</button><div><b>Office CRM</b><div class="current-indicator">● Authenticated session</div></div><div class="top-actions"><div class="filter-wrap '+(["campaigns","leads","notes","phone","calendar"].includes(tab)?"oc-campaign-global-hidden":"")+'"><label>AGENCY</label><select id="filterAgency"><option value="all">All Agencies</option><option value="arctos" '+(agency==="arctos"?"selected":"")+'>Arctos</option><option value="platinum" '+(agency==="platinum"?"selected":"")+'>Platinum Financial</option></select></div><div class="office-top-tools"><button class="primary office-action" type="button" id="officeNewAppointment" title="Set appointment"><span class="office-action-icon">▦</span><span class="office-action-label">Appointment</span></button><button class="secondary office-action" type="button" id="officeNewClient" title="New client"><span class="office-action-icon">＋</span><span class="office-action-label">New Client</span></button></div><button class="outline" id="signoutTop">Sign out</button></div></header><div class="live-banner"><b>SECURE OFFICE CONNECTIONS</b><div class="connection-dots">'+connectionTags+'</div></div><main id="main" class="main-content"></main><footer>Office CRM · Arctos: Justin · Platinum Financial: Isaiah · Office Staff: Sheena</footer></div></div><div id="dialog" class="modal-root"></div><div id="alert" class="toast"></div>';
  document.getElementById("logout").addEventListener("click",()=>showLogin());
  document.getElementById("signoutTop").addEventListener("click",()=>showLogin());
  document.getElementById("officeNewAppointment").addEventListener("click",()=>ocOpenAppointmentForm());
  document.getElementById("officeNewClient").addEventListener("click",()=>ocOpenNewClientForm());
  document.getElementById("mobileNav").addEventListener("click",()=>document.getElementById("officeSidebar").classList.toggle("open"));
  document.getElementById("filterAgency").addEventListener("change",e=>{agency=e.target.value;if(tab==="clients")clientLookupStatsCache=null;render();if(tab==="clients"){if(clientLookupView!=="search")void loadClientLookupView(clientLookupView);else if(savedSearch)void searchClients(savedSearch);}else if(["calendar","campaigns","dashboard"].includes(tab))loadTab()});
- document.querySelectorAll("[data-tab]").forEach(b=>b.addEventListener("click",()=>{tab=b.dataset.tab;if(tab==="campaigns")resetCampaignPicker();if(tab==="leads")resetLeadPicker();document.getElementById("officeSidebar").classList.remove("open");shell();render();loadTab()}));
+ document.querySelectorAll("[data-tab]").forEach(b=>b.addEventListener("click",()=>{tab=b.dataset.tab;if(tab==="calendar"){calendarSelection="office";calendarPeople=[];calendarPeoplePromise=null;calendarPeopleErrors=[];calendarRequestId++;}if(tab==="campaigns")resetCampaignPicker();if(tab==="leads")resetLeadPicker();document.getElementById("officeSidebar").classList.remove("open");shell();render();loadTab()}));
 }
 function toast(v){const e=document.getElementById("alert");if(!e)return;e.textContent=v;e.classList.add("show");setTimeout(()=>e.classList.remove("show"),3500)}
 function head(title,subtitle){return '<div class="page-heading"><div><div class="eyebrow">OFFICE WORKSPACE</div><h1>'+esc(title)+'</h1><p>'+esc(subtitle)+'</p></div></div>'}
@@ -84,7 +85,7 @@ function render(){
  '<section class="panel office-phone-panel"><div class="panel-header"><h2>Phone Communications</h2><button type="button" class="outline" id="officePhoneRefresh">Refresh</button></div>'+
  '<p class="muted office-phone-tip">View available phone messages and call history for the Office CRM. Tap a date to open its calls. Numbers do not need a saved client record to appear.</p>'+
  '<div id="officePhoneSections" class="office-phone-tabs"></div><div id="officePhoneStatus" class="muted" role="status" aria-live="polite"></div><div id="officePhoneRecords" class="office-phone-days"></div></section>';
- if(tab==="calendar")body=head("Office Calendar","Month, week, and day views across authorized agencies.")+'<div class="notice">Use Appointment above, or select a calendar date, to book a new appointment. You can view existing appointments here. Edit existing appointments in the agency CRM.</div><section class="panel oc-calendar-panel" style="margin-top:17px"><div id="calendarResults"><div class="loading-state">Loading calendar…</div></div></section>';
+ if(tab==="calendar")body=head("Office Calendar","The Office assistant calendar opens first. Choose an agent tab to view that person’s calendar.")+'<div class="notice">Use Appointment above, or select a calendar date, to book a new appointment. You can view existing appointments here. Edit existing appointments in the agency CRM.</div><section class="panel oc-calendar-panel" style="margin-top:17px"><div id="calendarResults"><div class="loading-state">Loading calendar…</div></div></section>';
  if(tab==="campaigns")body=head("Campaign Center","Choose an agency and an agent to view their campaigns.")+'<section class="panel"><div class="panel-header"><h2>Agent Campaigns</h2></div><div class="oc-campaign-pickers"><div class="oc-campaign-picker"><label for="campaignAgency">Select Agency</label><select id="campaignAgency"><option value="">Choose an agency</option>'+["arctos","platinum"].filter(a=>connected[a]).map(a=>'<option value="'+esc(a)+'"'+(campaignAgency===a?" selected":"")+'>'+esc(LABEL[a])+'</option>').join("")+'</select></div><div class="oc-campaign-picker"><label for="campaignAgent">Select Agent</label><select id="campaignAgent" disabled><option value="">Choose an agency first</option></select></div></div><div id="campaignResults" class="oc-campaign-results"><div class="empty">Choose an agency, then an agent to view campaigns.</div></div></section>';
  if(tab==="notes")body=head("Notes","Choose an agency and agent to see saved notes, or open your personal office notes.")+'<section class="panel" id="noteWorkspace"></section>';
  if(tab==="leads")body=head("Leads","View leads in Arctos and Platinum Financial without copying records.")+'<section class="panel"><div class="panel-header"><h2>Agency Leads</h2></div><div class="oc-campaign-pickers"><div class="oc-campaign-picker"><label for="leadAgency">Select Agency</label><select id="leadAgency"><option value="">Choose an agency</option>'+["arctos","platinum"].filter(a=>connected[a]).map(a=>'<option value="'+esc(a)+'"'+(leadAgency===a?" selected":"")+'>'+esc(LABEL[a])+'</option>').join("")+'</select></div><div class="oc-campaign-picker"><label for="leadAgent">Select Agent</label><select id="leadAgent" disabled><option value="">Choose an agency first</option></select></div></div><div id="leadResults" class="oc-campaign-results"><div class="empty">Choose an agency, then an agent to view their leads.</div></div></section>';
@@ -547,7 +548,7 @@ function ocEvents(date){
 }
 function ocChip(a,compact=false){
  const id=appointments.indexOf(a),label=String(a.title||a.client_name||"Appointment");
- return '<button type="button" class="oc-event '+esc(a.agency||"office")+(compact?' compact':'')+'" data-cal-event="'+id+'" title="'+esc((LABEL[a.agency]||a.agency)+" · "+(AGENT[a.agency]||"")+" · "+ocEventTime(a)+" · "+label)+'" aria-label="'+esc(ocEventTime(a)+" "+label+" for "+(AGENT[a.agency]||LABEL[a.agency]||"staff"))+'"><span class="oc-event-time">'+esc(ocEventTime(a))+'</span><span class="oc-event-title">'+esc(label)+'</span></button>';
+ return '<button type="button" class="oc-event '+esc(a.agency||"office")+(compact?' compact':'')+'" data-cal-event="'+id+'" title="'+esc((LABEL[a.agency]||a.agency)+" · "+(a.calendar_agent_name||AGENT[a.agency]||"")+" · "+ocEventTime(a)+" · "+label)+'" aria-label="'+esc(ocEventTime(a)+" "+label+" for "+(a.calendar_agent_name||AGENT[a.agency]||LABEL[a.agency]||"staff"))+'"><span class="oc-event-time">'+esc(ocEventTime(a))+'</span><span class="oc-event-title">'+esc(label)+'</span></button>';
 }
 function ocLongDate(d,options){return d.toLocaleDateString("en-US",options)}
 function ocTitle(){
@@ -600,7 +601,7 @@ function ocDetails(a){
  const dialog=document.getElementById("dialog");if(!dialog||!a)return;
  dialog.dataset.dayPopup="";
  const date=ocEventDate(a),day=date?ocDate(date):new Date();
- dialog.innerHTML='<section class="modal-card oc-detail" role="dialog" aria-modal="true" aria-label="Appointment details"><button type="button" class="close-button" id="ocCloseDetails" aria-label="Close">×</button><div class="eyebrow">APPOINTMENT DETAILS</div><h2>'+esc(a.title||a.client_name||"Appointment")+'</h2><div class="oc-detail-line"><b>When</b><span>'+esc(ocLongDate(day,{weekday:"long",month:"long",day:"numeric",year:"numeric"})+" at "+ocEventTime(a))+'</span></div><div class="oc-detail-line"><b>Agency</b><span>'+tag(a.agency)+'</span></div><div class="oc-detail-line"><b>Agent</b><span>'+esc(AGENT[a.agency]||"Staff")+'</span></div><div class="oc-detail-line"><b>Status</b><span>'+status(a.status)+'</span></div><p class="muted">This appointment is shown directly from the agency or Office Staff calendar. To edit an existing appointment, use the agency CRM.</p></section>';
+ dialog.innerHTML='<section class="modal-card oc-detail" role="dialog" aria-modal="true" aria-label="Appointment details"><button type="button" class="close-button" id="ocCloseDetails" aria-label="Close">×</button><div class="eyebrow">APPOINTMENT DETAILS</div><h2>'+esc(a.title||a.client_name||"Appointment")+'</h2><div class="oc-detail-line"><b>When</b><span>'+esc(ocLongDate(day,{weekday:"long",month:"long",day:"numeric",year:"numeric"})+" at "+ocEventTime(a))+'</span></div><div class="oc-detail-line"><b>Agency</b><span>'+tag(a.agency)+'</span></div><div class="oc-detail-line"><b>Agent</b><span>'+esc(a.calendar_agent_name||AGENT[a.agency]||"Staff")+'</span></div><div class="oc-detail-line"><b>Status</b><span>'+status(a.status)+'</span></div><p class="muted">This appointment is shown directly from the agency or Office Staff calendar. To edit an existing appointment, use the agency CRM.</p></section>';
  document.getElementById("ocCloseDetails").onclick=()=>{dialog.innerHTML=""};
  dialog.onclick=e=>{if(e.target===dialog)dialog.innerHTML=""};
 }
@@ -616,6 +617,7 @@ function ocNavigate(action){
 
 /* Daily appointment popup: separate, initially collapsed accordion for each agency. */
 async function ocOpenDay(date){
+ if(tab==="calendar")return ocOpenSelectedDay(date);
  const day=ocDate(date),key=ocISO(day),dialog=document.getElementById("dialog");
  if(!dialog)return;
  dialog.dataset.dayPopup=key;
@@ -661,7 +663,64 @@ async function ocOpenDay(date){
  }
 }
 
+function ocCalendarChoices(){return [{key:'office',agency:'office',agentId:null,label:'Office Calendar — '+AGENT.office},...calendarPeople];}
+function ocSelectedCalendar(){return ocCalendarChoices().find(p=>p.key===calendarSelection)||ocCalendarChoices()[0];}
+async function ocLoadCalendarPeople(){
+ if(calendarPeoplePromise)return calendarPeoplePromise;
+ const scopes=Object.keys(ENDPOINTS).filter(a=>connected[a]);
+ const pending=Promise.allSettled(scopes.map(a=>request(a,'campaign_agents'))).then(results=>{
+  if(calendarPeoplePromise!==pending)return;
+  calendarPeople=[];calendarPeopleErrors=[];
+  results.forEach((result,i)=>{
+   const scope=scopes[i];
+   if(result.status==='rejected'){calendarPeopleErrors.push(LABEL[scope]+': agent tabs could not load. Use Refresh to retry.');return;}
+   for(const person of result.value.agents||[]){
+    const key=scope+':'+person.id;
+    if(!person.id||calendarPeople.some(p=>p.key===key))continue;
+    calendarPeople.push({key,agency:scope,agentId:String(person.id),label:(person.full_name||AGENT[scope])+' — '+LABEL[scope]});
+   }
+  });
+ });
+ calendarPeoplePromise=pending;return pending;
+}
+async function ocReadPersonalAppointments(person,from,to){
+ const data=person.agency==='office'?await requestSchedule('office','appointments',{from,to}):await request(person.agency,'appointments',{from,to,agent_id:person.agentId});
+ return (Array.isArray(data.appointments)?data.appointments:[])
+  .filter(row=>!person.agentId||String(row.assigned_agent_id||'')===person.agentId)
+  .map(row=>({...row,agency:person.agency,calendar_agent_name:person.agency==='office'?AGENT.office:person.label.split(' — ')[0]}));
+}
+async function ocFetchSelectedCalendar(){
+ const id=++calendarRequestId,selected=calendarSelection,range=ocRange();
+ calendarLoading=true;appointments=[];calendarErrors=[];showCalendar();
+ await ocLoadCalendarPeople();
+ if(id!==calendarRequestId||tab!=='calendar'||selected!==calendarSelection)return;
+ const person=ocSelectedCalendar();calendarSelection=person.key;showCalendar();
+ try{
+  if(!connected[person.agency])throw Error('This calendar connection is unavailable.');
+  const rows=await ocReadPersonalAppointments(person,ocISO(range.start),ocISO(range.end));
+  if(id!==calendarRequestId||tab!=='calendar'||calendarSelection!==person.key)return;
+  appointments=rows;calendarErrors=[...calendarPeopleErrors];
+ }catch(error){if(id!==calendarRequestId||tab!=='calendar')return;appointments=[];calendarErrors=[...calendarPeopleErrors,error.message||'Calendar could not load.'];}
+ calendarLoading=false;calendarLoaded=true;
+}
+async function ocOpenSelectedDay(date){
+ const day=ocDate(date),key=ocISO(day),person=ocSelectedCalendar(),dialog=document.getElementById('dialog');if(!dialog)return;
+ const ticket=person.key+'|'+key;dialog.dataset.dayPopup=ticket;
+ dialog.innerHTML='<section class="modal-card oc-day-popup" role="dialog" aria-modal="true" aria-label="Daily appointments"><header class="oc-popup-header"><div><div class="eyebrow">'+esc(person.label)+'</div><h2>'+esc(ocLongDate(day,{weekday:'long',month:'long',day:'numeric',year:'numeric'}))+'</h2></div><button type="button" class="close-button" id="ocCloseDayPopup" aria-label="Close appointments">×</button></header><div class="oc-person-day-body"><div class="loading-state">Loading appointments…</div></div><footer class="oc-popup-actions"><button type="button" class="primary" id="ocScheduleDay">Set Appointment</button><button type="button" class="outline" id="ocShowFullDay">Open full day calendar</button></footer></section>';
+ const close=()=>{dialog.dataset.dayPopup='';dialog.innerHTML='';};
+ document.getElementById('ocCloseDayPopup').onclick=close;dialog.onclick=e=>{if(e.target===dialog)close();};
+ document.getElementById('ocScheduleDay').onclick=()=>ocOpenAppointmentForm(key);
+ document.getElementById('ocShowFullDay').onclick=()=>{close();calendarDate=day;calendarView='day';calendarLoading=true;showCalendar();void fetchCalendar().then(showCalendar);};
+ try{
+  const rows=(await ocReadPersonalAppointments(person,key,key)).sort((a,b)=>ocEventMinutes(a)-ocEventMinutes(b));
+  if(!dialog.isConnected||dialog.dataset.dayPopup!==ticket||calendarSelection!==person.key)return;
+  const body=dialog.querySelector('.oc-person-day-body');
+  body.innerHTML=rows.length?rows.map((a,i)=>'<button type="button" class="oc-popup-appointment '+esc(person.agency)+'" data-person-day-event="'+i+'"><span class="oc-popup-time">'+esc(ocEventTime(a))+'</span><span class="oc-popup-title">'+esc(a.title||a.client_name||'Appointment')+'</span><span class="oc-popup-status">'+esc(a.status||'Scheduled')+'</span></button>').join(''):'<p class="oc-empty">No appointments scheduled for this day.</p>';
+  body.querySelectorAll('[data-person-day-event]').forEach(button=>button.onclick=()=>ocDetails(rows[Number(button.dataset.personDayEvent)]));
+ }catch(error){if(dialog.isConnected&&dialog.dataset.dayPopup===ticket)dialog.querySelector('.oc-person-day-body').innerHTML='<p class="oc-popup-error">'+esc(error.message||'Appointments could not load.')+'</p>';}
+}
 async function fetchCalendar(){
+ if(tab==="calendar")return ocFetchSelectedCalendar();
  const id=++calendarRequestId,scope=tab==="calendar"?ocRange():{start:ocAdd(new Date(),-7),end:ocAdd(new Date(),50)};
  const active=available();
  if(tab==="calendar"){calendarLoading=true;showCalendar()}
@@ -676,15 +735,19 @@ async function fetchCalendar(){
 }
 function showCalendar(){
  const target=document.getElementById("calendarResults");if(!target||tab!=="calendar")return;
- const legend='<div class="calendar-legend" aria-label="Appointment agency colors"><span class="legend-item"><i class="legend-dot arctos" aria-hidden="true"></i> Arctos — Justin</span><span class="legend-item"><i class="legend-dot platinum" aria-hidden="true"></i> Platinum Financial — Isaiah</span><span class="legend-item"><i class="legend-dot office" aria-hidden="true"></i> Office Staff — Sheena</span></div>';
+ const person=ocSelectedCalendar();
+ const agentTabs='<div class="oc-agent-tabs" role="tablist" aria-label="Staff calendars">'+ocCalendarChoices().map(p=>'<button type="button" role="tab" data-calendar-person="'+esc(p.key)+'" aria-selected="'+String(p.key===calendarSelection)+'" aria-controls="office-calendar-pane" class="'+(p.key===calendarSelection?'active':'')+'">'+esc(p.label)+'</button>').join('')+'</div>';
+ const legend='<p class="muted oc-calendar-owner">'+esc(person.label)+' · '+esc(LABEL[person.agency])+' <button type="button" class="link-btn" data-calendar-refresh>Refresh</button></p>';
  const toolbar='<div class="oc-toolbar"><div class="oc-nav"><button type="button" class="oc-icon-btn" data-cal-nav="prev" aria-label="Previous '+calendarView+'">‹</button><button type="button" class="oc-icon-btn" data-cal-nav="next" aria-label="Next '+calendarView+'">›</button><button type="button" class="oc-today-btn" data-cal-nav="today">Today</button><h2>'+esc(ocTitle())+'</h2></div><div class="oc-view-tabs" role="group" aria-label="Calendar view">'+["month","week","day"].map(v=>'<button type="button" data-cal-view="'+v+'" class="'+(calendarView===v?'active':'')+'" aria-pressed="'+(calendarView===v?'true':'false')+'">'+v[0].toUpperCase()+v.slice(1)+'</button>').join("")+'</div></div>';
  let content;
  if(calendarLoading)content='<div class="loading-state">Loading '+esc(calendarView)+' appointments…</div>';
- else if(!available().length)content='<div class="empty">No authorized agency calendar is connected.</div>';
+ else if(!connected[person.agency])content='<div class="empty">No authorized agency calendar is connected.</div>';
  else content=(calendarView==="month"?ocMonthMarkup():calendarView==="week"?ocWeekMarkup():ocDayMarkup());
  const warning=calendarErrors.length&&!calendarLoading?'<div class="oc-fetch-warning" role="status">Some appointments could not be loaded: '+esc(calendarErrors.join(" · "))+'</div>':'';
- const sourceCounts=!calendarLoading&&available().length?'<div class="oc-source-counts" aria-label="Appointments loaded from each agency">'+["arctos","platinum","office"].filter(k=>(agency==="all"||agency===k)&&connected[k]).map(k=>'<span class="oc-source-count '+k+'">'+esc(LABEL[k])+": "+appointments.filter(a=>a.agency===k).length+' in view</span>').join("")+'</div>':"";
- target.innerHTML=toolbar+legend+warning+sourceCounts+content;
+ const sourceCounts=!calendarLoading?'<div class="oc-source-counts">'+appointments.length+' appointments in '+esc(person.label)+'</div>':'';
+ target.innerHTML=agentTabs+toolbar+legend+warning+sourceCounts+'<div id="office-calendar-pane" role="tabpanel" aria-label="'+esc(person.label)+'">'+content+'</div>';
+ target.querySelectorAll('[data-calendar-person]').forEach(button=>button.onclick=()=>{calendarSelection=button.dataset.calendarPerson;appointments=[];calendarErrors=[];calendarLoading=true;showCalendar();void fetchCalendar().then(showCalendar);});
+ target.querySelector('[data-calendar-refresh]').onclick=()=>{calendarPeoplePromise=null;calendarPeopleErrors=[];calendarLoading=true;showCalendar();void fetchCalendar().then(showCalendar);};
  target.querySelectorAll("[data-cal-nav]").forEach(btn=>btn.onclick=()=>ocNavigate(btn.dataset.calNav));
  target.querySelectorAll("[data-cal-view]").forEach(btn=>btn.onclick=()=>{calendarView=btn.dataset.calView;calendarLoading=true;showCalendar();fetchCalendar().then(()=>showCalendar())});
  target.querySelectorAll("[data-cal-date]").forEach(btn=>btn.onclick=()=>ocOpenDay(btn.dataset.calDate));
@@ -1547,6 +1610,8 @@ function ocOpenAppointmentForm(prefillDay,phoneHint=""){
   }catch(e){errorEl.textContent=e.message;await checkSlots();}
   finally{if(btn.isConnected){btn.disabled=false;btn.textContent="Add to Calendar"}}
  };
+ const person=tab==='calendar'?ocSelectedCalendar():null;
+ if(person){agencyEl.value=person.agency;Promise.resolve(agencyEl.onchange()).then(()=>{if(!agentEl.isConnected)return;if(person.agentId)agentEl.value=person.agentId;else if(agentEl.options.length===2)agentEl.selectedIndex=1;if(agentEl.value)agentEl.onchange();});}
 }
 
 function ocOpenNewClientForm(){

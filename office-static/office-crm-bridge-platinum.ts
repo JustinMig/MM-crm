@@ -303,9 +303,12 @@ async function perform(action:string,data:any,actor:{id:string;email:string;perm
  if(action==="appointments"){
   const from=String(data.from||"").slice(0,10);const to=String(data.to||"").slice(0,10);
   if(!/^\d{4}-\d\d-\d\d$/.test(from)||!/^\d{4}-\d\d-\d\d$/.test(to))throw Error("Date range required");
-  let rows:any[];
-  if(SCOPE==="arctos") rows=await q(sb.from("appointments").select("id,client_id,assigned_agent_id,title,event_type,event_date,start_time,end_time,status,notes").gte("event_date",from).lte("event_date",to).order("event_date").limit(300));
-  else rows=await q(sb.from("appointments").select("id,client_id,assigned_agent_id,title,event_type,event_date,start_time,end_time,starts_at,ends_at,status,notes").gte("event_date",from).lte("event_date",to).order("event_date").order("start_time").limit(300));
+  const agentId=String(data.agent_id||"");if(agentId&&!uuid(agentId))throw Error("Invalid selected agent");
+  let query;
+  if(SCOPE==="arctos") query=sb.from("appointments").select("id,client_id,assigned_agent_id,title,event_type,event_date,start_time,end_time,status,notes").gte("event_date",from).lte("event_date",to).order("event_date").limit(300);
+  else query=sb.from("appointments").select("id,client_id,assigned_agent_id,title,event_type,event_date,start_time,end_time,starts_at,ends_at,status,notes").gte("event_date",from).lte("event_date",to).order("event_date").order("start_time").limit(300);
+  if(agentId)query=query.eq("assigned_agent_id",agentId);
+  const rows=await q(query);
   return {appointments:rows};
  }
  if(action==="lead_agents"){
