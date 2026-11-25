@@ -8,7 +8,7 @@ export const dynamic='force-dynamic'
 export const maxDuration=60
 
 const ORIGINS=new Set([
- 'https://office-crm-sand.vercel.app',
+ 'https://office.mayerig.com','https://office-crm-sand.vercel.app',
  'https://office-crm-msccv965z2-2421s-projects.vercel.app'
 ])
 const cors=(request:Request)=>({

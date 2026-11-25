@@ -12,10 +12,9 @@ import { officeClientLookup } from "./office-client-lookup.ts";
 const MM_URL="https://aefdewkiqgiwkquklnvr.supabase.co";
 const MM_PUBLIC="sb_publishable_3dEzyrV3AvaxDMQDMTsvKw_mT7M_vqx";
 const SCOPE="platinum";
-const ROOT_ORIGIN="https://office-crm-sand.vercel.app";
+const officeOrigins=new Set(["https://office.mayerig.com","https://office-crm-sand.vercel.app"]);
 const SERVICE_URL=Deno.env.get("SUPABASE_URL")||"";
 const SERVICE_KEY=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")||"";
-const json=(body:unknown,code=200)=>new Response(JSON.stringify(body),{status:code,headers:{"Content-Type":"application/json","Cache-Control":"private, no-store","Vary":"Origin","Access-Control-Allow-Origin":ROOT_ORIGIN,"X-Content-Type-Options":"nosniff"}});
 const uuid=(s:unknown)=>/^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(String(s||""));
 const authorizedChanges=new Set(["first_name","last_name","middle_name","phone","email","date_of_birth","gender","address1","address2","city","county","state","zip_code","status","products","notes","spouse","height_feet","height_inches","weight_lbs","smoker","veteran","drivers_license_expiration","drivers_license_state","doctors_section_notes"]);
 const clientSelection=SCOPE==="platinum"?"id,assigned_agent_id,first_name,last_name,middle_name,phone,email,date_of_birth,gender,address1,address2,city,county,state,zip_code,status,products,notes,spouse,height_feet,height_inches,weight_lbs,smoker,veteran,drivers_license_expiration,drivers_license_state,doctors_section_notes":"id,assigned_agent_id,first_name,last_name,phone,email,date_of_birth,gender,address1,address2,city,county,state,zip_code,status,products,notes,spouse,height_feet,height_inches,weight_lbs,smoker,veteran,drivers_license_expiration,drivers_license_state,doctors_section_notes,old_plan_carrier,old_plan_id,old_plan_member_id,old_plan_year";
@@ -406,6 +405,9 @@ async function perform(action:string,data:any,actor:{id:string;email:string;perm
  throw Error("Unsupported Office CRM operation");
 }
 Deno.serve(async req=>{
+ const origin=req.headers.get("origin")||"";
+ const ROOT_ORIGIN=officeOrigins.has(origin)?origin:"https://office-crm-sand.vercel.app";
+ const json=(body:unknown,code=200)=>new Response(JSON.stringify(body),{status:code,headers:{"Content-Type":"application/json","Cache-Control":"private, no-store","Vary":"Origin","Access-Control-Allow-Origin":ROOT_ORIGIN,"X-Content-Type-Options":"nosniff"}});
  if(req.method==="OPTIONS")return new Response(null,{status:204,headers:{"Access-Control-Allow-Origin":ROOT_ORIGIN,"Access-Control-Allow-Headers":"authorization,content-type,apikey","Access-Control-Allow-Methods":"POST,OPTIONS","Vary":"Origin"}});
  if(req.method!=="POST")return json({error:"POST required"},405);
  try{

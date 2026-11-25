@@ -6,7 +6,7 @@ export const runtime='nodejs'
 export const dynamic='force-dynamic'
 
 const ALLOWED_ORIGINS=new Set([
- 'https://office-crm-sand.vercel.app',
+ 'https://office.mayerig.com','https://office-crm-sand.vercel.app',
  'https://office-crm-msccv965z2-2421s-projects.vercel.app'
 ])
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i

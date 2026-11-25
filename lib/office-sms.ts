@@ -1,5 +1,5 @@
 // Shared pure helpers and verified Twilio webhook persistence for Office CRM.
-export const OFFICE_SMS_ORIGINS=new Set(['https://office-crm-sand.vercel.app','https://office-crm-msccv965z2-2421s-projects.vercel.app'])
+export const OFFICE_SMS_ORIGINS=new Set(['https://office.mayerig.com','https://office-crm-sand.vercel.app','https://office-crm-msccv965z2-2421s-projects.vercel.app'])
 export const OFFICE_SMS_BRIDGES={arctos:'https://bogusfmvdrlvxscopgaw.supabase.co/functions/v1/office-crm-bridge',platinum:'https://sggzshbdfgkyyvxbebul.supabase.co/functions/v1/office-crm-bridge'} as const
 export const smsPhone=(v:unknown)=>{const n=String(v||'').replace(/\D/g,'');return n.length===10?'+1'+n:n.length===11&&n[0]==='1'?'+'+n:''}
 export const smsName=(v:unknown)=>String(v||'').normalize('NFKC').trim().replace(/\s+/g,' ').toLowerCase()
