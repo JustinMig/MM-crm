@@ -21,6 +21,9 @@ export async function POST(request: NextRequest) {
   const errorCode = String(params.get('ErrorCode') || '') || null
   const admin = createAdminClient()
 
+  const officeResult=await admin.from('office_sms_messages').update({status,error_code:errorCode,error_message:errorCode?`Twilio error ${errorCode}`:null,updated_at:new Date().toISOString()}).eq('twilio_message_sid',sid)
+  if(officeResult.error)return new NextResponse('Office SMS status storage unavailable',{status:503})
+
   await admin
     .from('client_sms_messages')
     .update({

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { normalizeUsPhone, validateTwilioRequest } from '@/lib/twilio'
+import {saveOfficeInbound} from '@/lib/office-sms'
 import { sendCrmMessagePush } from '@/lib/web-push'
 
 export const runtime = 'nodejs'
@@ -22,6 +23,12 @@ export async function POST(request: NextRequest) {
   if (!from || !sid) return new NextResponse('<Response></Response>', { status: 200, headers: { 'Content-Type': 'text/xml' } })
 
   const admin = createAdminClient()
+  try {
+    if(await saveOfficeInbound(admin,params))return new NextResponse('<Response></Response>',{status:200,headers:{'Content-Type':'text/xml'}})
+  } catch {
+    return new NextResponse('Office SMS storage unavailable',{status:503})
+  }
+
   let client: { id: string; agency_id: string; assigned_agent_id: string | null; phone: string | null } | null = null
 
   // Prefer the client thread that most recently sent a message to this exact number.

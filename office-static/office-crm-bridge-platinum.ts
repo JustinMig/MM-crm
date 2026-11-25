@@ -229,6 +229,19 @@ async function officeProtected(sb:ReturnType<typeof admin>,kind:string,id:string
 
 async function perform(action:string,data:any,actor:{id:string;email:string;permission:any}){
  const sb=admin();
+ if(action==="sms_context"){
+  const requested=String(data.client_id||'');
+  if(requested&&!uuid(requested))throw Error('Invalid client.');
+  const client=requested?await q(sb.from('clients').select('id,first_name,last_name,phone,assigned_agent_id,status').eq('id',requested).maybeSingle()):null;
+  if(requested&&!client)throw Error('Client not found in this agency.');
+  const agentId=String(data.agent_id||client?.assigned_agent_id||'');
+  if(!uuid(agentId)||client&&client.assigned_agent_id!==agentId)throw Error('Choose the client’s assigned agent.');
+  const agent=await q(sb.from('profiles').select('id,full_name').eq('id',agentId).eq('active',true).in('role',['owner','agent']).maybeSingle());
+  if(!agent)throw Error('Agent is unavailable.');
+  const clients=[];
+  for(let offset=0;offset<20000;offset+=1000){const page=await q(sb.from('clients').select('id,first_name,last_name,phone,assigned_agent_id,status').eq('assigned_agent_id',agentId).order('id').range(offset,offset+999));clients.push(...page);if(page.length<1000)break;}
+  return {client,agent,clients:requested?undefined:clients};
+ }
  if(action==="campaign_center")return await officeCampaignCenter({sb,actor,scope:SCOPE,log},data);
  if(action==="delete_client")return await deleteOfficeClient({sb,actor,scope:SCOPE,log},data);
  if(action==="session")return {connected:true,agency:SCOPE,permissions:{edit:!!actor.permission.can_edit,sensitive:!!actor.permission.can_view_sensitive}};

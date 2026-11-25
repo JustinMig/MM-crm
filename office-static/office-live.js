@@ -24,6 +24,13 @@ function setError(s){let e=document.getElementById("auth-error");if(e)e.textCont
 function loading(s){screen.innerHTML='<div class="loading-state">'+esc(s||"Loading Office CRM…")+'</div>'}
 function token(){return access&&access.access_token||""}
 function headers(){return {"Content-Type":"application/json","authorization":"Bearer "+token()}}
+async function officeSmsRequest(payload,retried=false){
+ if(!access)throw Error('Sign in first');
+ const response=await fetch('https://crm.mayerig.com/api/office-sms',{method:'POST',headers:headers(),body:JSON.stringify(payload),cache:'no-store',signal:AbortSignal.timeout(65000)});
+ if(response.status===401&&!retried){await refresh();return officeSmsRequest(payload,true)}
+ const data=await response.json().catch(()=>({}));if(!response.ok)throw Error(data.error||'Unable to access office texts.');return data;
+}
+window.officeSms?.configure({request:officeSmsRequest,signedIn:()=>!!access,agencies:()=>['arctos','platinum'].filter(a=>connected[a]),openClient});
 async function refresh(){
  if(!access?.refresh_token)throw Error("Please sign in again");
  let response=await fetch(MM_URL+"/auth/v1/token?grant_type=refresh_token",{method:"POST",headers:{"apikey":PUBLIC_KEY,"Content-Type":"application/json"},body:JSON.stringify({refresh_token:access.refresh_token}),cache:"no-store"});
@@ -52,6 +59,7 @@ async function checkConnections(){
  connected.office={permissions:{edit:true}};
 }
 function showLogin(message=""){
+ window.officeSms?.reset?.();
  officePhoneRequestId++;officePhoneLoading=false;officePhoneLastSync=0;officePhoneSyncMessage="";
  officePhoneData={calls:[],texts:[],voicemails:[]};
  officePhoneMatchCache.clear();officePhoneMatchQueue.length=0;
@@ -64,8 +72,8 @@ function showLogin(message=""){
 function shell(){
  const connectionTags=["arctos","platinum"].map(a=>'<span class="small-pill '+(connected[a]?"online":"offline")+'">'+esc(LABEL[a])+": "+(connected[a]?"connected":"unavailable")+'</span>').join("");
  screen.innerHTML='<div class="app-shell"><aside class="sidebar" id="officeSidebar"><div class="brand"><img class="brand-mark office-brand-logo" src="/mh-logo.jpg?v=mh-brand-20261125-1" width="44" height="44" alt="M&amp;H Insurance Group"><div><strong>Office CRM</strong><small>Secure Office Workspace</small></div></div><div class="workspace-label">WORKSPACE</div><nav class="navigation">'+
- ['dashboard|▦|Dashboard','clients|⌕|Clients','calendar|▣|Calendar','phone|☎|Phone','campaigns|◉|Campaigns','notes|☰|Notes','leads|◎|Leads','people|♙|Office Staff'].map(x=>{let [id,icon,label]=x.split("|");return '<button type="button" data-tab="'+id+'" class="'+(id===tab?"active":"")+'"><span class="nav-icon">'+icon+'</span> '+label+'</button>'}).join("")+
- '<div class="nav-separator"></div><button type="button" id="logout"><span class="nav-icon">↪</span> Sign Out</button></nav><div class="session-name">Authorized office account</div></aside><div class="shell-right"><header class="topbar"><button class="mobile-nav" id="mobileNav">☰</button><div><b>Office CRM</b><div class="current-indicator">● Authenticated session</div></div><div class="top-actions"><div class="filter-wrap '+(["campaigns","leads","notes","phone","calendar"].includes(tab)?"oc-campaign-global-hidden":"")+'"><label>AGENCY</label><select id="filterAgency"><option value="all">All Agencies</option><option value="arctos" '+(agency==="arctos"?"selected":"")+'>Arctos</option><option value="platinum" '+(agency==="platinum"?"selected":"")+'>Platinum Financial</option></select></div><div class="office-top-tools"><button class="primary office-action" type="button" id="officeNewAppointment" title="Set appointment"><span class="office-action-icon">▦</span><span class="office-action-label">Appointment</span></button><button class="secondary office-action" type="button" id="officeNewClient" title="New client"><span class="office-action-icon">＋</span><span class="office-action-label">New Client</span></button></div><button class="outline" id="signoutTop">Sign out</button></div></header><div class="live-banner"><b>SECURE OFFICE CONNECTIONS</b><div class="connection-dots">'+connectionTags+'</div></div><main id="main" class="main-content"></main><footer>Office CRM · Arctos: Justin · Platinum Financial: Isaiah · Office Staff: Sheena</footer></div></div><div id="dialog" class="modal-root"></div><div id="alert" class="toast"></div>';
+ ['dashboard|▦|Dashboard','clients|⌕|Clients','calendar|▣|Calendar','phone|☎|Phone','texts|✉|Texts','campaigns|◉|Campaigns','notes|☰|Notes','leads|◎|Leads','people|♙|Office Staff'].map(x=>{let [id,icon,label]=x.split("|");return '<button type="button" data-tab="'+id+'" class="'+(id===tab?"active":"")+'"><span class="nav-icon">'+icon+'</span> '+label+'</button>'}).join("")+
+ '<div class="nav-separator"></div><button type="button" id="logout"><span class="nav-icon">↪</span> Sign Out</button></nav><div class="session-name">Authorized office account</div></aside><div class="shell-right"><header class="topbar"><button class="mobile-nav" id="mobileNav">☰</button><div><b>Office CRM</b><div class="current-indicator">● Authenticated session</div></div><div class="top-actions"><div class="filter-wrap '+(["campaigns","leads","notes","phone","calendar","texts"].includes(tab)?"oc-campaign-global-hidden":"")+'"><label>AGENCY</label><select id="filterAgency"><option value="all">All Agencies</option><option value="arctos" '+(agency==="arctos"?"selected":"")+'>Arctos</option><option value="platinum" '+(agency==="platinum"?"selected":"")+'>Platinum Financial</option></select></div><div class="office-top-tools"><button class="primary office-action" type="button" id="officeNewAppointment" title="Set appointment"><span class="office-action-icon">▦</span><span class="office-action-label">Appointment</span></button><button class="secondary office-action" type="button" id="officeNewClient" title="New client"><span class="office-action-icon">＋</span><span class="office-action-label">New Client</span></button></div><button class="outline" id="signoutTop">Sign out</button></div></header><div class="live-banner"><b>SECURE OFFICE CONNECTIONS</b><div class="connection-dots">'+connectionTags+'</div></div><main id="main" class="main-content"></main><footer>Office CRM · Arctos: Justin · Platinum Financial: Isaiah · Office Staff: Sheena</footer></div></div><div id="dialog" class="modal-root"></div><div id="alert" class="toast"></div>';
  document.getElementById("logout").addEventListener("click",()=>showLogin());
  document.getElementById("signoutTop").addEventListener("click",()=>showLogin());
  document.getElementById("officeNewAppointment").addEventListener("click",()=>ocOpenAppointmentForm());
@@ -80,6 +88,7 @@ function available(){return Object.keys(ENDPOINTS).filter(a=>connected[a]&&(agen
 function render(){
  let body="";
  if(tab==="dashboard")body=head("Office Dashboard","One secure workspace for your agencies.")+'<div class="office-grid"><div class="metric"><small>Connected Agencies</small><b>'+["arctos","platinum"].filter(a=>!!connected[a]).length+'</b></div><div class="metric"><small>Appointments in View</small><b>'+appointments.length+'</b></div><div class="metric"><small>Agency Campaigns</small><b>'+campaigns.length+'</b></div></div><div class="panel"><div class="panel-header"><h2>Quick Actions</h2></div><div class="quick-actions"><button class="quick-action" data-open="clients"><span>⌕</span>Find client</button><button class="quick-action" data-open="calendar"><span>▣</span>View calendar</button><button class="quick-action" data-open="campaigns"><span>◉</span>Work campaigns</button></div></div>';
+ if(tab==="texts")body=head("Texts","Office conversations, replies and mass texts — using the existing M&M texting connection.")+'<div id="officeSmsWorkspace"></div>';
  if(tab==="clients")body=head("Client Directory","Search both agencies without copying their client records.")+officeClientLookupMarkup();
  if(tab==="phone")body=head("Phone","Office telephone calls, text messages and RingCentral voicemails.")+
  '<section class="panel office-phone-panel"><div class="panel-header"><h2>Phone Communications</h2><button type="button" class="outline" id="officePhoneRefresh">Refresh</button></div>'+
@@ -431,6 +440,7 @@ function officePhonePaint(){
 }
 
 async function loadTab(){
+ if(tab==="texts"){window.officeSms?.mount(document.getElementById("officeSmsWorkspace"));return}
  if(tab==="phone"){await officePhoneLoad();return}
  if(tab==="dashboard"){await Promise.all([fetchCalendar(),fetchCampaigns()]);render();return}
  if(tab==="calendar"){calendarLoading=true;showCalendar();await fetchCalendar();showCalendar();return}
@@ -1354,6 +1364,9 @@ async function openClient(a,id,selectedTab="overview"){
     ocClientPanel("files",'<div class="oc-client-group-heading"><strong>Notes & Files</strong><p>Client notes, forms and documents.</p></div>'+blocks.notes)+
     '<p class="oc-client-modal-error" data-office-client-error role="alert"></p></div></div>';
   const root=dlg.querySelector(".oc-arctos-client-dialog");
+  const textButton=document.createElement('button');textButton.type='button';textButton.className='outline';textButton.textContent='Text';textButton.dataset.officeText=String(id);
+  textButton.onclick=()=>window.officeSms?.open(a,id);root.querySelector('.oc-client-modal-header')?.insertBefore(textButton,root.querySelector('[data-office-client-close]'));
+
   window.officeArctosOverviewMount?.(root,c);
   ocClientBindTabs(root,selectedTab);
   const form=root.querySelector("#editClient");
