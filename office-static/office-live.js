@@ -1738,8 +1738,6 @@ screen.addEventListener("submit",async e=>{
  }catch(error){setError(error.message||"Login failed")}
 });
 (async()=>{try{let s=sessionStorage.getItem("office_login_session");if(s){access=JSON.parse(s);await checkConnections();shell();render();loadTab();return}}catch{}showLogin()})();
-})();
-
 function mountOfficeFullDirectory(){
  const form=document.getElementById('officeClientSearch');if(!form)return;
  const host=document.createElement('section');host.className='panel office-agent-directory';
@@ -1765,12 +1763,12 @@ function mountOfficeFullDirectory(){
    const current=++ticket;reset();agentSelect.disabled=true;load.disabled=true;agentSelect.innerHTML='<option value="">Choose an agent</option>';
    if(!agencySelect.value)return;
    status.textContent='Loading agents…';
-   try{const data=await officeSmsRequest({command:'agents',agency:agencySelect.value});if(current!==ticket||!host.isConnected)return;agentSelect.innerHTML+=[...(data.agents||[])].map(a=>'<option value="'+esc(a.id)+'">'+esc(a.full_name)+'</option>').join('');agentSelect.disabled=false;status.textContent='Choose an agent.';}catch(e){status.textContent=e.message;}
+   try{const data=await request(agencySelect.value,'directory_agents');if(current!==ticket||!host.isConnected)return;agentSelect.innerHTML+=[...(data.agents||[])].map(a=>'<option value="'+esc(a.id)+'">'+esc(a.full_name)+'</option>').join('');agentSelect.disabled=false;status.textContent='Choose an agent.';}catch(e){status.textContent=e.message;}
  };
  agentSelect.onchange=()=>{ticket++;reset();load.disabled=!agentSelect.value;};
  load.onclick=async()=>{
    const current=++ticket,a=agencySelect.value,id=agentSelect.value;reset();load.disabled=true;status.textContent='Loading every client for this agent…';
-   try{const data=await officeSmsRequest({command:'directory',agency:a,agent_id:id});if(current!==ticket||!host.isConnected)return;rows=data.clients||[];canSend=!!data.can_send;draw();}catch(e){status.textContent=e.message;}finally{if(host.isConnected&&current===ticket)load.disabled=false;}
+   try{const data=await request(a,'sms_context',{agent_id:id});if(current!==ticket||!host.isConnected)return;rows=data.clients||[];canSend=!!connected[a]?.permissions?.edit;draw();}catch(e){status.textContent=e.message;}finally{if(host.isConnected&&current===ticket)load.disabled=false;}
  };
  host.querySelector('[data-full-all]').onclick=()=>{selected=new Set(rows.filter(eligible).map(c=>c.id));draw();};
  host.querySelector('[data-full-none]').onclick=()=>{selected.clear();draw();};
@@ -1780,3 +1778,4 @@ function mountOfficeFullDirectory(){
  };
  if(agency&&agency!=='all'&&connected[agency]){agencySelect.value=agency;void agencySelect.onchange();}
 }
+})();
