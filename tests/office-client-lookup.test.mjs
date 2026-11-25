@@ -20,3 +20,5 @@ test('Birthday RPC keeps execution restricted to the agency service boundary',()
  const sql=JSON.parse(readFileSync(new URL('../office-static/office-client-lookup-rpc.json',import.meta.url),'utf8')).sql;assert.match(sql,/security invoker/);assert.match(sql,/revoke all[\s\S]*from public,anon,authenticated/);assert.match(sql,/grant execute[\s\S]*to service_role/);assert.match(sql,/status is distinct from 'deceased'/);
  for(const scope of ['arctos','platinum']){const source=readFileSync(new URL('../office-static/office-crm-bridge-'+scope+'.ts',import.meta.url),'utf8');assert.match(source,/action==="client_lookup"/);assert.match(source,/exclude_deceased===true/);}
 });
+
+test('T65 counts and paginated lists use the service-only T65 lookup in birthday order',async()=>{const f=fixture();const stats=await officeClientLookup(f,{view:'stats'});assert.equal(stats.t65,205);await officeClientLookup(f,{view:'t65',offset:200,limit:200});assert.ok(f.calls.some(c=>c.rpc==='office_client_t65'&&c.options.head));assert.equal(f.calls.filter(c=>c.rpc).at(-1).rpc,'office_client_t65');assert.ok(f.calls.some(c=>c.order==='birthday_65'));});

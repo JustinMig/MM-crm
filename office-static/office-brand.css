@@ -11,3 +11,6 @@
 }
 
 .office-delete-client{color:#a22424!important;margin-left:12px}.office-delete-client:disabled{opacity:.5}
+
+#main .office-client-lookup .client-summary-grid{grid-template-columns:repeat(3,minmax(0,1fr));max-width:540px}.client-summary-card.is-t65{background:#edf4ff;border-color:#9bbbe6}
+@media(max-width:480px){#main .office-client-lookup .client-summary-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}}
