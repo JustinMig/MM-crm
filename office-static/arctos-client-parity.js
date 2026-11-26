@@ -400,8 +400,10 @@ function enhance(modal){
   }
  }
  finalizeArctosSections(modal);
- window.officeArctosCoverageMount?.(modal);
- window.officeArctosMedicalFilesMount?.(modal);
+ if(!modal.dataset.officeProgressive){
+  window.officeArctosCoverageMount?.(modal);
+  window.officeArctosMedicalFilesMount?.(modal);
+ }
  window.officeClientRecordEnhance?.(modal);
  loadProtected(modal);
  // Existing appointment, save, note, and agency handlers remain attached to

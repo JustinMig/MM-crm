@@ -3,7 +3,7 @@ import {prepareAttachment} from '@/lib/crm-text-attachments'
 import {NextResponse} from 'next/server'
 import {createAdminClient} from '@/lib/supabase/admin'
 import {normalizeUsPhone,sendTwilioSms} from '@/lib/twilio'
-import {OFFICE_SMS_ORIGINS,OFFICE_SMS_BRIDGES,smsPhone,matchingLegacyClient,mergeSmsMessages,smsName} from '@/lib/office-sms'
+import {OFFICE_SMS_ORIGINS,OFFICE_SMS_BRIDGES,smsPhone,indexLegacyClients,reservedSms,mergeSmsMessages,smsName} from '@/lib/office-sms'
 export const runtime='nodejs'
 export const dynamic='force-dynamic'
 export const maxDuration=60
@@ -31,36 +31,87 @@ export async function POST(request:Request){
   }
   if(command==='agents')return NextResponse.json(await bridge('campaign_agents'),{headers:cors(request)})
   if(!['directory','conversations','thread','send','read','hide'].includes(command))return NextResponse.json({error:'Invalid texting operation.'},{status:400,headers:cors(request)})
-  const remote=await bridge('sms_context',{client_id:input.client_id||null,agent_id:input.agent_id||null})
+  const remote=await bridge('sms_context',{client_id:input.client_id||null,agent_id:input.agent_id||null,...(command==='conversations'?{agent_only:true}:{})})
   const agent=remote.agent,clients:any[]=remote.clients||[remote.client]
   if(!agent?.id)return NextResponse.json({error:'Choose an agent.'},{status:400,headers:cors(request)})
   if(command==='directory')return NextResponse.json({clients,agent,can_send:!!acl.can_edit},{headers:cors(request)})
   // Only an exact, unique phone/name/agent match may reuse Sheena's existing M&M conversation.
-  const mmAgents=await checked(admin.from('profiles').select('id,full_name').eq('agency_id',profile.agency_id).eq('active',true))
-  const mmMatches=(mmAgents||[]).filter((p:any)=>smsName(p.full_name)===smsName(agent.full_name)),mmAgent=mmMatches.length===1?mmMatches[0]:null
-  let legacyClients:any[]=[]
-  if(mmAgent){for(let offset=0;offset<20000;offset+=1000){const page=await checked(admin.from('clients').select('id,first_name,last_name,phone,assigned_agent_id').eq('agency_id',profile.agency_id).eq('assigned_agent_id',mmAgent.id).order('id').range(offset,offset+999));legacyClients.push(...(page||[]).map((c:any)=>({...c,agent_name:mmAgent.full_name})));if(page.length<1000)break}}
-  const legacyFor=(client:any)=>matchingLegacyClient(client,agent.full_name,legacyClients)
+  async function legacyAgent(){
+   const rows=await checked(admin.from('profiles').select('id,full_name').eq('agency_id',profile.agency_id).eq('active',true))
+   const sameName=(rows||[]).filter((p:any)=>smsName(p.full_name)===smsName(agent.full_name))
+   return sameName.length===1?sameName[0]:null
+  }
   if(command==='conversations'){
-   const [office,legacy]=await Promise.all([checked(admin.rpc('office_sms_summaries',{p_agency_id:profile.agency_id,p_scope:scope,p_agent_id:agent.id})),checked(admin.rpc('crm_sms_conversation_summaries',{p_agency_id:profile.agency_id,p_user_id:actor,p_can_see_agency:true}))])
-   const byRemote=new Map((office||[]).map((c:any)=>[c.remote_client_id,c]))
-   const byLegacy=new Map((legacy||[]).map((c:any)=>[c.client_id,c]))
-   const conversations=clients.flatMap((client:any)=>{const old=legacyFor(client),source:any=byRemote.get(client.id)||(old?byLegacy.get(old.id):null);if(!source||smsPhone(source.phone)!==smsPhone(client.phone))return [];return [{...source,client_id:client.id,client_name:[client.first_name,client.last_name].filter(Boolean).join(' '),phone:client.phone,agent_id:agent.id,agent_name:agent.full_name,unread_count:Number(source.unread_count||0)}]}).sort((a:any,b:any)=>String(b.latest_at).localeCompare(String(a.latest_at)))
+   const mmAgent=await legacyAgent()
+   const byRemote=new Map<string,any>(),byLegacy=new Map<string,any>()
+   const phones=new Set<string>(),legacyPhones=new Set<string>()
+   for(let offset=0;;offset+=1000){
+    const page=await checked(admin.rpc('office_sms_inbox_sources',{p_agency:profile.agency_id,p_scope:scope,p_legacy_agent:mmAgent?.id||null})
+     .order('source').order('source_id').range(offset,offset+999))
+    for(const {source,source_id,summary} of page){
+     const phone=smsPhone(summary.phone)
+     if(!phone||phone==='+16627504626')continue
+     phones.add(phone)
+     if(source==='office')byRemote.set(source_id,summary)
+     if(source==='legacy'){byLegacy.set(source_id,summary);legacyPhones.add(phone)}
+    }
+    if(page.length<1000)break
+   }
+   const remoteClients=new Map<string,any>(),legacyClients=new Map<string,any>()
+   async function collectMatches(batch:string[]){
+    const legacyBatch=batch.filter(phone=>legacyPhones.has(phone))
+    async function collectLegacy(){
+     if(!mmAgent||!legacyBatch.length)return
+     for(let offset=0;;offset+=1000){
+      const page=await checked(admin.rpc('crm_sms_phone_candidates',{p_agent:mmAgent.id,p_phones:legacyBatch})
+       .select('id,first_name,last_name,phone').eq('agency_id',profile.agency_id).order('id').range(offset,offset+999))
+      for(const client of page)legacyClients.set(client.id,client)
+      if(page.length<1000)return
+     }
+    }
+    const [agencyMatches]=await Promise.all([bridge('sms_context',{agent_id:agent.id,candidate_phones:batch}),collectLegacy()])
+    for(const client of agencyMatches.clients)remoteClients.set(client.id,client)
+   }
+   const numbers=[...phones]
+   // RPC arguments use JSON POST. A thousand U.S. numbers fit in about 16 KB.
+   for(let start=0;start<numbers.length;start+=3000){
+    const work=[]
+    for(let i=start;i<Math.min(start+3000,numbers.length);i+=1000)work.push(collectMatches(numbers.slice(i,i+1000)))
+    await Promise.all(work)
+   }
+   // Include same-name/same-phone M&M clients without messages in the ambiguity check.
+   const legacyFor=indexLegacyClients([...legacyClients.values()],mmAgent?.full_name)
+   const conversations=[...remoteClients.values()].flatMap((client:any)=>{
+    const old=legacyFor(client,agent.full_name),source=byRemote.get(client.id)||(old&&byLegacy.get(old.id))
+    if(!source||smsPhone(source.phone)!==smsPhone(client.phone))return []
+    return [{...source,client_id:client.id,client_name:[client.first_name,client.last_name].filter(Boolean).join(' '),phone:client.phone,
+     agent_id:agent.id,agent_name:agent.full_name,unread_count:Number(source.unread_count||0)}]
+   }).sort((a:any,b:any)=>String(b.latest_at).localeCompare(String(a.latest_at))||a.client_id.localeCompare(b.client_id))
    return NextResponse.json({conversations,can_send:!!acl.can_edit},{headers:cors(request)})
   }
   const client=remote.client
   if(!client||!uuid(client.id))throw Error('Client not found in this agency.')
   if(smsPhone(client.phone)==='+16627504626')return NextResponse.json({error:'This number is reserved for Arctos.'},{status:403,headers:cors(request)})
-  const phone=smsPhone(client.phone),existingThread=await checked(admin.from('office_sms_threads').select('id').eq('agency_id',profile.agency_id).eq('scope',scope).eq('remote_client_id',client.id).maybeSingle()),legacy=existingThread?null:legacyFor(client),name=[client.first_name,client.last_name].filter(Boolean).join(' ')
+  const phone=smsPhone(client.phone),name=[client.first_name,client.last_name].filter(Boolean).join(' ')
   if(!phone)return NextResponse.json({error:'This client needs a valid U.S. phone number.'},{status:400,headers:cors(request)})
-  let thread:any=null
-  if(!legacy){thread=await checked(admin.from('office_sms_threads').upsert({agency_id:profile.agency_id,scope,remote_client_id:client.id,remote_agent_id:agent.id,phone,client_name:name,agent_name:agent.full_name,updated_at:new Date().toISOString()},{onConflict:'agency_id,scope,remote_client_id'}).select('id').single())}
+  let thread=await checked(admin.from('office_sms_threads').select('id,remote_agent_id,phone,client_name,agent_name').eq('agency_id',profile.agency_id).eq('scope',scope).eq('remote_client_id',client.id).maybeSingle())
+  let legacy=null
+  if(!thread){
+   const mmAgent=await legacyAgent()
+   if(mmAgent){
+    const candidates=await checked(admin.rpc('crm_sms_phone_candidates',{p_agent:mmAgent.id,p_phones:[phone]}).select('id,first_name,last_name,phone').eq('agency_id',profile.agency_id))
+    legacy=indexLegacyClients(candidates||[],mmAgent.full_name)(client,agent.full_name)
+   }
+  }
+  if(!legacy&&(!thread||thread.remote_agent_id!==agent.id||thread.phone!==phone||thread.client_name!==name||thread.agent_name!==agent.full_name)){
+   thread=await checked(admin.from('office_sms_threads').upsert({agency_id:profile.agency_id,scope,remote_client_id:client.id,remote_agent_id:agent.id,phone,client_name:name,agent_name:agent.full_name,updated_at:new Date().toISOString()},{onConflict:'agency_id,scope,remote_client_id'}).select('id').single())
+  }
   const table=legacy?'client_sms_messages':'office_sms_messages',column=legacy?'client_id':'thread_id',threadId=legacy?legacy.id:thread.id
   const threadQuery=(fields:string)=>admin.from(table).select(fields).eq(column,threadId)
   if(command==='thread'){
    const offset=Number(input.offset||0);if(!Number.isSafeInteger(offset)||offset<0||offset>50000)throw Error('Invalid message page.')
-   const rows=await checked(threadQuery('id,direction,body,text_attachment,from_number,to_number,twilio_message_sid,status,error_code,error_message,read_at,created_at').order('created_at',{ascending:false}).order('id').range(offset,offset+99))
-   return NextResponse.json({client,agent,messages:mergeSmsMessages(rows||[],phone),has_more:rows.length===100,next_offset:offset+rows.length,can_send:!!acl.can_edit&&client.status!=='deceased'},{headers:cors(request)})
+   const rows=await checked(threadQuery('id,direction,body,text_attachment,from_number,to_number,twilio_message_sid,status,error_code,error_message,read_at,created_at').is('notification_hidden_at',null).order('created_at',{ascending:false}).order('id').range(offset,offset+99))
+   return NextResponse.json({client,agent,messages:mergeSmsMessages((rows||[]).filter((row:any)=>!reservedSms(row)),phone),has_more:rows.length===100,next_offset:offset+rows.length,can_send:!!acl.can_edit&&client.status!=='deceased'},{headers:cors(request)})
   }
   if(command==='read'||command==='hide'){
    const now=new Date().toISOString()

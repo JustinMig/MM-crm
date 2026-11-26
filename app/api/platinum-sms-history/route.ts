@@ -1,6 +1,6 @@
 import {createClient} from '@supabase/supabase-js'
 import {createAdminClient} from '@/lib/supabase/admin'
-import {matchingLegacyClient,smsPhone} from '@/lib/office-sms'
+import {indexLegacyClients,reservedSms,smsPhone} from '@/lib/office-sms'
 import {photoUrls} from '@/lib/sms-media'
 export const runtime='nodejs'
 export const dynamic='force-dynamic'
@@ -24,27 +24,91 @@ async function handle(request:Request,write=false){
   const input=write?await request.json():{}
   const clientId=write?String(input.clientId||''):new URL(request.url).searchParams.get('clientId')
   if(write&&!clientId)return Response.json({error:'Choose a client.'},{status:400,headers})
-  const clients:any[]=[]
-  for(let offset=0;;offset+=1000){
-   const query=native.from('clients').select('id,first_name,last_name,phone').eq('assigned_agent_id',nativeAgent).order('id').range(offset,offset+999)
-   const {data,error}=await query;if(error)throw Error('Platinum clients could not be verified.')
-   clients.push(...(data||[]));if((data||[]).length<1000)break
-  }
+  const mode=write?'':new URL(request.url).searchParams.get('mode')||''
+  if(mode&&(clientId||!['unread','summaries'].includes(mode)))return Response.json({error:'Invalid history view.'},{status:400,headers})
   const admin=createAdminClient()
   const {data:agent,error:agentError}=await admin.from('profiles').select('agency_id,full_name').eq('id',mmAgent).single()
   if(agentError||!agent?.agency_id)throw Error('Isaiah message history is unavailable.')
-  const legacy:any[]=[]
-  for(let offset=0;;offset+=1000){
-   const {data,error}=await admin.from('clients').select('id,first_name,last_name,phone').eq('agency_id',agent.agency_id).eq('assigned_agent_id',mmAgent).order('id').range(offset,offset+999)
-   if(error)throw Error('Isaiah message history could not be matched.')
-   legacy.push(...(data||[]).map(c=>({...c,agent_name:agent.full_name})));if((data||[]).length<1000)break
+  const fields='id,first_name,last_name,phone'
+  const loadDirectory=async(db:any,agentId:string,agency?:string)=>{
+   const rows:any[]=[]
+   for(let offset=0;;offset+=1000){
+    let query=db.from('clients').select(fields).eq('assigned_agent_id',agentId)
+    if(agency)query=query.eq('agency_id',agency)
+    const {data,error}=await query.order('id').range(offset,offset+999)
+    if(error)throw Error('Isaiah message history could not be matched.')
+    rows.push(...(data||[]))
+    if((data||[]).length<1000)return rows
+   }
   }
-  const matches=new Map<string,string>(),counts=new Map<string,number>()
+  const candidates=async(db:any,agentId:string,phones:string[],agency?:string)=>{
+   const rows:any[]=[]
+   for(let offset=0;phones.length;offset+=1000){
+    let query=db.rpc('crm_sms_phone_candidates',{p_agent:agentId,p_phones:phones}).select(fields)
+    if(agency)query=query.eq('agency_id',agency)
+    const {data,error}=await query.order('id').range(offset,offset+999)
+    if(error)throw Error('Platinum clients could not be verified.')
+    rows.push(...(data||[]))
+    if((data||[]).length<1000)break
+   }
+   return rows
+  }
+  let clients:any[],legacy:any[]
+  if(clientId){
+   const {data:target,error}=await native.from('clients').select(fields).eq('assigned_agent_id',nativeAgent).eq('id',clientId).maybeSingle()
+   if(error)throw Error('Platinum clients could not be verified.')
+   const phone=smsPhone(target?.phone)
+   ;[clients,legacy]=phone?await Promise.all([candidates(native,nativeAgent,[phone]),candidates(admin,mmAgent,[phone],agent.agency_id)]):[[],[]]
+  }else if(mode){
+   const unreadSids:string[]=[]
+   if(mode==='unread'){
+    for(let offset=0;;offset+=1000){
+     const {data,error}=await native.from('client_sms_messages').select('twilio_message_sid').eq('direction','inbound').is('read_at',null).not('twilio_message_sid','is',null).order('id').range(offset,offset+999)
+     if(error)throw Error('Platinum unread messages could not be loaded.')
+     unreadSids.push(...(data||[]).map(m=>m.twilio_message_sid))
+     if((data||[]).length<1000)break
+    }
+   }
+   const result=await admin.rpc('platinum_sms_digest_input',{p_agency:agent.agency_id,p_agent:mmAgent,p_mode:mode,p_unread_sids:unreadSids})
+   if(result.error)throw Error('Isaiah message history could not be summarized.')
+   legacy=result.data||[]
+   const phones=[...new Set(legacy.map(c=>smsPhone(c.phone)).filter(Boolean))]
+   clients=await candidates(native,nativeAgent,phones)
+  }else{
+   ;[clients,legacy]=await Promise.all([loadDirectory(native,nativeAgent),loadDirectory(admin,mmAgent,agent.agency_id)])
+  }
+  const matches=new Map<string,string>(),counts=new Map<string,number>(),legacyFor=indexLegacyClients(legacy,agent.full_name)
   for(const c of clients){const phone=smsPhone(c.phone);if(phone)counts.set(phone,(counts.get(phone)||0)+1)}
   for(const client of clients){
    if(clientId&&client.id!==clientId)continue
-   const match=matchingLegacyClient(client,agent.full_name,legacy)
+   const match=legacyFor(client,agent.full_name)
    if(match&&counts.get(smsPhone(client.phone))===1)matches.set(match.id,client.id)
+  }
+  const suppressed=new Set<string>()
+  if(!write){
+   const {data,error}=await admin.rpc('platinum_sms_suppressed_sids',{p_agency:agent.agency_id,p_agent:mmAgent})
+   if(error)throw Error('Message visibility could not be verified.')
+   for(const sid of data||[])suppressed.add(sid)
+  }
+  if(mode){
+   const states=legacy.flatMap(c=>matches.has(c.id)?(c.messages||[]).map((m:any[])=>[matches.get(c.id),...m]).filter((m:any[])=>!suppressed.has(m[2])):[])
+   for(const sid of suppressed)states.push([null,null,sid,null,false,true,null])
+   const {data:digest,error:digestError}=await native.rpc('platinum_sms_digest',{p_mode:mode,p_shared:states})
+   if(digestError||!digest)throw Error('Platinum message history could not be summarized.')
+   if(mode==='summaries'){
+    const ids=digest.conversations.map((c:any)=>c.latest.shared_id).filter(Boolean)
+    const previews=new Map<string,string>()
+    for(let offset=0;offset<ids.length;offset+=500){
+     const {data,error}=await admin.rpc('platinum_sms_preview',{p_agency:agent.agency_id,p_agent:mmAgent,p_ids:ids.slice(offset,offset+500)})
+     if(error)throw Error('Isaiah message previews could not be loaded.')
+     for(const row of data||[])previews.set(row.id,row.body)
+    }
+    for(const c of digest.conversations){
+     if(c.latest.shared_id)c.latest.body=previews.get(c.latest.shared_id)||''
+     delete c.latest.shared_id
+    }
+   }
+   return Response.json(digest,{headers})
   }
   if(write){
    if(!['read','hide'].includes(input.action))return Response.json({error:'Invalid message action.'},{status:400,headers})
@@ -61,13 +125,30 @@ async function handle(request:Request,write=false){
    if(error)throw Error('The message action could not be saved.')
    return Response.json({saved:true},{headers})
   }
-  const messages:any[]=[]
+  const messages:any[]=[],suppressedSids=new Set<string>()
+  // Only echo suppression keys for native rows the caller can already see.
+  if(clientId&&suppressed.size){
+   const keys=[...suppressed]
+   for(let offset=0;offset<keys.length;offset+=75){
+    const {data,error}=await native.from('client_sms_messages').select('twilio_message_sid').eq('client_id',clientId).in('twilio_message_sid',keys.slice(offset,offset+75))
+    if(error)throw Error('Message visibility could not be verified.')
+    for(const m of data||[])suppressedSids.add(m.twilio_message_sid)
+   }
+  }
   const ids=[...matches.keys()]
   for(let start=0;start<ids.length;start+=75){
    for(let offset=0;;offset+=1000){
     const {data,error}=await admin.from('client_sms_messages').select('id,client_id,direction,body,from_number,to_number,twilio_message_sid,status,error_code,error_message,read_at,notification_hidden_at,created_at,media_paths,text_attachment').in('client_id',ids.slice(start,start+75)).not('twilio_message_sid','is',null).order('created_at').order('id').range(offset,offset+999)
     if(error)throw Error('Isaiah messages could not be loaded.')
-    for(const message of data||[]){
+    const page=(data||[]).filter(m=>!m.notification_hidden_at&&!reservedSms(m)&&!suppressed.has(m.twilio_message_sid))
+    const nativeHidden=new Set<string>()
+    if(page.length){
+     const {data:keys,error}=await native.rpc('platinum_sms_hidden_shared',{p_shared:page.map(m=>[matches.get(m.client_id),m.id,m.twilio_message_sid])})
+     if(error)throw Error('Message visibility could not be verified.')
+     for(const key of keys||[])nativeHidden.add(key)
+    }
+    for(const message of page){
+     if(nativeHidden.has(message.twilio_message_sid))continue
      let attachment=message.text_attachment
      if(!attachment&&message.media_paths?.length){
       const urls=await photoUrls(admin,message.media_paths,86400)
@@ -78,7 +159,7 @@ async function handle(request:Request,write=false){
     if((data||[]).length<1000)break
    }
   }
-  return Response.json({messages,matchedClients:matches.size},{headers})
+  return Response.json({messages,suppressedSids:[...suppressedSids],matchedClients:matches.size},{headers})
  }catch(error){return Response.json({error:error instanceof Error?error.message:'Message history is unavailable.'},{status:502,headers})}
 }
 

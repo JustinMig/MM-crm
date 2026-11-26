@@ -228,7 +228,11 @@ window.officeArctosCoverageMount=modal=>{
  }
  for(const host of form.querySelectorAll('[data-card-manager]'))wireDocuments(host,host.dataset.cardManager);
  const removedFiles=new Set();
- void api.request(current.agency,'coverage_documents',{client_id:current.id}).then(result=>{if(identity()&&Array.isArray(result.documents)){const byId=new Map(documents.map(doc=>[doc.id,doc]));for(const doc of result.documents)byId.set(doc.id,{...byId.get(doc.id),...doc});documents=[...byId.values()].filter(doc=>!removedFiles.has(doc.id));fileQueues.forEach(renderFiles);}}).catch(error=>status('Files could not load: '+error.message,true));
+ const updateSavedSoa=()=>{
+  const soa=documents.find(doc=>['soa','scope_of_appointment'].includes(doc.category));
+  if(soa){form.querySelector('[data-soa-summary]').textContent=soa.file_name;form.querySelector('[data-view-soa]').hidden=false;}
+ };
+ void api.request(current.agency,'coverage_documents',{client_id:current.id}).then(result=>{if(identity()&&Array.isArray(result.documents)){const byId=new Map(documents.map(doc=>[doc.id,doc]));for(const doc of result.documents)byId.set(doc.id,{...byId.get(doc.id),...doc});documents=[...byId.values()].filter(doc=>!removedFiles.has(doc.id));fileQueues.forEach(renderFiles);updateSavedSoa();}}).catch(error=>status('Files could not load: '+error.message,true));
  form.addEventListener('click',async event=>{
   const view=event.target.closest('[data-office-coverage-view]'),remove=event.target.closest('[data-office-coverage-remove]'),unqueue=event.target.closest('[data-office-coverage-unqueue]');
   try{
@@ -237,8 +241,7 @@ window.officeArctosCoverageMount=modal=>{
    if(unqueue&&canEdit){for(const queue of fileQueues){queue.items=queue.items.filter(item=>item.id!==unqueue.dataset.officeCoverageUnqueue);renderFiles(queue);}}
   }catch(error){status(error.message,true);}
  });
- const soaDocs=documents.filter(doc=>['soa','scope_of_appointment'].includes(doc.category)),soa=soaDocs[0];
- if(soa){form.querySelector('[data-soa-summary]').textContent=soa.file_name;form.querySelector('[data-view-soa]').hidden=false;}
+ updateSavedSoa();
  window.officeArctosCoverageSoaBind?.(modal,form);
 };
 })();

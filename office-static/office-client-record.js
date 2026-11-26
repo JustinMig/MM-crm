@@ -258,5 +258,44 @@ window.officeClientRecordEnhance=modal=>{
  for(const el of root.querySelectorAll('[data-protected-input]'))initials.delete(el);
  root.querySelectorAll('details[open]').forEach(el=>el.open=false);
  if(!current.permissions?.edit)root.querySelectorAll('input,select,textarea,button[data-save-overview],button[data-save-tab],button[type="submit"],button[data-office-add-record],button[data-office-save-list],button[data-delete-record]').forEach(el=>{if(!el.matches('[data-cfh-search]'))el.disabled=true;});
+ if(root.dataset.officeProgressive){
+  // Medical and Notes & Files share one editor, including draft uploads and editable notes.
+  const loaded=new Set(),pending=new Set();
+  root.officeLoadClientSection=async key=>{
+   if(key==='overview')return;
+   const section=key==='coverage'?'coverage':'medical';
+   if(loaded.has(section)||pending.has(section))return;
+   const keys=section==='coverage'?['coverage']:['medical','files'];
+   const panels=keys.map(key=>root.querySelector('[data-oc-client-panel="'+key+'"]'));
+   const footers=panels.map(p=>p.querySelector('[data-tab-save-footer]'));
+   pending.add(section);
+   for(const panel of panels){
+    const state=panel.querySelector('[data-client-section-status]');
+    if(state)state.textContent='Loading client information…';
+   }
+   try{
+    const result=await api.request(current.agency,'client',{client_id:current.id,section});
+    if(!root.isConnected||api.current()?.agency!==current.agency||api.current()?.id!==current.id)return;
+    if(!result.details)throw Error('Client information was unavailable.');
+    Object.assign(details,result.details);Object.assign(errors,result.detail_errors);
+    if(section==='coverage')window.officeArctosCoverageMount(root);
+    else window.officeArctosMedicalFilesMount(root);
+    panels.forEach((panel,index)=>{panel.append(footers[index]);footers[index].hidden=false;});
+    loaded.add(section);
+   }catch(error){
+    if(!root.isConnected)return;
+    for(const panel of panels){
+     const state=panel.querySelector('[data-client-section-status]');
+     if(!state)continue;
+     const retry=document.createElement('button');retry.type='button';retry.className='outline';retry.textContent='Retry';
+     retry.onclick=()=>root.officeLoadClientSection(key);
+     state.replaceChildren(document.createTextNode('Client information could not load. '),retry);
+    }
+   }finally{pending.delete(section);}
+  };
+  for(const footer of root.querySelectorAll('[data-tab-save-footer]:not([data-tab-save-footer="overview"])'))footer.hidden=true;
+  void root.officeLoadClientSection(root.querySelector('[data-oc-client-tab][aria-selected="true"]')?.dataset.ocClientTab||'overview');
+ }
+
 };
 })();

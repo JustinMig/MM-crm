@@ -37,7 +37,18 @@ async function fixture(agency='arctos',detailErrors={},exact=false,options={}){
    else {const rows=data.view==='birthdays'?birthdays:data.view==='t65'?t65:data.view==='medicare_reviews'?reviews:deceased,offset=data.offset||0;result={clients:structuredClone(rows.slice(offset,offset+(data.limit||200))),total:rows.length,offset,month_key:month,month_label:'October 2026'};}
   }
   else if(data.action==='delete_client')result={deleted:true,client_id:data.client_id};
-  else if(data.action==='client')result={client:structuredClone(client),details:structuredClone(details),detail_errors:detailErrors};
+  else if(data.action==='dashboard_counts'){
+   const which=String(url).includes('bogusfmvdrlvxscopgaw')?'arctos':String(url).includes('sggzshbdfgkyyvxbebul')?'platinum':'office';
+   result=fixtureOptions.dashboardCounts?.[which]||{appointments:0,campaigns:0};
+  }
+  else if(data.action==='client'){
+   result={client:structuredClone(client),details:structuredClone(details),detail_errors:detailErrors};
+   if(fixtureOptions.progressive){
+    const tables={overview:['athena_medicare_reviews','client_review_manual'],coverage:['life_policies','medicare_details','health_plans','retirement_accounts','hospital_indemnity_plans'],medical:['client_doctors','client_pharmacies','client_medications']};
+    result.section=data.section;
+    result.details=Object.fromEntries(tables[data.section].map(t=>[t,structuredClone(details[t]||[])]));
+   }
+  }
   else if(data.action==='secure_client'){
    if(fixtureOptions.failSecure===data.kind)return new Response(JSON.stringify({error:'Synthetic protected read failure'}),{status:400});
    result={kind:data.kind,data:structuredClone(secure[data.kind]||{})};
@@ -78,7 +89,7 @@ async function fixture(agency='arctos',detailErrors={},exact=false,options={}){
  if(options.openRecord!==false){
   q('#clientSearch').value='Sample';q('#clientSearch').dispatchEvent(new w.KeyboardEvent('keydown',{key:'Enter',bubbles:true}));
   await until(()=>q('[data-client^="'+agency+':"]'));q('[data-client^="'+agency+':"]').click();
-  await until(()=>q('[data-office-exact-coverage] [name="sunfire_code"]'));
+  await until(()=>options.progressive?q('[data-save-tab="overview"]'):q('[data-office-exact-coverage] [name="sunfire_code"]'));
   if(options.sensitive!==false&&options.failSecure!=='identifiers')await until(()=>q('[data-protected-input="ssn"]')?.value===String(secure.identifiers.ssn||''));
  }
  const fill=(element,value)=>{element.value=value;element.dispatchEvent(new w.Event('input',{bubbles:true}));};

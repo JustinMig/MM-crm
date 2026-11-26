@@ -41,7 +41,7 @@ async function check(req:Request){
 }
 async function q<T>(promise:PromiseLike<{data:T,error:any}>):Promise<T>{const {data,error}=await promise;if(error)throw Error("Agency data request failed");return data}
 async function log(action:string,kind:string,objectId:string|null,actor:string){const sb=admin();await q(sb.from("office_crm_audit").insert({actor_id:actor,agency:SCOPE,operation:action,object_type:kind,object_id:uuid(objectId)?objectId:null}));}
-async function readClient(sb:ReturnType<typeof admin>,id:string){if(!uuid(id))throw Error("Invalid client record");return q(sb.from("clients").select(clientSelection).eq("id",id).maybeSingle())}
+async function readClient(sb:ReturnType<typeof admin>,id:string,selection=clientSelection){if(!uuid(id))throw Error("Invalid client record");return q(sb.from("clients").select(selection).eq("id",id).maybeSingle())}
 
 /* Protected client data remains inside each agency.
    Every call is authorized via MM office identity + agency-specific permission
@@ -254,9 +254,23 @@ async function perform(action:string,data:any,actor:{id:string;email:string;perm
   if(!uuid(agentId)||client&&client.assigned_agent_id!==agentId)throw Error('Choose the client’s assigned agent.');
   const agent=await q(sb.from('profiles').select('id,full_name').eq('id',agentId).eq('active',true).in('role',['owner','agent']).maybeSingle());
   if(!agent)throw Error('Agent is unavailable.');
+  if(requested||data.agent_only===true)return {client,agent};
+  if(Object.hasOwn(data,'candidate_phones')){
+   const phones=data.candidate_phones;
+   if(!Array.isArray(phones)||phones.length>1000||!phones.every(phone=>typeof phone==='string'&&/^\+1[0-9]{10}$/.test(phone)))throw Error('Invalid conversation phones.');
+   const clients=[];
+   if(phones.length){
+    for(let offset=0;;offset+=1000){
+     const page=await q(sb.rpc('crm_sms_phone_candidates',{p_agent:agent.id,p_phones:phones}).select('id,first_name,last_name,phone').order('id').range(offset,offset+999));
+     clients.push(...page);
+     if(page.length<1000)break;
+    }
+   }
+   return {agent,clients};
+  }
   const clients=[];
   for(let offset=0;offset<20000;offset+=1000){const page=await q(sb.from('clients').select('id,first_name,last_name,phone,assigned_agent_id,status').eq('assigned_agent_id',agentId).order('id').range(offset,offset+999));clients.push(...page);if(page.length<1000)break;}
-  return {client,agent,clients:requested?undefined:clients};
+  return {client,agent,clients};
  }
  if(action==="campaign_center")return await officeCampaignCenter({sb,actor,scope:SCOPE,log},data);
  if(action==="delete_client")return await deleteOfficeClient({sb,actor,scope:SCOPE,log},data);
@@ -308,8 +322,14 @@ async function perform(action:string,data:any,actor:{id:string;email:string;perm
   return {clients:await withOfficeReviewStatus({sb},clients)};
  }
  if(action==="client"){
-  const id=String(data.client_id||""); const client=await readClient(sb,id);
-  if(!client)throw Error("Client record not found");
+  const id=String(data.client_id||"");
+  const section=String(data.section||"all");
+  const sectionTables={
+   overview:["athena_medicare_reviews","client_review_manual"],
+   coverage:["medicare_details","health_plans","life_policies","hospital_indemnity_plans","retirement_accounts"],
+   medical:["client_doctors","client_pharmacies","client_medications"]
+  };
+  if(section!=="all"&&!Object.hasOwn(sectionTables,section))throw Error("Invalid client section");
   const tables=[
    ["medicare_details","client_id,part_a_date,part_b_date,medicaid_level,notes,sunfire_code,medicaid_number"],
    ["health_plans","id,client_id,carrier,plan_name,plan_id,member_id,plan_type,effective_date,termination_date,premium,status,notes"],
@@ -327,12 +347,37 @@ async function perform(action:string,data:any,actor:{id:string;email:string;perm
    ["client_doctors","*"],["client_pharmacies","*"],["client_medications","*"]
   ] as const;
   const details:any={},detail_errors:Record<string,string>={};
-  await Promise.all(tables.map(async ([name,selection])=>{try{const selected=["medicare_details","health_plans","life_policies","hospital_indemnity_plans","retirement_accounts","client_doctors","client_medications","client_pharmacies"].includes(name)?recordSelection(SCOPE,name):selection;const v=await q(sb.from(name==="client_sms_messages"?"office_visible_client_sms":name).select(selected).eq("client_id",id).limit(100));details[name]=v;}catch{details[name]=[];detail_errors[name]="This section could not load";}}));
-  return {client,details,detail_errors};
+  const client=await readClient(sb,id,section==="overview"||section==="all"?clientSelection:"id");
+  if(!client)throw Error("Client record not found");
+  const wanted=section==="all"?tables:tables.filter(([name])=>sectionTables[section].includes(name));
+  await Promise.all(wanted.map(async ([name,selection])=>{try{const selected=["medicare_details","health_plans","life_policies","hospital_indemnity_plans","retirement_accounts","client_doctors","client_medications","client_pharmacies"].includes(name)?recordSelection(SCOPE,name):selection;const v=await q(sb.from(name==="client_sms_messages"?"office_visible_client_sms":name).select(selected).eq("client_id",id).limit(100));details[name]=v;}catch{details[name]=[];detail_errors[name]="This section could not load";}}));
+  return {section,client,details,detail_errors};
  }
  if(action==="mutate_appointment"){
   const central=createClient(MM_URL,MM_PUBLIC,{global:{headers:{Authorization:authorization}},auth:{persistSession:false,autoRefreshToken:false}});
   return await mutateOfficeCalendar({sb,central,actor,uuid,log},data);
+ }
+ if(action==="dashboard_counts"){
+  const {from,to}=data;
+  if(!/^\d{4}-\d\d-\d\d$/.test(from)||!/^\d{4}-\d\d-\d\d$/.test(to)||to<from)throw Error("Date range required");
+  const campaignCount=sb.from("campaigns").select("id",{head:true,count:"exact"});
+  const central=createClient(MM_URL,MM_PUBLIC,{global:{headers:{Authorization:authorization}},auth:{persistSession:false,autoRefreshToken:false}});
+  // Shared appointments can also exist in the native calendar. Count their IDs once.
+  async function ids(query){
+   const result=[];
+   for(let start=0;;start+=500){
+    const rows=await q(query().order("id").range(start,start+499));
+    for(const row of rows)result.push(row.id);
+    if(rows.length<500)return result;
+   }
+  }
+  const [campaigns,local,shared]=await Promise.all([
+   campaignCount,
+   ids(()=>sb.from("appointments").select("id").gte("event_date",from).lte("event_date",to)),
+   ids(()=>central.rpc("office_arctos_calendar_events",{p_from:from,p_to:to}).select("id"))
+  ]);
+  if(campaigns.error)throw Error("Campaign count unavailable");
+  return {campaigns:campaigns.count,appointments:new Set([...local,...shared]).size};
  }
  if(action==="appointments"){
   const from=String(data.from||"").slice(0,10);const to=String(data.to||"").slice(0,10);

@@ -6,7 +6,7 @@ var LABEL={arctos:"Arctos",platinum:"Platinum Financial",office:"Office Staff"};
 var AGENT={arctos:"Justin",platinum:"Isaiah",office:"Sheena"};
 var access=null,agency="all",tab="dashboard",activeClient=null,selectedCampaign=null;
 var clientLookupView="search",clientLookupTicket=0,clientLookupController=null,clientLookupPaging={},clientLookupStatsTicket=0,clientLookupStatsCache=null,clientLookupMonthLabel="";
-var connected={},clients=[],campaigns=[],appointments=[],savedSearch="",screen=document.getElementById("office-root"),mobile=false;
+var connected={},clients=[],appointments=[],savedSearch="",screen=document.getElementById("office-root"),mobile=false;
 var officePhoneData={calls:[],texts:[],voicemails:[]},officePhoneSection="missed",officePhoneLoading=false;
 var officePhoneSyncMessage="",officePhoneLastSync=0,officePhoneRequestId=0;
 var officePhoneMatchCache=new Map(),officePhoneMatchBusy=0,officePhoneMatchQueue=[];
@@ -70,6 +70,7 @@ function showLogin(message=""){
  officePhoneAudioUrls.clear();
  calendarAgency="office";calendarSelection="office";calendarRequestId++;
  calendarRosters.clear();calendarRanges.clear();appointments=[];calendarErrors=[];
+ dashboardRequestId++;dashboardTotals={appointments:0,campaigns:0};
  access=null;
  sessionStorage.removeItem("office_login_session");
  screen.innerHTML='<div class="auth-screen"><section class="auth-card"><div class="brand-inline"><img class="brand-mark office-brand-logo" src="/mh-logo.jpg?v=mh-brand-20261125-1" width="44" height="44" alt="M&amp;H Insurance Group"><strong>Office CRM</strong></div><h1 class="auth-title">Welcome to the office</h1><p class="auth-subtitle">Secure access to Arctos and Platinum Financial. Use your existing M&amp;M CRM email and password.</p><form id="login-form"><div class="field"><label>Email address</label><input type="email" name="email" autocomplete="username" required></div><div class="field"><label>Password</label><input type="password" name="password" autocomplete="current-password" required></div><div id="auth-error" class="auth-error">'+esc(message)+'</div><button class="primary" type="submit">Sign in securely</button></form><p class="muted" style="font-size:11px;margin-top:20px">Client information is not stored in this browser. Access is limited to approved office staff.</p></section></div>';
@@ -92,10 +93,11 @@ function shell(){
 }
 function toast(v){const e=document.getElementById("alert");if(!e)return;e.textContent=v;e.classList.add("show");setTimeout(()=>e.classList.remove("show"),3500)}
 function head(title,subtitle){return '<div class="page-heading"><div><div class="eyebrow">OFFICE WORKSPACE</div><h1>'+esc(title)+'</h1><p>'+esc(subtitle)+'</p></div></div>'}
+var dashboardTotals={appointments:0,campaigns:0},dashboardRequestId=0;
 function available(){return Object.keys(ENDPOINTS).filter(a=>connected[a]&&(agency==="all"||agency===a))}
 function render(){
  let body="";
- if(tab==="dashboard")body=head("Office Dashboard","One secure workspace for your agencies.")+'<div class="office-grid"><div class="metric"><small>Connected Agencies</small><b>'+["arctos","platinum"].filter(a=>!!connected[a]).length+'</b></div><div class="metric"><small>Appointments in View</small><b>'+appointments.length+'</b></div><div class="metric"><small>Agency Campaigns</small><b>'+campaigns.length+'</b></div></div><div class="panel"><div class="panel-header"><h2>Quick Actions</h2></div><div class="quick-actions"><button class="quick-action" data-open="clients"><span>⌕</span>Find client</button><button class="quick-action" data-open="calendar"><span>▣</span>View calendar</button><button class="quick-action" data-open="campaigns"><span>◉</span>Work campaigns</button></div></div>';
+ if(tab==="dashboard")body=head("Office Dashboard","One secure workspace for your agencies.")+'<div class="office-grid"><div class="metric"><small>Connected Agencies</small><b>'+["arctos","platinum"].filter(a=>!!connected[a]).length+'</b></div><div class="metric"><small>Appointments in View</small><b>'+dashboardTotals.appointments+'</b></div><div class="metric"><small>Agency Campaigns</small><b>'+dashboardTotals.campaigns+'</b></div></div><div class="panel"><div class="panel-header"><h2>Quick Actions</h2></div><div class="quick-actions"><button class="quick-action" data-open="clients"><span>⌕</span>Find client</button><button class="quick-action" data-open="calendar"><span>▣</span>View calendar</button><button class="quick-action" data-open="campaigns"><span>◉</span>Work campaigns</button></div></div>';
  if(tab==="texts")body=head("Texts","Office conversations, replies and mass texts — using the existing M&M texting connection.")+'<div id="officeSmsWorkspace"></div>';
  if(tab==="clients")body=head("Client Directory","Search both agencies without copying their client records.")+officeClientLookupMarkup();
  if(tab==="phone")body=head("Phone","Office telephone calls, text messages and RingCentral voicemails.")+
@@ -109,7 +111,10 @@ function render(){
  if(tab==="backup")body=head("Backup","Save a copy to your computer or an external drive.")+'<section id="officeBackup"></section>';
  if(tab==="people")body=head("Agencies & People","Appointments and records stay assigned to the right agents.")+'<section class="panel">'+Object.entries(AGENT).map(([a,n])=>'<div class="person-row"><div class="avatar">'+esc(n[0])+'</div><div><b>'+esc(n)+'</b><small>'+esc(LABEL[a])+'</small></div><span class="status-pill">'+(connected[a]?"Connected":a==="office"?"Office Staff":"Pending")+'</span></div>').join("")+'</section>';
  document.getElementById("main").innerHTML=body;
- if(tab==="backup")window.officeBackup.mount(document.getElementById("officeBackup"),{request,sms:officeSmsRequest,allowed:a=>connected[a]?.permissions?.edit&&connected[a]?.permissions?.sensitive});
+ if(tab==="backup"){
+  const host=document.getElementById("officeBackup");
+  mountOfficeFeature("backup",host,()=>window.officeBackup.mount(host,{request,sms:officeSmsRequest,allowed:a=>connected[a]?.permissions?.edit&&connected[a]?.permissions?.sensitive}));
+ }
  document.querySelectorAll("[data-open]").forEach(b=>b.addEventListener("click",()=>{tab=b.dataset.open;if(tab==="calendar")openOfficeCalendar();if(tab==="campaigns")resetCampaignPicker();if(tab==="leads")resetLeadPicker();shell();render();loadTab()}));
  let cAgency=document.getElementById("campaignAgency");if(cAgency)cAgency.addEventListener("change",e=>chooseCampaignAgency(e.target.value));
  let cAgent=document.getElementById("campaignAgent");if(cAgent)cAgent.addEventListener("change",e=>chooseCampaignAgent(e.target.value));
@@ -452,7 +457,7 @@ function officePhonePaint(){
 async function loadTab(){
  if(tab==="texts"){window.officeSms?.mount(document.getElementById("officeSmsWorkspace"));return}
  if(tab==="phone"){await officePhoneLoad();return}
- if(tab==="dashboard"){await Promise.all([fetchCalendar(),fetchCampaigns()]);render();return}
+ if(tab==="dashboard"){await loadDashboardCounts();return}
  if(tab==="calendar"){await fetchCalendar();showCalendar();return}
  if(tab==="campaigns"){showCampaignControls();return}
  if(tab==="leads"){showLeadControls();return}
@@ -860,20 +865,7 @@ async function ocOpenSelectedDay(date){
   body.querySelectorAll('[data-person-day-event]').forEach(button=>button.onclick=()=>ocDetails(rows[Number(button.dataset.personDayEvent)]));
  }catch(error){if(dialog.isConnected&&dialog.dataset.dayPopup===ticket)dialog.querySelector('.oc-person-day-body').innerHTML='<p class="oc-popup-error">'+esc(error.message||'Appointments could not load.')+'</p>';}
 }
-async function fetchCalendar(){
- if(tab==="calendar")return ocFetchSelectedCalendar();
- const id=++calendarRequestId,scope=tab==="calendar"?ocRange():{start:ocAdd(new Date(),-7),end:ocAdd(new Date(),50)};
- const active=available();
- if(tab==="calendar"){calendarLoading=true;showCalendar()}
- const [result,staffResult]=await Promise.all([Promise.allSettled(active.map(a=>request(a,"appointments",{from:ocISO(scope.start),to:ocISO(scope.end)}))),(connected.office&&agency==="all")?requestSchedule("office","appointments",{from:ocISO(scope.start),to:ocISO(scope.end)}).then(v=>({ok:true,data:v})).catch(e=>({ok:false,error:e.message})):Promise.resolve(null)]);
- if(id!==calendarRequestId)return;
- calendarErrors=result.map((r,i)=>r.status==="rejected"?LABEL[active[i]]+": "+String(r.reason&&r.reason.message||"Could not load"):null).filter(Boolean);
- appointments=result.flatMap((r,i)=>r.status==="fulfilled"&&Array.isArray(r.value.appointments)?r.value.appointments.map(x=>({...x,agency:active[i]})):[]);
- if(staffResult?.ok&&Array.isArray(staffResult.data.appointments)) appointments.push(...staffResult.data.appointments.map(a=>({...a,agency:"office"})));
- if(staffResult&&!staffResult.ok)calendarErrors.push("Office Staff: "+staffResult.error);
- appointments.sort((a,b)=>(ocEventDate(a)+String(ocEventMinutes(a)).padStart(4,"0")).localeCompare(ocEventDate(b)+String(ocEventMinutes(b)).padStart(4,"0")));
- calendarLoading=false;calendarLoaded=true;
-}
+function fetchCalendar(){return ocFetchSelectedCalendar();}
 function showCalendar(){
  const target=document.getElementById("calendarResults");if(!target||tab!=="calendar")return;
  const person=ocSelectedCalendar();
@@ -918,12 +910,26 @@ function showCalendar(){
  }));
  target.querySelectorAll("[data-cal-event]").forEach(btn=>btn.onclick=()=>ocDetails(appointments[Number(btn.dataset.calEvent)]));
 }
-async function fetchCampaigns(){
- let active=available(),res=await Promise.allSettled(active.map(a=>request(a,"campaigns")));
- campaigns=res.flatMap((r,i)=>r.status==="fulfilled"?r.value.campaigns.map(x=>({...x,agency:active[i]})):[]);
+async function loadDashboardCounts(){
+ const ticket=++dashboardRequestId,selectedAgency=agency;
+ const params={from:ocISO(ocAdd(new Date(),-7)),to:ocISO(ocAdd(new Date(),50))};
+ const agencies=available(),includeOffice=connected.office&&agency==="all";
+ const queries=agencies.map(a=>request(a,"dashboard_counts",params));
+ if(includeOffice)queries.push(requestSchedule("office","dashboard_counts",params));
+ const results=await Promise.allSettled(queries);
+ if(ticket!==dashboardRequestId||tab!=="dashboard"||selectedAgency!==agency||!access)return;
+ function total(key,rows){
+  let count=0;
+  for(const row of rows){
+   if(row.status!=="fulfilled"||!Number.isSafeInteger(row.value[key]))return "—";
+   count+=row.value[key];
+  }
+  return count;
+ }
+ dashboardTotals={appointments:total("appointments",results),campaigns:total("campaigns",results.slice(0,agencies.length))};
+ const values=document.querySelectorAll("#main .office-grid .metric b");
+ if(values.length===3){values[1].textContent=dashboardTotals.appointments;values[2].textContent=dashboardTotals.campaigns;}
 }
-
-
 
 function mountNotes(){
  const el=document.getElementById("noteWorkspace");if(!el)return;
@@ -1163,14 +1169,18 @@ async function chooseCampaignAgent(value){
  campaignLoading=false;
  showCampaignControls();
 }
+function mountOfficeFeature(group,host,renderFeature){
+ if(window.officeAssets)return window.officeAssets.mount(group,host,renderFeature);
+ return renderFeature();
+}
 function showCampaigns(){
  const el=document.getElementById("campaignResults");if(!el||!campaignAgency||!campaignAgent)return;
  const selected=campaignAgents.find(a=>a.id===campaignAgent);
  const selectedAgency=campaignAgency,selectedAgent=campaignAgent;
- window.officeCampaignCenter.mount({el,esc,request,agency:selectedAgency,agent:selectedAgent,agentName:selected?.full_name||AGENT[selectedAgency],agencyName:LABEL[selectedAgency],canEdit:!!connected[selectedAgency]?.permissions?.edit,campaigns:campaignSelectionResults,openClient,
+ mountOfficeFeature("campaigns",el,()=>window.officeCampaignCenter.mount({el,esc,request,agency:selectedAgency,agent:selectedAgent,agentName:selected?.full_name||AGENT[selectedAgency],agencyName:LABEL[selectedAgency],canEdit:!!connected[selectedAgency]?.permissions?.edit,campaigns:campaignSelectionResults,openClient,
  isCurrent:()=>tab==="campaigns"&&campaignAgency===selectedAgency&&campaignAgent===selectedAgent,
  reload:()=>tab==="campaigns"&&campaignAgency===selectedAgency&&campaignAgent===selectedAgent?chooseCampaignAgent(selectedAgent):Promise.resolve(),
- addClients:()=>{tab="clients";agency=selectedAgency;shell();render();loadTab();}});
+ addClients:()=>{tab="clients";agency=selectedAgency;shell();render();loadTab();}}));
 }
 async function showMembers(a,id){
  const el=document.getElementById("campaignResults");if(!el)return;
@@ -1436,6 +1446,7 @@ function ocClientBindTabs(root,requested="overview"){
   buttons.forEach(b=>{const active=b.dataset.ocClientTab===key;b.setAttribute("aria-selected",String(active));b.tabIndex=active?0:-1;});
   panels.forEach(p=>{p.hidden=p.dataset.ocClientPanel!==key;});
   const flags=root.querySelector('.office-client-flags');if(flags)flags.hidden=key!=="overview";
+  root.officeLoadClientSection?.(key);
  };
  buttons.forEach(b=>b.addEventListener("click",()=>choose(b.dataset.ocClientTab)));
  choose(ocClientTabs.some(([key])=>key===requested)?requested:"overview");
@@ -1449,7 +1460,7 @@ function ocClientProtected(a){
   '<button type="button" class="outline" data-protected="'+esc(kind)+'">Reveal</button></div>'+
   '<div class="oc-protected-result" data-secure-result="'+esc(kind)+'"><span class="muted">Protected — select Reveal to view.</span></div></div>').join("");
 }
-function ocClientDetailMarkup(details,a,id){
+function ocClientDetailMarkup(details,a,id,overviewOnly=false){
  const ds=key=>Array.isArray(details[key])?details[key]:[];
  const medicareDetails=ds("medicare_details"),medicaidLevel=medicareDetails[0]?.medicaid_level||"";
  const medicareDisplay=medicareDetails.map(row=>{const copy={...row};delete copy.medicaid_level;return copy;});
@@ -1459,6 +1470,7 @@ function ocClientDetailMarkup(details,a,id){
   'No manual review completion recorded.')+'</span></div>';
  const overviewOther=ocClientAccordion("Identification & Protected Information",
   "Secure identifiers, banking and Medicare.gov credentials",ocClientProtected(a),"identity");
+ if(overviewOnly)return {reviewMarkup,overviewOther};
  const coverage=ocClientAccordion("Medicare & Current Coverage","Medicare, Medicaid, current plans and reviews",
   ocClientSub("Medicare Information",ocClientRecords(medicareDisplay,"No Medicare details saved.")+ocMedicaidLevelEditor(medicaidLevel))+
   ocClientSub("Medicare Advantage / Health Plans",ocClientRecords(ds("health_plans"),"No health plan records saved."))+
@@ -1490,13 +1502,16 @@ async function openClient(a,id,selectedTab="overview"){
  const dlg=document.getElementById("dialog");
  if(!dlg||!["arctos","platinum"].includes(a)||!connected[a])return;
  dlg.innerHTML='<div class="modal-card wide oc-arctos-client-dialog" role="dialog" aria-modal="true"><div class="loading-state">Loading client record from '+esc(LABEL[a])+'…</div></div>';
+ let currentView=dlg.firstElementChild;
  try{
-  const result=await request(a,"client",{client_id:id});
-  if(!document.getElementById("dialog")||!dlg.isConnected)return;
+  const [result]=await Promise.all([request(a,"client",{client_id:id,section:"overview"}),window.officeAssets?.load("record")]);
+  if(!currentView.isConnected)return;
   const c=result.client||{},details=result.details||{};
   activeClient={agency:a,id,client:c,details,errors:result.detail_errors||{}};
   const name=[c.first_name,c.last_name].filter(Boolean).join(" ").trim()||"Client";
-  const blocks=ocClientDetailMarkup(details,a,id);
+  const progressive=result.section==="overview";
+  const waiting='<div class="loading-state" data-client-section-status role="status">Loading client information…</div>';
+  const blocks=ocClientDetailMarkup(details,a,id,progressive);
   const editForm='<form id="editClient" class="oc-client-main-form" autocomplete="off">'+
    ocClientGeneralFields(c,"edit")+
    '<details class="oc-client-category oc-client-note-overview"><summary><span><strong>Client Note</strong><small>Editable client overview note</small></span><span class="oc-client-chevron">⌄</span></summary>'+
@@ -1508,13 +1523,15 @@ async function openClient(a,id,selectedTab="overview"){
     ocClientHeader(name,LABEL[a]+' · '+AGENT[a])+
     '<div class="oc-client-four-tabs">'+ocClientNav()+
     ocClientPanel("overview",ocClientGlance(c,a)+blocks.reviewMarkup+editForm+blocks.overviewOther)+
-    ocClientPanel("coverage",'<div class="oc-client-group-heading"><strong>Insurance & Coverage</strong><p>Open the category you want to review.</p></div>'+
+    ocClientPanel("coverage",progressive?waiting:'<div class="oc-client-group-heading"><strong>Insurance & Coverage</strong><p>Open the category you want to review.</p></div>'+
        '<p class="oc-client-readonly-hint">Policy-specific details are shown securely from '+esc(LABEL[a])+
        '. Edit complex policy records in that agency CRM to keep coverage history accurate.</p>'+blocks.coverage)+
-    ocClientPanel("medical",'<div class="oc-client-group-heading"><strong>Medical Information</strong><p>Doctors, current medications and pharmacies.</p></div>'+blocks.medical)+
-    ocClientPanel("files",'<div class="oc-client-group-heading"><strong>Notes & Files</strong><p>Client notes, forms and documents.</p></div>'+blocks.notes)+
+    ocClientPanel("medical",progressive?waiting:'<div class="oc-client-group-heading"><strong>Medical Information</strong><p>Doctors, current medications and pharmacies.</p></div>'+blocks.medical)+
+    ocClientPanel("files",progressive?waiting:'<div class="oc-client-group-heading"><strong>Notes & Files</strong><p>Client notes, forms and documents.</p></div>'+blocks.notes)+
     '<p class="oc-client-modal-error" data-office-client-error role="alert"></p></div></div>';
   const root=dlg.querySelector(".oc-arctos-client-dialog");
+  if(progressive)root.dataset.officeProgressive="true";
+  currentView=root;
   const textButton=document.createElement('button');textButton.type='button';textButton.className='outline';textButton.textContent='Text';textButton.dataset.officeText=String(id);
   textButton.onclick=()=>window.officeSms?.open(a,id);root.querySelector('.oc-client-modal-header')?.insertBefore(textButton,root.querySelector('[data-office-client-close]'));
 
@@ -1634,7 +1651,7 @@ async function openClient(a,id,selectedTab="overview"){
    finally{button.disabled=false}
   }));
   const noteForm=root.querySelector("#newClientNote");
-  noteForm.onsubmit=async event=>{
+  if(noteForm)noteForm.onsubmit=async event=>{
    event.preventDefault();if(!noteForm.reportValidity())return;
    const message=String(new FormData(noteForm).get("note")||"").trim();
    if(!message)return;
@@ -1646,9 +1663,11 @@ async function openClient(a,id,selectedTab="overview"){
    }catch(error){toast("Could not save note: "+error.message);button.disabled=false;}
   };
  }catch(error){
+  if(!currentView.isConnected)return;
   dlg.innerHTML='<div class="modal-card"><button class="close-button" id="closeErr">×</button>'+
-    '<p class="auth-warn">'+esc(error?.message||"Client record could not be loaded.")+'</p></div>';
+    '<p class="auth-warn">'+esc(error?.message||"Client record could not be loaded.")+'</p><button type="button" class="outline" data-retry-client>Retry</button></div>';
   dlg.querySelector("#closeErr").onclick=()=>{dlg.innerHTML=""};
+  dlg.querySelector("[data-retry-client]").onclick=()=>openClient(a,id,selectedTab);
  }
 }
 
@@ -1771,7 +1790,7 @@ function ocOpenAppointmentForm(prefillDay,phoneHint=""){
    await requestSchedule(which,"book",{agency:which,agent_id:agent,client_id:mode==="existing"?selectedClient?.id:null,person_name:mode==="existing"?clientInput.value:input.get("person_name"),person_phone:input.get("person_phone"),event_type:input.get("event_type"),date:dt,time,title:input.get("title"),notes:input.get("notes")});
    calendarRanges.clear();ocCloseEntry();toast("Appointment saved to "+(which==="office"?officeCalendar.label:LABEL[which]));
    if(tab==="calendar"){calendarLoading=true;showCalendar();await fetchCalendar();showCalendar();}
-   else if(tab==="dashboard"){await fetchCalendar();render();}
+   else if(tab==="dashboard"){await loadDashboardCounts();}
   }catch(e){errorEl.textContent=e.message;await checkSlots();}
   finally{if(btn.isConnected){btn.disabled=false;btn.textContent="Add to Calendar"}}
  };

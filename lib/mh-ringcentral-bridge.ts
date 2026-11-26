@@ -14,6 +14,23 @@ function bridgeError(message: string, status: number) {
   return Object.assign(new Error(message), { status })
 }
 
+// The Arctos RPC verifies the caller's JWT and current administrator profile.
+// No client directory or appointment fields are needed for this read.
+export async function getAuthorizedMhCalendarRevision(request: Request) {
+  const authorization = request.headers.get('authorization') || ''
+  if (!/^Bearer\s+\S+$/i.test(authorization)) throw bridgeError('Arctos sign-in is required.', 401)
+  const response = await fetch(`${MH_SUPABASE_URL}/rest/v1/rpc/arctos_calendar_revision`, {
+    method: 'POST',
+    headers: { apikey: MH_PUBLISHABLE_KEY, Authorization: authorization, 'Content-Type': 'application/json' },
+    body: '{}',
+    cache: 'no-store'
+  })
+  if (!response.ok) throw bridgeError('Unable to verify Arctos calendar access.', response.status)
+  const revision: unknown = await response.json()
+  if (typeof revision !== 'string' || !/^\d+$/.test(revision)) throw bridgeError('Arctos calendar revision unavailable.', 503)
+  return revision
+}
+
 export async function getAuthorizedMhClients(request: Request) {
   const authorization = request.headers.get('authorization') || ''
   const token = authorization.replace(/^Bearer\s+/i, '').trim()

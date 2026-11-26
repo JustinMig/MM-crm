@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { JUSTIN_CALENDAR_USER_ID } from '@/lib/calendar-access'
 import { assertAppointmentTimeAvailable } from '@/lib/workspace-calendar-conflicts'
-import { getAuthorizedMhClients, normalizeMhPhone } from '@/lib/mh-ringcentral-bridge'
+import { getAuthorizedMhClients, getAuthorizedMhCalendarRevision, normalizeMhPhone } from '@/lib/mh-ringcentral-bridge'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -106,8 +106,14 @@ async function loadEvent(id: string, ctx: Awaited<ReturnType<typeof context>>) {
 
 export async function GET(request: Request) {
   try {
-    const ctx = await context(request)
     const url = new URL(request.url)
+    if (url.searchParams.get('revision') === '1') {
+      const native = await getAuthorizedMhCalendarRevision(request)
+      const { data: shared, error } = await createAdminClient().rpc('justin_calendar_revision')
+      if (error || !shared) throw new Error('Justin calendar revision unavailable.')
+      return NextResponse.json({ revision: `${native}/${shared}` }, { headers: { 'Cache-Control': 'private, no-store' } })
+    }
+    const ctx = await context(request)
     const from = text(url.searchParams.get('start') || url.searchParams.get('from'), 10)
     const to = text(url.searchParams.get('end') || url.searchParams.get('to'), 10)
     if (!validDate(from) || !validDate(to) || from > to) return NextResponse.json({ error: 'Invalid calendar date range.' }, { status: 400 })

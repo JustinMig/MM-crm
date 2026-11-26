@@ -60,6 +60,7 @@ window.officeArctosMedicalFilesMount=modal=>{
   if(remove&&!remove.disabled){const card=remove.closest('[data-health-card]'),group=groups.find(group=>group.host===card);if(!group)return;if(!group.fresh)deletions.push(group);card.remove();refreshEmpty();}
  });
  const notesFields=()=>[clientNote,...modal.querySelectorAll('[data-office-exact-overview] [name="notes"]')];
+ if(modal.dataset.officeProgressive){const overviewNote=notesFields()[1];if(overviewNote)clientNote.value=overviewNote.value;}
  modal.addEventListener('input',event=>{if(!notesFields().includes(event.target))return;for(const input of notesFields())if(input!==event.target)input.value=event.target.value;});
  modal.addEventListener('office:client-core-saved',event=>{for(const group of groups.filter(group=>group.table==='clients'))for(const [input,key]of group.pairs)if(key in event.detail.changes&&input.value===String(event.detail.changes[key]??''))remember(input);});
  const activePairs=group=>{group.pairs=group.pairs.map(([input,key])=>{const live=group.host.querySelector('[name="'+input.name+'"]');if(live&&live!==input){if(!baseline.has(live))baseline.set(live,baseline.get(input));return [live,key];}return [input,key];});return group.pairs;};
@@ -93,9 +94,16 @@ window.officeArctosMedicalFilesMount=modal=>{
  modal.officeExactMedicalFilesDirty=()=>deletions.length>0||groups.some(group=>group.host.isConnected&&(changed(group)||group.fresh&&meaningful(group)))||queues.some(queue=>queue.items.length>0)||!!files.querySelector('[data-cfh-note-title]')?.value.trim()||!!files.querySelector('[data-cfh-note-body]')?.value.trim();
  // The original hub's read and note operations are explicitly adapted, never exposed as arbitrary queries.
  const noteRequests=new Map();let noteFailure=null,notePending=null;
+ // The file hub and upload lists request the same page when opened together.
+ const documentPages=new Map();
+ const readDocumentPage=(offset,limit)=>{
+  const key=offset+':'+limit;
+  if(!documentPages.has(key))documentPages.set(key,request('client_documents',{offset,limit}).finally(()=>documentPages.delete(key)));
+  return documentPages.get(key);
+ };
  const asResult=task=>Promise.resolve().then(task).then(data=>({data,error:null}),error=>({data:null,error}));
  const supabase={from(table){let payload=null,removing=false,recordId=null,offset=0,limit=200;const q={select(){return q;},eq(key,value){if(key==='id')recordId=value;if(key==='client_id'&&value!==current.id)throw Error('Client scope mismatch.');return q;},order(){return q;},range(start,end){offset=start;limit=end-start+1;return q;},limit(value){limit=value;return q;},insert(value){payload=value;return q;},delete(){removing=true;return q;},then(resolve,reject){return asResult(async()=>{
-  if(table==='documents'){const result=await request('client_documents',{offset,limit});return (result.documents||[]).map(row=>({...row,storage_path:row.file_available?'office-doc:'+row.id:null}));}
+  if(table==='documents'){const result=await readDocumentPage(offset,limit);return (result.documents||[]).map(row=>({...row,storage_path:row.file_available?'office-doc:'+row.id:null}));}
   if(table!=='client_notes')throw Error('Unsupported client operation.');
   if(payload){if(!edit)throw Error('Editing is not authorized');noteFailure=null;const key=JSON.stringify([payload.title,payload.body]),noteId=noteRequests.get(key)||crypto.randomUUID();noteRequests.set(key,noteId);notePending=request('add_client_note',{note_id:noteId,title:payload.title,body:payload.body}).then(result=>{if(!result.saved)throw Error('Note save was not confirmed.');noteRequests.delete(key);return result.note;}).catch(error=>{noteFailure=error;throw error;}).finally(()=>{notePending=null;});return await notePending;}
   if(removing){if(!edit)throw Error('Editing is not authorized');await request('delete_client_note',{note_id:recordId});return null;}
@@ -135,7 +143,7 @@ window.officeArctosMedicalFilesMount=modal=>{
    const result=start.saved?start:await request('coverage_upload_complete',data);if(!result.saved)throw Error('The file upload was not confirmed. Select Save Info to retry.');queue.items.splice(queue.items.indexOf(item),1);const record={...result.document,file_available:true};documents=documents.filter(doc=>doc.id!==record.id);documents.push(record);queues.forEach(render);modal.dispatchEvent(new CustomEvent('arctos:client-file-change'));
   }fileStatus(queue,'Files saved securely.');}finally{queue.busy=false;}
  }
- async function loadDocuments(force=false){if(documentLoad){if(force)documentsRefreshPending=true;return documentLoad;}if(documentsLoaded&&!force)return;documentLoad=(async()=>{const rows=[];for(let offset=0;offset<4000;offset+=200){const result=await request('client_documents',{offset,limit:200});rows.push(...(result.documents||[]));if(!result.documents||result.documents.length<200)break;}documents=rows;documentsLoaded=true;queues.forEach(render);})().catch(error=>{queues.forEach(queue=>fileStatus(queue,'Files could not load: '+error.message,true));}).finally(()=>{documentLoad=null;if(documentsRefreshPending){documentsRefreshPending=false;void loadDocuments(true);}});return documentLoad;}
+ async function loadDocuments(force=false){if(documentLoad){if(force)documentsRefreshPending=true;return documentLoad;}if(documentsLoaded&&!force)return;documentLoad=(async()=>{const rows=[];for(let offset=0;offset<4000;offset+=200){const result=await readDocumentPage(offset,200);rows.push(...(result.documents||[]));if(!result.documents||result.documents.length<200)break;}documents=rows;documentsLoaded=true;queues.forEach(render);})().catch(error=>{queues.forEach(queue=>fileStatus(queue,'Files could not load: '+error.message,true));}).finally(()=>{documentLoad=null;if(documentsRefreshPending){documentsRefreshPending=false;void loadDocuments(true);}});return documentLoad;}
  let documentsLoaded=false,documentsRefreshPending=false;wireFiles(pharmacy,true);wireFiles(files.querySelector('[data-notes-extras-documents]'),false);
  for(const form of [medical,files])form.addEventListener('click',async event=>{
   const view=event.target.closest('[data-office-file-view]'),remove=event.target.closest('[data-office-file-remove]'),unqueue=event.target.closest('[data-office-file-unqueue]'),preview=event.target.closest('[data-office-file-preview]');
@@ -149,6 +157,7 @@ window.officeArctosMedicalFilesMount=modal=>{
  });
  function showPreview(record,url){hub.openFileModal(record,url);const dialog=[...document.querySelectorAll('.mh-file-preview-dialog')].at(-1);if(dialog){dialog.classList.add('office-file-preview');previews.add(dialog);}return dialog;}
  modal.addEventListener('click',event=>{if(event.target.closest('[data-oc-client-tab="files"],[data-oc-client-tab="medical"]'))void loadDocuments();});
+ if(modal.dataset.officeProgressive&&['files','medical'].includes(modal.querySelector('[data-oc-client-tab][aria-selected="true"]')?.dataset.ocClientTab))void loadDocuments();
  modal.addEventListener('arctos:client-file-change',()=>{void loadDocuments(true);});
  const readonly=()=>{if(edit)return;medical.querySelectorAll('input,textarea,select,button').forEach(input=>input.disabled=true);files.querySelectorAll('[data-cfh-note-title],[data-cfh-note-body],[data-cfh-note-save],[data-cfh-delete-note],[data-extras-files],[data-extras-camera],[data-extras-upload],[data-extras-category],[name="notes"]').forEach(input=>input.disabled=true);};
  const cleanup=new MutationObserver(()=>{if(!modal.isConnected){for(const dialog of previews){if(dialog.open)dialog.close();dialog.remove();}queues.forEach(queue=>queue.items.length=0);cleanup.disconnect();}else readonly();});cleanup.observe(document.body,{subtree:true,childList:true});readonly();
