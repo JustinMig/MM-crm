@@ -111,7 +111,7 @@ export async function GET(request: Request) {
       const native = await getAuthorizedMhCalendarRevision(request)
       const { data: shared, error } = await createAdminClient().rpc('justin_calendar_revision')
       if (error || !shared) throw new Error('Justin calendar revision unavailable.')
-      return NextResponse.json({ revision: `${native}/${shared}` }, { headers: { 'Cache-Control': 'private, no-store' } })
+      return NextResponse.json({ revision: `${native.revision}/${shared}`, contactRevision: native.contactRevision }, { headers: { 'Cache-Control': 'private, no-store' } })
     }
     const ctx = await context(request)
     const from = text(url.searchParams.get('start') || url.searchParams.get('from'), 10)

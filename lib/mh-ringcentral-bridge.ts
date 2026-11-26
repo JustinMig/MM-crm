@@ -19,16 +19,17 @@ function bridgeError(message: string, status: number) {
 export async function getAuthorizedMhCalendarRevision(request: Request) {
   const authorization = request.headers.get('authorization') || ''
   if (!/^Bearer\s+\S+$/i.test(authorization)) throw bridgeError('Arctos sign-in is required.', 401)
-  const response = await fetch(`${MH_SUPABASE_URL}/rest/v1/rpc/arctos_calendar_revision`, {
+  const response = await fetch(`${MH_SUPABASE_URL}/rest/v1/rpc/arctos_calendar_state`, {
     method: 'POST',
     headers: { apikey: MH_PUBLISHABLE_KEY, Authorization: authorization, 'Content-Type': 'application/json' },
     body: '{}',
     cache: 'no-store'
   })
   if (!response.ok) throw bridgeError('Unable to verify Arctos calendar access.', response.status)
-  const revision: unknown = await response.json()
-  if (typeof revision !== 'string' || !/^\d+$/.test(revision)) throw bridgeError('Arctos calendar revision unavailable.', 503)
-  return revision
+  const { revision, contactRevision } = (await response.json()) ?? {}
+  const isCounter = (value: unknown): value is string => typeof value === 'string' && /^\d+$/.test(value)
+  if (!isCounter(revision) || !isCounter(contactRevision)) throw bridgeError('Arctos calendar revision unavailable.', 503)
+  return { revision, contactRevision }
 }
 
 export async function getAuthorizedMhClients(request: Request) {
