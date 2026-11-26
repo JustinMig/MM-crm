@@ -5,33 +5,77 @@
  function status(message){progress=message;if(view?.isConnected)view.querySelector('[role=status]').textContent=message;}
  function check(){if(stop)throw Error('Backup canceled.');}
  function safeExt(name){return String(name||'').match(/\.[a-z0-9]{1,10}$/i)?.[0].toLowerCase()||'';}
- async function destination(name){
-  if(window.showSaveFilePicker){
-   const handle=await window.showSaveFilePicker({suggestedName:name,types:[{description:'Encrypted ZIP backup',accept:{'application/zip':['.zip']}}]});
-   return {stream:await handle.createWritable(),done:async()=>{},cleanup:async()=>{}};
+ function staleHandle(error){
+  return ['InvalidStateError','NoModificationAllowedError','NotReadableError'].includes(error?.name)||/state.*changed since|state cached in an interface object/i.test(error?.message||'');
+ }
+ let resumeWrite=null;
+ async function retryWrite(action){
+  for(let attempt=0;;attempt++){
+   check();
+   try{return await action();}
+   catch(error){
+    if(!staleHandle(error))throw error;
+    if(attempt>=3){
+     status('Backup paused. Reconnect the original drive or pause folder syncing, then choose Retry writing.');
+     await new Promise(resolve=>{resumeWrite=resolve;controls();});
+     resumeWrite=null;controls();check();attempt=-1;
+     status('Retrying the current file…');
+     continue;
+    }
+    await new Promise(resolve=>window.setTimeout(resolve,200*(attempt+1)));
+   }
   }
-  if(!navigator.storage?.getDirectory)throw Error('Open Office CRM in desktop Chrome or Edge to save this large backup directly to disk.');
-  const root=await navigator.storage.getDirectory(),temp=crypto.randomUUID()+'.zip';
+ }
+ let finishedZip=null;
+ function downloadButton(){
+  if(!view?.isConnected)return;
+  view.querySelector('[data-download-zip]').hidden=!finishedZip;
+ }
+ async function downloadZip(){
+  const saved=finishedZip;if(!saved)return;
+  // Read a new snapshot on each download, after the ZIP writer has closed.
+  const handle=await saved.root.getFileHandle(saved.temp);
+  const url=URL.createObjectURL(await handle.getFile()),a=document.createElement('a');
+  a.href=url;a.download=saved.name;document.body.appendChild(a);a.click();a.remove();
+  window.setTimeout(()=>URL.revokeObjectURL(url),3600000);
+ }
+ async function destination(name){
+  const storage=window.navigator.storage;
+  if(!storage?.getDirectory)throw Error('Open Office CRM in desktop Chrome or Edge to download this large backup.');
+  const root=await (await storage.getDirectory()).getDirectoryHandle('office-backup-downloads',{create:true});
+  const now=Date.now();
+  // Remove abandoned encrypted staging files on a later visit.
+  for await(const [entry] of root.entries()){
+   const stamp=/^(\d+)-[a-f0-9-]+\.zip$/.exec(entry);
+   if(stamp&&now-Number(stamp[1])>86400000)await root.removeEntry(entry).catch(()=>{});
+  }
+  const temp=now+'-'+window.crypto.randomUUID()+'.zip';
   const handle=await root.getFileHandle(temp,{create:true});
-  const cleanup=()=>root.removeEntry(temp);
-  return {stream:await handle.createWritable(),cleanup,done:async()=>{
-   const url=URL.createObjectURL(await handle.getFile()),a=document.createElement('a');
-   a.download=name;a.href=url;a.click();setTimeout(()=>{URL.revokeObjectURL(url);cleanup().catch(()=>{});},60000);
+  return {stream:await handle.createWritable(),cleanup:()=>root.removeEntry(temp),done:async()=>{
+   finishedZip={root,temp,name};downloadButton();
+   try{await downloadZip();}catch{/* The completed ZIP is still available for manual download. */}
   }};
  }
- // Folder writes close one file at a time, so large archives do not accumulate in memory.
  async function folderDestination(name){
   const parent=await window.showDirectoryPicker({mode:'readwrite'});
-  const root=await parent.getDirectoryHandle(name,{create:true});
+  await parent.getDirectoryHandle(name,{create:true});
+  const openRoot=()=>parent.getDirectoryHandle(name);
   async function write(path,value){
-   const parts=path.split('/'),file=parts.pop();let dir=root;
-   for(const part of parts)dir=await dir.getDirectoryHandle(part,{create:true});
-   const handle=await dir.getFileHandle(file,{create:true}),stream=await handle.createWritable();
-   try{if(typeof value==='string'){const writer=stream.getWriter();try{await writer.write(value);await writer.close();}finally{writer.releaseLock();}}else await value.pipeTo(stream);}
-   catch(error){try{await stream.abort();}catch{}throw error;}
+   await retryWrite(async()=>{
+    const parts=path.split('/'),file=parts.pop();let dir=await openRoot();
+    for(const part of parts)dir=await dir.getDirectoryHandle(part,{create:true});
+    const handle=await dir.getFileHandle(file,{create:true});
+    const stream=await handle.createWritable(),writer=stream.getWriter();
+    try{await writer.write(value);await writer.close();}
+    catch(error){try{await writer.abort();}catch{}throw error;}
+    finally{writer.releaseLock();}
+   });
   }
   await write('INCOMPLETE.txt','The backup is still running or was interrupted. Only use it as a complete backup once this marker is removed.');
-  return {write,finish:()=>root.removeEntry('INCOMPLETE.txt')};
+  return {write,finish:()=>retryWrite(async()=>{
+   const root=await openRoot();
+   try{await root.removeEntry('INCOMPLETE.txt');}catch(error){if(error.name!=='NotFoundError')throw error;}
+  })};
  }
  function csv(rows){
   const cell=value=>{
@@ -78,6 +122,7 @@
   if(!view?.isConnected)return;
   for(const el of view.querySelectorAll('input,select,[type=submit]'))el.disabled=running;
   view.querySelector('[data-cancel]').hidden=!running;
+  view.querySelector('[data-retry-write]').hidden=!resumeWrite;
  }
  async function run(form,ctx){
   if(running)return;
@@ -86,7 +131,7 @@
   if(!folder&&password!==form.elements.confirmation.value){status('The passwords must match.');return;}
   const selected=form.elements.scope.value,scopes=selected==='both'?Object.keys(labels):[selected];
   if(scopes.some(s=>!ctx.allowed(s))){status('Full Office access is required for each selected agency.');return;}
-  running=true;stop=false;controls();let dest,finalized=false;
+  finishedZip=null;downloadButton();running=true;stop=false;controls();let dest,finalized=false;
   const started=new Date(),name='Office-CRM-'+selected+'-'+started.toISOString().replace(/[:.]/g,'-')+'.zip';
   const onLeave=e=>{e.preventDefault();e.returnValue='';};
   window.addEventListener('beforeunload',onLeave);
@@ -122,7 +167,7 @@
        check();const response=await fetch(f.url,{cache:'no-store',credentials:'omit'});
        if(!response.ok||!response.body)throw Error('Could not download a saved file. Please retry the backup.');
        const path=scope+'/'+f.client_id+'/'+category+'/'+f.id+safeExt(f.name);
-       if(folder)await dest.write(path,response.body);else await archive.add(path,response.body);
+       if(folder)await dest.write(path,new Uint8Array(await response.arrayBuffer()));else await archive.add(path,response.body);
        counts[category]++;manifest.files.push({path,originalName:f.name});
       }
      }
@@ -141,21 +186,25 @@
    finalized=true;
    const total=Object.values(manifest.agencies).reduce((n,a)=>n+a.clients,0);
    const changes=manifest.changesDuringExport?' Records changed during export in '+manifest.changesDuringExport.join(', ')+'. Run a fresh backup for the latest changes.':'';
-   form.elements.password.value=form.elements.confirmation.value='';status('Backup complete. '+total+' clients and '+manifest.files.length+' files saved. '+(folder?'Open Open-Backup.html or Clients.csv in the new folder.':'Extract '+name+' and open Open-Backup.html or Clients.csv.')+changes);
+   form.elements.password.value=form.elements.confirmation.value='';status('Backup complete. '+total+' clients and '+manifest.files.length+' files saved. '+(folder?'Open Open-Backup.html or Clients.csv in the new folder.':'Use Download finished ZIP if your browser did not start the download. Extract the ZIP and open Open-Backup.html or Clients.csv.')+changes);
   }catch(error){
    if(dest&&!folder&&!finalized){try{await dest.stream.abort();}catch{}try{await dest.cleanup();}catch{}}
+   if(staleHandle(error)){status('The drive changed while Office was writing. The backup is incomplete. Choose Password-protected ZIP to download through your browser.');return;}
    status(error.name==='AbortError'?'Backup canceled.':'Backup did not finish. '+(error.message||'Try again.'));
   }finally{window.removeEventListener('beforeunload',onLeave);running=false;controls();}
  }
  window.officeBackup={mount(host,ctx){
-  view=host;host.innerHTML='<form class="panel"><h2>Download client backup</h2><p>Save Excel-readable CSVs, offline client pages and the original documents. Keep this tab open until the backup finishes.</p><label>Agency <select name="scope"><option value="both">Both agencies</option><option value="arctos">Arctos</option><option value="platinum">Platinum Financial</option></select></label><p><label>Save as <select name="format"><option value="folder">Folder on my drive</option><option value="zip">Password-protected ZIP</option></select></label></p><p data-folder-info>The folder contains readable personal information. Choose a private drive. Open Open-Backup.html inside the finished folder to find a client and their files.</p><div data-password><p><label>Backup password <input type="password" name="password" minlength="12" required autocomplete="new-password"></label> <label>Confirm password <input type="password" name="confirmation" required autocomplete="new-password"></label></p><p>Use at least 12 characters. Keep the password to open the ZIP in 7-Zip or another AES-compatible archive app.</p></div><button type="submit" class="primary">Download backup</button> <button type="button" data-cancel hidden>Cancel backup</button><p role="status" aria-live="polite"></p></form>';
+  view=host;host.innerHTML='<form class="panel"><h2>Download client backup</h2><p>Save Excel-readable CSVs, offline client pages and the original documents. Keep this tab open until the backup finishes.</p><label>Agency <select name="scope"><option value="both">Both agencies</option><option value="arctos">Arctos</option><option value="platinum">Platinum Financial</option></select></label><p><label>Save as <select name="format"><option value="folder">Folder on my drive</option><option value="zip">Password-protected ZIP</option></select></label></p><p data-folder-info>The folder contains readable personal information. Choose a private drive. Open Open-Backup.html inside the finished folder to find a client and their files.</p><div data-password><p><label>Backup password <input type="password" name="password" minlength="12" required autocomplete="new-password"></label> <label>Confirm password <input type="password" name="confirmation" required autocomplete="new-password"></label></p><p>Use at least 12 characters. Keep the password to open the ZIP in 7-Zip or another AES-compatible archive app.</p></div><button type="submit" class="primary">Download backup</button> <button type="button" data-cancel hidden>Cancel backup</button> <button type="button" data-retry-write hidden>Retry writing</button> <button type="button" data-download-zip hidden>Download finished ZIP</button><p role="status" aria-live="polite"></p></form>';
+  downloadButton();
+  host.querySelector('[data-download-zip]').onclick=()=>downloadZip().catch(()=>status('The browser could not download the finished ZIP. Try the download button again.'));
   const form=host.querySelector('form');
   const format=form.elements.format;
   if(!window.showDirectoryPicker){format.querySelector('[value=folder]').disabled=true;format.value='zip';}
   function formatChanged(){const encrypted=format.value==='zip';host.querySelector('[data-password]').hidden=!encrypted;host.querySelector('[data-folder-info]').hidden=encrypted;form.elements.password.required=form.elements.confirmation.required=encrypted;if(!encrypted){form.elements.password.value='';form.elements.confirmation.value='';}}
   format.onchange=formatChanged;formatChanged();
   form.onsubmit=e=>{e.preventDefault();void run(form,ctx);};
-  host.querySelector('[data-cancel]').onclick=()=>{stop=true;status('Canceling backup…');};
+  host.querySelector('[data-retry-write]').onclick=()=>resumeWrite?.();
+  host.querySelector('[data-cancel]').onclick=()=>{stop=true;resumeWrite?.();status('Canceling backup…');};
   status(progress);controls();
  }};
 })();
