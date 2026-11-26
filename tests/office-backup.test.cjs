@@ -21,7 +21,7 @@ async function simulate(fail){
  assert.match(message,/Backup complete/);
  const reader=new zip.ZipReader(new zip.BlobReader(blob));const entries=await reader.getEntries();
  assert.ok(entries.every(e=>e.encrypted));
- assert.equal(entries.length,5);const record=entries.find(e=>e.filename==='platinum/archived/record.json');
+ assert.equal(entries.length,11);const record=entries.find(e=>e.filename==='platinum/archived/record.json');
  await assert.rejects(record.getData(new zip.TextWriter(),{password:'wrong',useWebWorkers:false}));
  const saved=JSON.parse(await record.getData(new zip.TextWriter(),{password:pass,useWebWorkers:false}));
  assert.equal(saved.client.status,'deceased');assert.equal(saved.related.shared_messages[0].body,'sample text');
@@ -29,3 +29,34 @@ async function simulate(fail){
 }
 test('both agency records and file bytes round trip through the encrypted backup',()=>simulate(false));
 test('a missing document aborts the output',()=>simulate(true));
+test('folder backup saves readable CSV, offline links and original file bytes without a password',async()=>{
+ const os=require('node:os'),temp=fs.mkdtempSync(path.join(os.tmpdir(),'office-csv-test-'));
+ function directory(at){
+  return {
+   async getDirectoryHandle(n){const d=path.join(at,n);fs.mkdirSync(d,{recursive:true});return directory(d)},
+   async getFileHandle(n){return {createWritable:async()=>{const chunks=[];return new WritableStream({write:x=>chunks.push(Buffer.from(x)),close:()=>fs.writeFileSync(path.join(at,n),Buffer.concat(chunks))});}}},
+   async removeEntry(n){fs.unlinkSync(path.join(at,n));}
+  };
+ }
+ const dom=new JSDOM('<main></main>'),window=dom.window;
+ try{
+  window.showDirectoryPicker=async()=>directory(temp);
+  vm.runInNewContext(fs.readFileSync(path.join(dir,'office-backup.js'),'utf8'),{window,document:window.document,fetch:async()=>new Response('local file bytes')});
+  const host=window.document.querySelector('main'),client={id:'123',first_name:'Test',last_name:'Family, Jr.',status:'active',phone:'555-0100'};
+  window.officeBackup.mount(host,{allowed:()=>true,request:async(scope,action)=>action==='backup_index'?{clients:[{id:client.id}]}:{records:[{client,protected:{identifiers:{ssn:'sample'}},related:{client_notes:[{body:'=1+2'}]}}],files:[{id:'file-1',client_id:'123',name:'Policy & card.pdf',url:'https://example.invalid/test'}]},sms:async()=>({byClient:{},files:[]})});
+  const form=host.querySelector('form');form.elements.scope.value='arctos';assert.ok(form.checkValidity());
+  form.dispatchEvent(new window.Event('submit',{cancelable:true}));
+  for(let i=0;i<300&&!/Backup complete/.test(host.textContent);i++)await new Promise(r=>setTimeout(r,10));
+  assert.match(host.textContent,/Backup complete/);
+  const root=path.join(temp,fs.readdirSync(temp)[0]);
+  assert.equal(fs.existsSync(path.join(root,'INCOMPLETE.txt')),false);
+  assert.match(fs.readFileSync(path.join(root,'Clients.csv'),'utf8'),/"Family, Jr."/);
+  const index=new JSDOM(fs.readFileSync(path.join(root,'Open-Backup.html'),'utf8'));
+  const recordPath=path.join(root,index.window.document.querySelector('td a').getAttribute('href'));
+  const record=new JSDOM(fs.readFileSync(recordPath,'utf8'));
+  assert.match(record.window.document.body.textContent,/sample/);
+  const link=[...record.window.document.querySelectorAll('a')].find(a=>a.textContent==='Policy & card.pdf');
+  assert.equal(fs.readFileSync(path.resolve(path.dirname(recordPath),link.getAttribute('href')),'utf8'),'local file bytes');
+  assert.match(fs.readFileSync(path.resolve(path.dirname(recordPath),'Details.csv'),'utf8'),/"'=1\+2"/);
+ }finally{dom.window.close();fs.rmSync(temp,{recursive:true,force:true});}
+});
