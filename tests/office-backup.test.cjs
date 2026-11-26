@@ -14,7 +14,7 @@ async function simulate(fail){
  vm.runInNewContext(fs.readFileSync(path.join(dir,'office-backup.js'),'utf8'),{window,document:window.document,zip,URL:{createObjectURL:()=> 'blob:sample',revokeObjectURL:()=>{}},fetch:async()=>new Response(fail?null:'sample document',{status:fail?404:200})});
  const root=window.document.querySelector('main');
  const ids=[{id:'archived',updated_at:'v1'}];
- window.officeBackup.mount(root,{allowed:()=>true,request:async(scope,action)=>action==='backup_index'?{clients:ids}:{records:[{client:{id:'archived',status:'deceased'},related:{},protected:{ssn:'SAMPLE ONLY'}}],files:[{id:'doc',client_id:'archived',name:'test.pdf',url:'https://example.invalid/file'}]},sms:async()=>({byClient:{archived:[{body:'sample text'}]},files:[]})});
+ window.officeBackup.mount(root,{allowed:()=>true,request:async(scope,action)=>action==='backup_index'?{clients:ids}:{records:[{client:{id:'archived',first_name:'Jane',last_name:'Smith',status:'deceased'},related:{},protected:{ssn:'SAMPLE ONLY'}}],files:[{id:'doc',client_id:'archived',name:'test.pdf',url:'https://example.invalid/file'}]},sms:async()=>({byClient:{archived:[{body:'sample text'}]},files:[]})});
  const form=root.querySelector('form'),pass='synthetic-password';
  form.elements.password.value=form.elements.confirmation.value=pass;
  form.dispatchEvent(new window.Event('submit',{cancelable:true}));
@@ -26,7 +26,7 @@ async function simulate(fail){
  assert.match(message,/Backup complete/);
  const reader=new zip.ZipReader(new zip.BlobReader(blob));const entries=await reader.getEntries();
  assert.ok(entries.every(e=>e.encrypted));
- assert.equal(entries.length,11);const record=entries.find(e=>e.filename==='platinum/archived/record.json');
+ assert.equal(entries.length,11);const record=entries.find(e=>e.filename==='platinum/Smith, Jane/record.json');
  await assert.rejects(record.getData(new zip.TextWriter(),{password:'wrong',useWebWorkers:false}));
  const saved=JSON.parse(await record.getData(new zip.TextWriter(),{password:pass,useWebWorkers:false}));
  assert.equal(saved.client.status,'deceased');assert.equal(saved.related.shared_messages[0].body,'sample text');
@@ -49,7 +49,7 @@ test('folder backup saves readable CSV, offline links and original file bytes wi
   window.showDirectoryPicker=async()=>directory(temp);
   vm.runInNewContext(fs.readFileSync(path.join(dir,'office-backup.js'),'utf8'),{window,document:window.document,fetch:async()=>new Response('local file bytes')});
   const host=window.document.querySelector('main'),client={id:'123',first_name:'Test',last_name:'Family, Jr.',status:'active',phone:'555-0100'};
-  window.officeBackup.mount(host,{allowed:()=>true,request:async(scope,action)=>action==='backup_index'?{clients:[{id:client.id}]}:{records:[{client,protected:{identifiers:{ssn:'sample'}},related:{client_notes:[{body:'=1+2'}]}}],files:[{id:'file-1',client_id:'123',name:'Policy & card.pdf',url:'https://example.invalid/test'}]},sms:async()=>({byClient:{},files:[]})});
+  window.officeBackup.mount(host,{allowed:()=>true,request:async(scope,action)=>action==='backup_index'?{clients:[{id:client.id}]}:{records:[{client:{...client,id:'456'},protected:{},related:{}},{client,protected:{identifiers:{ssn:'sample'}},related:{client_notes:[{body:'=1+2'}]}}],files:[{id:'file-1',client_id:'123',name:'Policy & card.pdf',url:'https://example.invalid/test'}]},sms:async()=>({byClient:{},files:[]})});
   const form=host.querySelector('form');form.elements.scope.value='arctos';assert.ok(form.checkValidity());
   form.dispatchEvent(new window.Event('submit',{cancelable:true}));
   for(let i=0;i<400&&host.querySelector('[data-retry-write]').hidden;i++)await new Promise(r=>setTimeout(r,10));
@@ -60,7 +60,7 @@ test('folder backup saves readable CSV, offline links and original file bytes wi
   assert.equal(staleWrites,4);assert.equal(fs.existsSync(path.join(root,'INCOMPLETE.txt')),false);
   assert.match(fs.readFileSync(path.join(root,'Clients.csv'),'utf8'),/"Family, Jr."/);
   const index=new JSDOM(fs.readFileSync(path.join(root,'Open-Backup.html'),'utf8'));
-  const recordPath=path.join(root,index.window.document.querySelector('td a').getAttribute('href'));
+  const recordPath=path.join(root,[...index.window.document.querySelectorAll('td a')].find(a=>a.getAttribute('href').includes('(2)')).getAttribute('href'));
   const record=new JSDOM(fs.readFileSync(recordPath,'utf8'));
   assert.match(record.window.document.body.textContent,/sample/);
   const link=[...record.window.document.querySelectorAll('a')].find(a=>a.textContent==='Policy & card.pdf');
