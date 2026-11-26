@@ -724,6 +724,31 @@ async function ocFetchSelectedCalendar(){
  }catch(error){if(id!==calendarRequestId||tab!=='calendar')return;appointments=[];calendarErrors=[...calendarPeopleErrors,error.message||'Calendar could not load.'];}
  calendarLoading=false;calendarLoaded=true;
 }
+// Recheck the selected Arctos calendar when staff return to Office or keep it open.
+let officeCalendarRefreshAt=0,officeCalendarRefreshing=false;
+async function refreshOpenArctosCalendar(){
+ if(!access||tab!=='calendar'||document.hidden||calendarLoading||officeCalendarRefreshing||
+    document.querySelector('#dialog .modal-card')||Date.now()-officeCalendarRefreshAt<1500)return;
+ const person=ocSelectedCalendar();
+ if(person.agency!=='arctos')return;
+ const requestId=calendarRequestId,range=ocRange();
+ officeCalendarRefreshing=true;officeCalendarRefreshAt=Date.now();
+ try{
+  const rows=await ocReadPersonalAppointments(person,ocISO(range.start),ocISO(range.end));
+  if(tab!=='calendar'||requestId!==calendarRequestId||calendarSelection!==person.key)return;
+  const errors=[...calendarPeopleErrors];
+  if(JSON.stringify(appointments)!==JSON.stringify(rows)||JSON.stringify(calendarErrors)!==JSON.stringify(errors)){
+   appointments=rows;calendarErrors=errors;showCalendar();
+  }
+ }catch(error){
+  if(tab==='calendar'&&requestId===calendarRequestId&&calendarSelection===person.key){
+   calendarErrors=[...calendarPeopleErrors,error.message||'Calendar refresh failed.'];showCalendar();
+  }
+ }finally{officeCalendarRefreshing=false;}
+}
+window.addEventListener('focus',refreshOpenArctosCalendar);
+document.addEventListener('visibilitychange',refreshOpenArctosCalendar);
+setInterval(refreshOpenArctosCalendar,30000);
 async function ocOpenSelectedDay(date){
  const day=ocDate(date),key=ocISO(day),person=ocSelectedCalendar(),dialog=document.getElementById('dialog');if(!dialog)return;
  const ticket=person.key+'|'+key;dialog.dataset.dayPopup=ticket;

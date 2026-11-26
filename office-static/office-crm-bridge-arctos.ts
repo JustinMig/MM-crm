@@ -227,7 +227,7 @@ async function officeProtected(sb:ReturnType<typeof admin>,kind:string,id:string
  return {kind,data:value};
 }
 
-async function perform(action:string,data:any,actor:{id:string;email:string;permission:any}){
+async function perform(action:string,data:any,actor:{id:string;email:string;permission:any},authorization:string){
  const sb=admin();
  if(action==="backup_index"||action==="backup_clients"||action==="backup_identity")return backupAgency({sb,scope:SCOPE,actor,log,officeProtected},action,data);
  if(action==="client_directory"){
@@ -333,12 +333,37 @@ async function perform(action:string,data:any,actor:{id:string;email:string;perm
   const from=String(data.from||"").slice(0,10);const to=String(data.to||"").slice(0,10);
   if(!/^\d{4}-\d\d-\d\d$/.test(from)||!/^\d{4}-\d\d-\d\d$/.test(to))throw Error("Date range required");
   const agentId=String(data.agent_id||"");if(agentId&&!uuid(agentId))throw Error("Invalid selected agent");
-  let query;
-  if(SCOPE==="arctos") query=sb.from("appointments").select("id,client_id,assigned_agent_id,title,event_type,event_date,start_time,end_time,status,notes").gte("event_date",from).lte("event_date",to).order("event_date").limit(300);
-  else query=sb.from("appointments").select("id,client_id,assigned_agent_id,title,event_type,event_date,start_time,end_time,starts_at,ends_at,status,notes").gte("starts_at",from+"T00:00:00-06:00").lte("starts_at",to+"T23:59:59-05:00").order("starts_at").limit(300);
-  if(agentId)query=query.eq("assigned_agent_id",agentId);
-  const rows=await q(query);
-  return {appointments:rows};
+  const pageSize=300;
+  async function readPages(makeQuery){
+   const rows=[];
+   for(let offset=0;;offset+=pageSize){
+    const page=await q(makeQuery().order("event_date").order("start_time",{nullsFirst:true}).order("id").range(offset,offset+pageSize-1));
+    rows.push(...page);
+    if(page.length<pageSize)return rows;
+   }
+  }
+  const local=()=> {
+   const query=sb.from("appointments").select("id,client_id,assigned_agent_id,title,event_type,event_date,start_time,end_time,status,notes").gte("event_date",from).lte("event_date",to);
+   return agentId?query.eq("assigned_agent_id",agentId):query;
+  };
+  const justinId="9ca80b13-42e7-46eb-9ad8-c0bb700c6ba9";
+  if(agentId && agentId!==justinId)return {appointments:await readPages(local)};
+  const central=createClient(MM_URL,MM_PUBLIC,{global:{headers:{Authorization:authorization}},auth:{persistSession:false,autoRefreshToken:false}});
+  const [shared,native]=await Promise.all([
+   readPages(()=>central.rpc("office_arctos_calendar_events",{p_from:from,p_to:to})),
+   readPages(local)
+  ]);
+  // Linked client IDs are local to each agency; never return a central client ID here.
+  for(let i=0;i<shared.length;i+=75){
+   const batch=shared.slice(i,i+75);
+   const links=await q(sb.from("calendar_event_client_links").select("event_id,client_id").in("event_id",batch.map(row=>row.id)));
+   const byEvent=new Map(links.map(link=>[link.event_id,link.client_id]));
+   for(const row of batch)row.client_id=byEvent.get(row.id)||null;
+  }
+  const byId=new Map(native.map(row=>[row.id,row]));
+  for(const row of shared)byId.set(row.id,row);
+  const sortKey=row=>[row.event_date,row.start_time||"",row.id].join(" ");
+  return {appointments:Array.from(byId.values()).sort((a,b)=>sortKey(a).localeCompare(sortKey(b)))};
  }
  if(action==="lead_agents"){
   const agents=await q(sb.from("profiles").select("id,full_name,role").eq("active",true).in("role",["owner","agent"]).order("full_name",{ascending:true}).limit(150));
@@ -422,7 +447,7 @@ Deno.serve(async req=>{
   if((req.headers.get("content-type")||"").split(";")[0]!=="application/json")return json({error:"JSON required"},415);
   const actor=await check(req);
   const data=await req.json(); const action=String(data?.action||"");
-  const out=await perform(action,data,actor);
+  const out=await perform(action,data,actor,req.headers.get("authorization")||"");
   return json(out);
  }catch(e){let reason=safeMessage(e);let code=/login|identity|sign in|expired|invalid session/i.test(reason)?401:/access|permission|authorized/i.test(reason)?403:400;
   if(reason==="Agency data request failed")code=502;

@@ -43,9 +43,31 @@ test('Both agency appointment queries filter by the selected agent before return
   const source=fs.readFileSync(new URL('../office-static/office-crm-bridge-'+scope+'.ts','file://'+__filename),'utf8');
   const body=source.slice(source.indexOf(' if(action==="appointments"){'),source.indexOf(' if(action==="lead_agents")'));
   const run=new (Object.getPrototypeOf(async function(){}).constructor)('sb','data','SCOPE','q','uuid','action',body);
-  const filters=[],query={select(){return query},gte(){return query},lte(){return query},order(){return query},limit(){return query},eq(...args){filters.push(args);return query}},sb={from:()=>query};
+  const filters=[],query={select(){return query},gte(){return query},lte(){return query},order(){return query},range(){return query},limit(){return query},eq(...args){filters.push(args);return query}},sb={from:()=>query};
   const data={from:date,to:date,agent_id:id};const result=await run(sb,data,scope,async()=>[event('Synthetic',id)],s=>s===id,'appointments');
   assert.deepEqual(filters,[['assigned_agent_id',id]]);assert.equal(result.appointments.length,1);
   await assert.rejects(run(sb,{...data,agent_id:'invalid'},scope,async()=>[],()=>false,'appointments'),/Invalid selected agent/);
  }
+});
+test('Justin sees native and M&M events once, paged and sorted using the Office session',async()=>{
+ const src=fs.readFileSync(require.resolve('../office-static/office-crm-bridge-arctos.ts'),'utf8');
+ const body=src.slice(src.indexOf(' if(action==="appointments"){'),src.indexOf(' if(action==="lead_agents")'));
+ const run=new (Object.getPrototypeOf(async function(){}).constructor)('sb','data','q','uuid','action','createClient','MM_URL','MM_PUBLIC','authorization',body);
+ const justin='9ca80b13-42e7-46eb-9ad8-c0bb700c6ba9',date='2026-11-25',sent=[];
+ const event=(id,what)=>({id,title:what,assigned_agent_id:justin,client_id:null,event_date:date,start_time:'09:00'});
+ const native=[event('both','duplicate local'),event('local','Office booking')];
+ const shared=[event('both','Justin updated event'),...Array.from({length:300},(_,i)=>event('upstream-'+i,'Arctos booking'))];
+ const paged=rows=>{const q={select(){return q},gte(){return q},lte(){return q},order(){return q},eq(field,value){assert.equal(field,'assigned_agent_id');assert.equal(value,justin);return q},range(i,j){return rows.slice(i,j+1)}};return q};
+ const sb={from(t){if(t==='appointments')return paged(native);
+   assert.equal(t,'calendar_event_client_links');return {select(){return this},in(field,ids){assert.equal(field,'event_id');return ids.includes('both')?[{event_id:'both',client_id:'local-client'}]:[]}};}};
+ const make=(url,key,options)=>{assert.equal(url,'central');assert.equal(key,'public');assert.equal(options.global.headers.Authorization,'Bearer office-token');
+   return {rpc(name,params){assert.equal(name,'office_arctos_calendar_events');assert.deepEqual(params,{p_from:date,p_to:date});sent.push(name);return paged(shared)}};};
+ for(const agent_id of [justin,'']){
+  const {appointments}=await run(sb,{agent_id,from:date,to:date},async x=>x,()=>true,'appointments',make,'central','public','Bearer office-token');
+  assert.equal(appointments.length,302);assert.ok(appointments.some(e=>e.id==='local'));
+  assert.equal(appointments.find(e=>e.id==='both').client_id,'local-client');
+  assert.equal(appointments.find(e=>e.id==='both').title,'Justin updated event');
+  assert.deepEqual(appointments.map(x=>x.id),appointments.map(x=>x.id).sort((a,b)=>a.localeCompare(b)));
+ }
+ assert.equal(sent.length,4);
 });
