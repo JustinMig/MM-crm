@@ -74,6 +74,9 @@ function showLogin(message=""){
  sessionStorage.removeItem("office_login_session");
  screen.innerHTML='<div class="auth-screen"><section class="auth-card"><div class="brand-inline"><img class="brand-mark office-brand-logo" src="/mh-logo.jpg?v=mh-brand-20261125-1" width="44" height="44" alt="M&amp;H Insurance Group"><strong>Office CRM</strong></div><h1 class="auth-title">Welcome to the office</h1><p class="auth-subtitle">Secure access to Arctos and Platinum Financial. Use your existing M&amp;M CRM email and password.</p><form id="login-form"><div class="field"><label>Email address</label><input type="email" name="email" autocomplete="username" required></div><div class="field"><label>Password</label><input type="password" name="password" autocomplete="current-password" required></div><div id="auth-error" class="auth-error">'+esc(message)+'</div><button class="primary" type="submit">Sign in securely</button></form><p class="muted" style="font-size:11px;margin-top:20px">Client information is not stored in this browser. Access is limited to approved office staff.</p></section></div>';
 }
+function openOfficeCalendar(){
+ calendarAgency='office';calendarSelection='office';calendarRosters.clear();calendarRequestId++;
+}
 function shell(){
  const connectionTags=["arctos","platinum"].map(a=>'<span class="small-pill '+(connected[a]?"online":"offline")+'">'+esc(LABEL[a])+": "+(connected[a]?"connected":"unavailable")+'</span>').join("");
  screen.innerHTML='<div class="app-shell"><aside class="sidebar" id="officeSidebar"><div class="brand"><img class="brand-mark office-brand-logo" src="/mh-logo.jpg?v=mh-brand-20261125-1" width="44" height="44" alt="M&amp;H Insurance Group"><div><strong>Office CRM</strong><small>Secure Office Workspace</small></div></div><div class="workspace-label">WORKSPACE</div><nav class="navigation">'+
@@ -85,7 +88,7 @@ function shell(){
  document.getElementById("officeNewClient").addEventListener("click",()=>ocOpenNewClientForm());
  document.getElementById("mobileNav").addEventListener("click",()=>document.getElementById("officeSidebar").classList.toggle("open"));
  document.getElementById("filterAgency").addEventListener("change",e=>{agency=e.target.value;if(tab==="clients")clientLookupStatsCache=null;render();if(tab==="clients"){if(clientLookupView!=="search")void loadClientLookupView(clientLookupView);else if(savedSearch)void searchClients(savedSearch);}else if(["calendar","campaigns","dashboard"].includes(tab))loadTab()});
- document.querySelectorAll("[data-tab]").forEach(b=>b.addEventListener("click",()=>{tab=b.dataset.tab;if(tab==="calendar"){calendarAgency="office";calendarSelection="office";calendarRosters.clear();calendarRequestId++;}if(tab==="campaigns")resetCampaignPicker();if(tab==="leads")resetLeadPicker();document.getElementById("officeSidebar").classList.remove("open");shell();render();loadTab()}));
+ document.querySelectorAll("[data-tab]").forEach(b=>b.addEventListener("click",()=>{tab=b.dataset.tab;if(tab==="calendar")openOfficeCalendar();if(tab==="campaigns")resetCampaignPicker();if(tab==="leads")resetLeadPicker();document.getElementById("officeSidebar").classList.remove("open");shell();render();loadTab()}));
 }
 function toast(v){const e=document.getElementById("alert");if(!e)return;e.textContent=v;e.classList.add("show");setTimeout(()=>e.classList.remove("show"),3500)}
 function head(title,subtitle){return '<div class="page-heading"><div><div class="eyebrow">OFFICE WORKSPACE</div><h1>'+esc(title)+'</h1><p>'+esc(subtitle)+'</p></div></div>'}
@@ -107,7 +110,7 @@ function render(){
  if(tab==="people")body=head("Agencies & People","Appointments and records stay assigned to the right agents.")+'<section class="panel">'+Object.entries(AGENT).map(([a,n])=>'<div class="person-row"><div class="avatar">'+esc(n[0])+'</div><div><b>'+esc(n)+'</b><small>'+esc(LABEL[a])+'</small></div><span class="status-pill">'+(connected[a]?"Connected":a==="office"?"Office Staff":"Pending")+'</span></div>').join("")+'</section>';
  document.getElementById("main").innerHTML=body;
  if(tab==="backup")window.officeBackup.mount(document.getElementById("officeBackup"),{request,sms:officeSmsRequest,allowed:a=>connected[a]?.permissions?.edit&&connected[a]?.permissions?.sensitive});
- document.querySelectorAll("[data-open]").forEach(b=>b.addEventListener("click",()=>{tab=b.dataset.open;if(tab==="campaigns")resetCampaignPicker();if(tab==="leads")resetLeadPicker();shell();render();loadTab()}));
+ document.querySelectorAll("[data-open]").forEach(b=>b.addEventListener("click",()=>{tab=b.dataset.open;if(tab==="calendar")openOfficeCalendar();if(tab==="campaigns")resetCampaignPicker();if(tab==="leads")resetLeadPicker();shell();render();loadTab()}));
  let cAgency=document.getElementById("campaignAgency");if(cAgency)cAgency.addEventListener("change",e=>chooseCampaignAgency(e.target.value));
  let cAgent=document.getElementById("campaignAgent");if(cAgent)cAgent.addEventListener("change",e=>chooseCampaignAgent(e.target.value));
  let lAgency=document.getElementById("leadAgency");if(lAgency)lAgency.addEventListener("change",e=>chooseLeadAgency(e.target.value));
@@ -715,7 +718,6 @@ async function ocOpenDay(date){
  ];
  const markup=scopes.map(s=>{
   const msg=!s.enabled?"Calendar connection unavailable.":"Loading appointments…";
-  return '<details class="oc-agency-section '+s.id+'" data-oc-agency":"Loading appointments…";
   return '<details class="oc-agency-section '+s.id+'" data-oc-agency="'+s.id+'"><summary><span class="oc-agency-title"><i class="oc-agency-marker '+s.id+'" aria-hidden="true"></i><b>'+esc(s.name)+'</b></span><span class="oc-agency-right"><span class="oc-agency-count" data-oc-count="'+s.id+'">'+(s.enabled?"Loading":"Unavailable")+'</span><span class="oc-chevron" aria-hidden="true">⌄</span></span></summary><div class="oc-agency-body" data-oc-body="'+s.id+'"><p class="oc-empty">'+esc(msg)+'</p></div></details>';
  }).join("");
  dialog.innerHTML='<section class="modal-card oc-day-popup" role="dialog" aria-modal="true" aria-label="Daily appointments for '+esc(ocLongDate(day,{month:"long",day:"numeric",year:"numeric"}))+'"><header class="oc-popup-header"><div><div class="eyebrow">OFFICE APPOINTMENTS</div><h2>'+esc(ocLongDate(day,{weekday:"long",month:"long",day:"numeric",year:"numeric"}))+'</h2><p>Choose an agency to see that day’s appointments.</p></div><button type="button" class="close-button" id="ocCloseDayPopup" aria-label="Close appointments">×</button></header><div class="oc-popup-groups">'+markup+'</div><footer class="oc-popup-actions"><button type="button" class="primary" id="ocScheduleDay">Set Appointment</button><button type="button" class="outline" id="ocShowFullDay">Open full day calendar</button></footer></section>';
