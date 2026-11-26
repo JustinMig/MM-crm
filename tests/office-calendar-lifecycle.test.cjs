@@ -16,6 +16,8 @@ async function setup(edit=true){
   return new Response(JSON.stringify({saved:true}));
  };
  f.q('[data-tab="calendar"]').click();
+ await until(()=>f.q('[data-calendar-agency="arctos"]'));
+ f.q('[data-calendar-agency="arctos"]').click();
  await until(()=>f.q('[data-calendar-person="arctos:'+id+'"]'));
  f.q('[data-calendar-person="arctos:'+id+'"]').click();
  await until(()=>f.q('[data-cal-event]'));

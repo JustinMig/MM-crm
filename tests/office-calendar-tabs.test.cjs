@@ -3,39 +3,89 @@ const {fixture,until,id,doctorId,sleep}=require('./helpers/office-client-fixture
 const today=new Date(),date=[today.getFullYear(),String(today.getMonth()+1).padStart(2,'0'),String(today.getDate()).padStart(2,'0')].join('-');
 const event=(name,agent)=>({id:name,assigned_agent_id:agent,title:name,event_date:date,start_time:'10:00',end_time:'10:30',status:'scheduled'});
 const options={openRecord:false,calendarAgents:{arctos:[{id,full_name:'Justin Mayer'},{id:doctorId,full_name:'Other Arctos Agent'}],platinum:[{id,full_name:'Isaiah Hernandez'}],office:[{id,full_name:'Sheena'}]},calendarAppointments:{office:[event('Assistant appointment',id)],arctos:[event('Justin appointment',id),event('Other agent appointment',doctorId)],platinum:[event('Isaiah appointment',id)]}};
-async function ready(f){await until(()=>f.q('[data-calendar-person="office"]')&&f.q('[data-calendar-person="arctos:'+id+'"]')&&!f.q('#calendarResults .loading-state'));}
-test('Office calendar opens first, agent tabs isolate every view, and returning to Calendar resets to Office',async()=>{
+const agencyButton=(f,scope)=>f.q('[data-calendar-agency="'+scope+'"]');
+const personButton=(f,scope,agent)=>f.q('[data-calendar-person="'+scope+':'+agent+'"]');
+const appointmentTitles=f=>f.all('.oc-event-title').map(node=>node.textContent);
+async function openCalendar(f){
+ f.q('[data-tab="calendar"]').click();
+ await until(()=>agencyButton(f,'office')&&appointmentTitles(f).includes('Assistant appointment'));
+}
+async function openAgency(f,scope,agent){
+ agencyButton(f,scope).click();
+ await until(()=>personButton(f,scope,agent));
+}
+async function openPerson(f,scope,agent,title){
+ personButton(f,scope,agent).click();
+ await until(()=>appointmentTitles(f).includes(title));
+}
+test('Calendar opens on the unnamed office schedule and shows appointments only after an agency and agent are chosen',async()=>{
  const f=await fixture('arctos',{},true,options);try{
   f.q('#filterAgency').value='platinum';f.q('#filterAgency').dispatchEvent(new f.w.Event('change',{bubbles:true}));
-  f.q('[data-tab="calendar"]').click();await ready(f);
-  assert.equal(f.q('[data-calendar-person="office"]').getAttribute('aria-selected'),'true');
-  assert.deepEqual(f.all('.oc-event-title').map(n=>n.textContent),['Assistant appointment']);
-  for(const [key,title]of [['arctos:'+id,'Justin appointment'],['arctos:'+doctorId,'Other agent appointment'],['platinum:'+id,'Isaiah appointment']]){
-   f.q('[data-calendar-person="'+key+'"]').click();await until(()=>!f.q('#calendarResults .loading-state'));
-   assert.deepEqual(f.all('.oc-event-title').map(n=>n.textContent),[title]);
+  await openCalendar(f);
+  assert.deepEqual(f.all('[data-calendar-agency]').map(node=>node.textContent.trim()),['Office calendar','Arctos','Platinum Financial']);
+  assert.equal(agencyButton(f,'office').getAttribute('aria-selected'),'true');
+  assert.doesNotMatch(f.q('#calendarResults').textContent,/sheena/i);
+  assert.deepEqual(appointmentTitles(f),['Assistant appointment']);
+  assert.equal(f.all('[data-calendar-person]').length,0);
+  const requestsBefore=f.requests.filter(r=>r.action==='appointments').length;
+  await openAgency(f,'arctos',id);
+  assert.equal(f.requests.filter(r=>r.action==='appointments').length,requestsBefore);
+  assert.deepEqual(appointmentTitles(f),[]);
+  assert.ok(personButton(f,'arctos',doctorId));
+  assert.equal(personButton(f,'platinum',id),null);
+  await openPerson(f,'arctos',id,'Justin appointment');
+  assert.deepEqual(appointmentTitles(f),['Justin appointment']);
+  await openPerson(f,'arctos',doctorId,'Other agent appointment');
+  assert.deepEqual(appointmentTitles(f),['Other agent appointment']);
+  await openAgency(f,'platinum',id);
+  assert.deepEqual(appointmentTitles(f),[]);
+  assert.equal(personButton(f,'arctos',doctorId),null);
+  await openPerson(f,'platinum',id,'Isaiah appointment');
+  for(const view of ['week','day','month']){
+   f.q('[data-cal-view="'+view+'"]').click();
+   await until(()=>!f.q('#calendarResults .loading-state'));
+   assert.deepEqual(appointmentTitles(f),['Isaiah appointment']);
   }
-  for(const view of ['week','day','month']){f.q('[data-cal-view="'+view+'"]').click();await until(()=>!f.q('#calendarResults .loading-state'));assert.ok(f.all('.oc-event-title').every(n=>n.textContent==='Isaiah appointment'));}
   assert.ok(f.requests.some(r=>r.action==='appointments'&&r.agent_id===doctorId));
-  f.q('[data-tab="clients"]').click();f.q('[data-tab="calendar"]').click();await ready(f);
-  assert.equal(f.q('[data-calendar-person="office"]').getAttribute('aria-selected'),'true');assert.deepEqual(f.all('.oc-event-title').map(n=>n.textContent),['Assistant appointment']);
+  f.q('[data-tab="clients"]').click();await openCalendar(f);
+  assert.deepEqual(appointmentTitles(f),['Assistant appointment']);
+  assert.equal(agencyButton(f,'office').getAttribute('aria-selected'),'true');
  }finally{f.w.close();}
 });
-test('Opening a day stays on the selected person and booking prefills that agent',async()=>{
+test('Booking from Office calendar uses the office staff assignment without naming the calendar after the staff member',async()=>{
  const f=await fixture('arctos',{},true,options);try{
-  f.q('[data-tab="calendar"]').click();await ready(f);f.q('[data-calendar-person="arctos:'+id+'"]').click();await until(()=>!f.q('#calendarResults .loading-state'));
+  await openCalendar(f);f.q('#officeNewAppointment').click();
+  await until(()=>f.q('#oaAgent')?.value===id);
+  assert.equal(f.q('#oaAgency').value,'office');
+  assert.equal(f.q('#oaAgent').selectedOptions[0].textContent,'Office calendar');
+ }finally{f.w.close();}
+});
+test('A newly listed Platinum agent can be selected and booking uses that agent’s calendar',async()=>{
+ const dynamic=structuredClone(options),newId='33333333-3333-4333-8333-333333333333';
+ const f=await fixture('arctos',{},true,dynamic);try{
+  await openCalendar(f);await openAgency(f,'platinum',id);
+  assert.equal(personButton(f,'platinum',newId),null);
+  dynamic.calendarAgents.platinum.push({id:newId,full_name:'New Platinum Agent'});
+  dynamic.calendarAppointments.platinum.push(event('New agent appointment',newId));
+  f.q('[data-calendar-refresh]').click();await until(()=>personButton(f,'platinum',newId));
+  await openPerson(f,'platinum',newId,'New agent appointment');
+  assert.deepEqual(appointmentTitles(f),['New agent appointment']);
   f.q('[data-cal-date="'+date+'"]').click();await until(()=>f.q('[data-person-day-event]'));
-  assert.deepEqual(f.all('.oc-popup-title').map(n=>n.textContent),['Justin appointment']);assert.match(f.q('.oc-day-popup .eyebrow').textContent,/Justin Mayer/);
-  f.q('#ocScheduleDay').click();await until(()=>f.q('#oaAgent')?.value===id);
-  assert.equal(f.q('#oaAgency').value,'arctos');assert.equal(f.q('#oaDate').value,date);
+  assert.deepEqual(f.all('.oc-popup-title').map(n=>n.textContent),['New agent appointment']);
+  assert.match(f.q('.oc-day-popup .eyebrow').textContent,/New Platinum Agent/);
+  f.q('#ocScheduleDay').click();await until(()=>f.q('#oaAgent')?.value===newId);
+  assert.equal(f.q('#oaAgency').value,'platinum');assert.equal(f.q('#oaDate').value,date);
  }finally{f.w.close();}
 });
-test('A previous agent response cannot replace the currently selected calendar',async()=>{
+test('A previous agency’s delayed appointment response cannot replace the selected agent’s calendar',async()=>{
  const f=await fixture('arctos',{},true,options);try{
-  f.q('[data-tab="calendar"]').click();await ready(f);let release;const fetch=f.w.fetch;
+  await openCalendar(f);await openAgency(f,'arctos',doctorId);
+  let release;const fetch=f.w.fetch;
   f.w.fetch=async(url,options)=>{const data=JSON.parse(options.body||'{}'),response=await fetch(url,options);if(data.action==='appointments'&&data.agent_id===doctorId)return new Promise(resolve=>release=()=>resolve(response));return response;};
-  f.q('[data-calendar-person="arctos:'+doctorId+'"]').click();await until(()=>release);
-  f.q('[data-calendar-person="platinum:'+id+'"]').click();await until(()=>!f.q('#calendarResults .loading-state'));release();await sleep();await sleep();
-  assert.deepEqual(f.all('.oc-event-title').map(n=>n.textContent),['Isaiah appointment']);
+  personButton(f,'arctos',doctorId).click();await until(()=>release);
+  await openAgency(f,'platinum',id);await openPerson(f,'platinum',id,'Isaiah appointment');
+  release();await sleep();await sleep();
+  assert.deepEqual(appointmentTitles(f),['Isaiah appointment']);
  }finally{f.w.close();}
 });
 test('Both agency appointment queries filter by the selected agent before returning rows',async()=>{
