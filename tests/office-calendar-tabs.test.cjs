@@ -59,6 +59,7 @@ test('Justin sees native and M&M events once, paged and sorted using the Office 
  const shared=[event('both','Justin updated event'),...Array.from({length:300},(_,i)=>event('upstream-'+i,'Arctos booking'))];
  const paged=rows=>{const q={select(){return q},gte(){return q},lte(){return q},order(){return q},eq(field,value){assert.equal(field,'assigned_agent_id');assert.equal(value,justin);return q},range(i,j){return rows.slice(i,j+1)}};return q};
  const sb={from(t){if(t==='appointments')return paged(native);
+   if(t==='calendar_event_details')return {select(){return this},in(field,ids){return ids.filter(id=>id==='local'||id==='both').map(id=>({event_id:id,activity_title:'Review',person_phone:'5550101'}))}};
    assert.equal(t,'calendar_event_client_links');return {select(){return this},in(field,ids){assert.equal(field,'event_id');return ids.includes('both')?[{event_id:'both',client_id:'local-client'}]:[]}};}};
  const make=(url,key,options)=>{assert.equal(url,'central');assert.equal(key,'public');assert.equal(options.global.headers.Authorization,'Bearer office-token');
    return {rpc(name,params){assert.equal(name,'office_arctos_calendar_events');assert.deepEqual(params,{p_from:date,p_to:date});sent.push(name);return paged(shared)}};};
@@ -67,6 +68,7 @@ test('Justin sees native and M&M events once, paged and sorted using the Office 
   assert.equal(appointments.length,302);assert.ok(appointments.some(e=>e.id==='local'));
   assert.equal(appointments.find(e=>e.id==='both').client_id,'local-client');
   assert.equal(appointments.find(e=>e.id==='both').title,'Justin updated event');
+  for(const id of ['local','both']){assert.equal(appointments.find(e=>e.id===id).activity_title,'Review');assert.equal(appointments.find(e=>e.id===id).person_phone,'5550101');}
   assert.deepEqual(appointments.map(x=>x.id),appointments.map(x=>x.id).sort((a,b)=>a.localeCompare(b)));
  }
  assert.equal(sent.length,4);

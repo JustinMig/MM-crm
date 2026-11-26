@@ -1,4 +1,5 @@
 // @ts-nocheck -- Supabase Edge Function is compiled by Deno, not the Next.js TypeScript project.
+import {mutateOfficeCalendar} from "./office-calendar-mutations.ts";
 import {officeCampaignCenter} from "./office-campaign-center.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.57.0";
 import { writeOfficeRecord, recordSelection, writeOfficeOverview } from "./office-record-store.ts";
@@ -329,6 +330,10 @@ async function perform(action:string,data:any,actor:{id:string;email:string;perm
   await Promise.all(tables.map(async ([name,selection])=>{try{const selected=["medicare_details","health_plans","life_policies","hospital_indemnity_plans","retirement_accounts","client_doctors","client_medications","client_pharmacies"].includes(name)?recordSelection(SCOPE,name):selection;const v=await q(sb.from(name==="client_sms_messages"?"office_visible_client_sms":name).select(selected).eq("client_id",id).limit(100));details[name]=v;}catch{details[name]=[];detail_errors[name]="This section could not load";}}));
   return {client,details,detail_errors};
  }
+ if(action==="mutate_appointment"){
+  const central=createClient(MM_URL,MM_PUBLIC,{global:{headers:{Authorization:authorization}},auth:{persistSession:false,autoRefreshToken:false}});
+  return await mutateOfficeCalendar({sb,central,actor,uuid,log},data);
+ }
  if(action==="appointments"){
   const from=String(data.from||"").slice(0,10);const to=String(data.to||"").slice(0,10);
   if(!/^\d{4}-\d\d-\d\d$/.test(from)||!/^\d{4}-\d\d-\d\d$/.test(to))throw Error("Date range required");
@@ -353,15 +358,18 @@ async function perform(action:string,data:any,actor:{id:string;email:string;perm
    readPages(()=>central.rpc("office_arctos_calendar_events",{p_from:from,p_to:to})),
    readPages(local)
   ]);
-  // Linked client IDs are local to each agency; never return a central client ID here.
-  for(let i=0;i<shared.length;i+=75){
-   const batch=shared.slice(i,i+75);
-   const links=await q(sb.from("calendar_event_client_links").select("event_id,client_id").in("event_id",batch.map(row=>row.id)));
-   const byEvent=new Map(links.map(link=>[link.event_id,link.client_id]));
-   for(const row of batch)row.client_id=byEvent.get(row.id)||null;
+  const byId=new Map(native.map(row=>[row.id,{...row,calendar_source:"arctos_campaign"}]));
+  for(const row of shared)byId.set(row.id,{...row,client_id:null,calendar_source:"mayer_justin"});
+  const ids=[...byId.keys()];
+  for(let i=0;i<ids.length;i+=75){
+   const batch=ids.slice(i,i+75);
+   const [links,details]=await Promise.all([
+    q(sb.from("calendar_event_client_links").select("event_id,client_id").in("event_id",batch)),
+    q(sb.from("calendar_event_details").select("event_id,activity_title,person_phone").in("event_id",batch))
+   ]);
+   for(const link of links){const row=byId.get(link.event_id);if(row&&!row.client_id)row.client_id=link.client_id;}
+   for(const item of details){const row=byId.get(item.event_id);if(row){row.activity_title=item.activity_title;row.person_phone=item.person_phone;}}
   }
-  const byId=new Map(native.map(row=>[row.id,row]));
-  for(const row of shared)byId.set(row.id,row);
   const sortKey=row=>[row.event_date,row.start_time||"",row.id].join(" ");
   return {appointments:Array.from(byId.values()).sort((a,b)=>sortKey(a).localeCompare(sortKey(b)))};
  }

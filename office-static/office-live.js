@@ -94,7 +94,7 @@ function render(){
  '<section class="panel office-phone-panel"><div class="panel-header"><h2>Phone Communications</h2><button type="button" class="outline" id="officePhoneRefresh">Refresh</button></div>'+
  '<p class="muted office-phone-tip">View available phone messages and call history for the Office CRM. Tap a date to open its calls. Numbers do not need a saved client record to appear.</p>'+
  '<div id="officePhoneSections" class="office-phone-tabs"></div><div id="officePhoneStatus" class="muted" role="status" aria-live="polite"></div><div id="officePhoneRecords" class="office-phone-days"></div></section>';
- if(tab==="calendar")body=head("Office Calendar","The Office assistant calendar opens first. Choose an agent tab to view that person’s calendar.")+'<div class="notice">Use Appointment above, or select a calendar date, to book a new appointment. You can view existing appointments here. Edit existing appointments in the agency CRM.</div><section class="panel oc-calendar-panel" style="margin-top:17px"><div id="calendarResults"><div class="loading-state">Loading calendar…</div></div></section>';
+ if(tab==="calendar")body=head("Office Calendar","The Office assistant calendar opens first. Choose an agent tab to view that person’s calendar.")+'<div class="notice">Use Appointment above, or select a calendar date, to book a new appointment. Open an Arctos appointment to edit it, mark it complete, or delete it.</div><section class="panel oc-calendar-panel" style="margin-top:17px"><div id="calendarResults"><div class="loading-state">Loading calendar…</div></div></section>';
  if(tab==="campaigns")body=head("Campaign Center","Choose an agency and an agent to view their campaigns.")+'<section class="panel"><div class="panel-header"><h2>Agent Campaigns</h2></div><div class="oc-campaign-pickers"><div class="oc-campaign-picker"><label for="campaignAgency">Select Agency</label><select id="campaignAgency"><option value="">Choose an agency</option>'+["arctos","platinum"].filter(a=>connected[a]).map(a=>'<option value="'+esc(a)+'"'+(campaignAgency===a?" selected":"")+'>'+esc(LABEL[a])+'</option>').join("")+'</select></div><div class="oc-campaign-picker"><label for="campaignAgent">Select Agent</label><select id="campaignAgent" disabled><option value="">Choose an agency first</option></select></div></div><div id="campaignResults" class="oc-campaign-results"><div class="empty">Choose an agency, then an agent to view campaigns.</div></div></section>';
  if(tab==="notes")body=head("Notes","Choose an agency and agent to see saved notes, or open your personal office notes.")+'<section class="panel" id="noteWorkspace"></section>';
  if(tab==="leads")body=head("Leads","View leads in Arctos and Platinum Financial without copying records.")+'<section class="panel"><div class="panel-header"><h2>Agency Leads</h2></div><div class="oc-campaign-pickers"><div class="oc-campaign-picker"><label for="leadAgency">Select Agency</label><select id="leadAgency"><option value="">Choose an agency</option>'+["arctos","platinum"].filter(a=>connected[a]).map(a=>'<option value="'+esc(a)+'"'+(leadAgency===a?" selected":"")+'>'+esc(LABEL[a])+'</option>').join("")+'</select></div><div class="oc-campaign-picker"><label for="leadAgent">Select Agent</label><select id="leadAgent" disabled><option value="">Choose an agency first</option></select></div></div><div id="leadResults" class="oc-campaign-results"><div class="empty">Choose an agency, then an agent to view their leads.</div></div></section>';
@@ -567,9 +567,15 @@ function ocEvents(date){
  let k=ocISO(date);
  return appointments.filter(a=>ocEventDate(a)===k).sort((a,b)=>ocEventMinutes(a)-ocEventMinutes(b));
 }
+function ocStatusLabel(value){
+ const raw=String(value||'scheduled').replace(/_/g,' ');
+ return raw.charAt(0).toUpperCase()+raw.slice(1);
+}
 function ocChip(a,compact=false){
  const id=appointments.indexOf(a),label=String(a.title||a.client_name||"Appointment");
- return '<button type="button" class="oc-event '+esc(a.agency||"office")+(compact?' compact':'')+'" data-cal-event="'+id+'" title="'+esc((LABEL[a.agency]||a.agency)+" · "+(a.calendar_agent_name||AGENT[a.agency]||"")+" · "+ocEventTime(a)+" · "+label)+'" aria-label="'+esc(ocEventTime(a)+" "+label+" for "+(a.calendar_agent_name||AGENT[a.agency]||LABEL[a.agency]||"staff"))+'"><span class="oc-event-time">'+esc(ocEventTime(a))+'</span><span class="oc-event-title">'+esc(label)+'</span></button>';
+ const state=ocStatusLabel(a.status),when=ocEventTime(a),person=a.calendar_agent_name||AGENT[a.agency]||"Staff";
+ const stateBadge=state==='Scheduled'?'':'<strong class="oc-event-status">'+esc(state==='Completed'?'✓ Completed':state)+'</strong> ';
+ return '<button type="button" class="oc-event '+esc(a.agency||"office")+(compact?' compact':'')+'" data-cal-event="'+id+'" title="'+esc([state,when,label,person].join(" · "))+'" aria-label="'+esc([state,when,label,person].join(", "))+'">'+stateBadge+'<span class="oc-event-time">'+esc(when)+'</span><span class="oc-event-title">'+esc(label)+'</span></button>';
 }
 function ocLongDate(d,options){return d.toLocaleDateString("en-US",options)}
 function ocTitle(){
@@ -621,10 +627,64 @@ function ocDayMarkup(){
 function ocDetails(a){
  const dialog=document.getElementById("dialog");if(!dialog||!a)return;
  dialog.dataset.dayPopup="";
- const date=ocEventDate(a),day=date?ocDate(date):new Date();
- dialog.innerHTML='<section class="modal-card oc-detail" role="dialog" aria-modal="true" aria-label="Appointment details"><button type="button" class="close-button" id="ocCloseDetails" aria-label="Close">×</button><div class="eyebrow">APPOINTMENT DETAILS</div><h2>'+esc(a.title||a.client_name||"Appointment")+'</h2><div class="oc-detail-line"><b>When</b><span>'+esc(ocLongDate(day,{weekday:"long",month:"long",day:"numeric",year:"numeric"})+" at "+ocEventTime(a))+'</span></div><div class="oc-detail-line"><b>Agency</b><span>'+tag(a.agency)+'</span></div><div class="oc-detail-line"><b>Agent</b><span>'+esc(a.calendar_agent_name||AGENT[a.agency]||"Staff")+'</span></div><div class="oc-detail-line"><b>Status</b><span>'+status(a.status)+'</span></div><p class="muted">This appointment is shown directly from the agency or Office Staff calendar. To edit an existing appointment, use the agency CRM.</p></section>';
- document.getElementById("ocCloseDetails").onclick=()=>{dialog.innerHTML=""};
- dialog.onclick=e=>{if(e.target===dialog)dialog.innerHTML=""};
+ const day=ocDate(ocEventDate(a));
+ const canEdit=a.agency==="arctos" && connected.arctos?.permissions?.edit &&
+   ["arctos_campaign","mayer_justin"].includes(a.calendar_source);
+ const close=()=>{dialog.innerHTML="";};
+ const when=ocLongDate(day,{weekday:"long",month:"long",day:"numeric",year:"numeric"})+
+   (a.start_time||a.starts_at?" at "+ocEventTime(a):"");
+ dialog.innerHTML='<section class="modal-card oc-detail" data-appointment-detail="'+esc(a.id)+'" role="dialog" aria-modal="true" aria-label="Appointment details"><button type="button" class="close-button" id="ocCloseDetails" aria-label="Close">×</button><div class="eyebrow">APPOINTMENT DETAILS</div><h2>'+esc(a.title||a.client_name||"Appointment")+'</h2><div class="oc-detail-line"><b>When</b><span>'+esc(when)+'</span></div><div class="oc-detail-line"><b>Agency</b><span>'+tag(a.agency)+'</span></div><div class="oc-detail-line"><b>Agent</b><span>'+esc(a.calendar_agent_name||AGENT[a.agency]||"Staff")+'</span></div><div class="oc-detail-line"><b>Status</b><span>'+status(ocStatusLabel(a.status))+'</span></div>'+
+   (a.activity_title?'<div class="oc-detail-line"><b>Appointment purpose</b><span>'+esc(a.activity_title)+'</span></div>':'')+
+   (a.person_phone?'<div class="oc-detail-line"><b>Phone</b><span>'+esc(a.person_phone)+'</span></div>':'')+
+   (a.notes?'<p><b>Notes</b><br>'+esc(a.notes)+'</p>':'')+
+   (canEdit?'<div class="form-actions"><button type="button" class="outline" data-oc-edit>Edit appointment</button>'+(a.status!=="completed"?'<button type="button" class="primary" data-oc-complete>Mark complete</button>':'')+'<button type="button" class="outline" data-oc-delete>Delete appointment</button></div>':'')+
+   '<p role="alert" class="office-form-error"></p></section>';
+ const card=dialog.firstElementChild;
+ dialog.querySelector("#ocCloseDetails").onclick=close;
+ dialog.onclick=e=>{if(e.target===dialog&&!card.hasAttribute("aria-busy"))close();};
+ if(!canEdit)return;
+ const mutate=async(operation,changes,editor=card)=>{
+  if(editor.hasAttribute('aria-busy'))return;
+  editor.setAttribute('aria-busy','true');
+  const buttons=[...editor.querySelectorAll('button')];buttons.forEach(button=>button.disabled=true);
+  const message=editor.querySelector('[role=alert]');message.textContent='';
+  try{
+   const result=await request('arctos','mutate_appointment',{
+    event_id:a.id,calendar_source:a.calendar_source,event_date:a.event_date,expected_status:a.status,operation,changes
+   });
+   if(!result.saved)throw Error('The appointment change was not confirmed.');
+   if(editor.isConnected)close();
+   if(tab==='calendar'){await fetchCalendar();showCalendar();}
+   else if(tab==='dashboard')await loadTab();
+  }catch(error){message.textContent=error.message||'The appointment could not be saved.';}
+  finally{editor.removeAttribute('aria-busy');buttons.forEach(button=>button.disabled=false);}
+ };
+ card.querySelector('[data-oc-complete]')?.addEventListener('click',()=>mutate('complete'));
+ card.querySelector('[data-oc-delete]').onclick=()=>{
+  if(window.confirm('Delete this appointment from the Arctos and Office calendars?'))void mutate('delete');
+ };
+ card.querySelector('[data-oc-edit]').onclick=()=>{
+  dialog.innerHTML='<section class="modal-card office-entry-dialog" role="dialog" aria-modal="true" aria-label="Edit appointment"><h2>Edit appointment</h2><form><div class="form-grid"><label class="field full">Calendar headline<input name="title" required maxlength="250"></label><label class="field">Date<input name="event_date" type="date" required></label><label class="field">Start time<input name="start_time" type="time"></label><label class="field">End time<input name="end_time" type="time"></label><label class="field full">Notes<textarea name="notes" maxlength="5000"></textarea></label></div><p role="alert" class="office-form-error"></p><div class="form-actions"><button type="button" class="outline" data-oc-cancel>Cancel</button><button type="submit" class="primary">Save changes</button></div></form></section>';
+  const form=dialog.querySelector('form'), fields=['title','event_date','start_time','end_time','notes'];
+  const displayed={};
+  for(const key of fields){
+   displayed[key]=String(a[key]||'');
+   if(key.endsWith('_time'))displayed[key]=displayed[key].slice(0,5);
+   form.elements.namedItem(key).value=displayed[key];
+  }
+  dialog.onclick=null;
+  form.querySelector('[data-oc-cancel]').onclick=()=>ocDetails(a);
+  form.onsubmit=e=>{
+   e.preventDefault();
+   const changes={};
+   for(const key of fields){
+    const value=form.elements.namedItem(key).value.trim();
+    if(value!==displayed[key])changes[key]=value||null;
+   }
+   if(!Object.keys(changes).length){ocDetails(a);return;}
+   void mutate('update',changes,form);
+  };
+ };
 }
 function ocNavigate(action){
  if(action==="today")calendarDate=ocDate(new Date());
@@ -676,7 +736,7 @@ async function ocOpenDay(date){
   dialog.__dayAppts[s.id]=items;
   count.textContent=items.length+" appointment"+(items.length===1?"":"s");
   if(!items.length){body.innerHTML='<p class="oc-empty">No appointments scheduled for this day.</p>';continue}
-  body.innerHTML=items.map((a,i)=>'<button type="button" class="oc-popup-appointment '+s.id+'" data-popup-event="'+s.id+':'+i+'"><span class="oc-popup-time">'+esc(ocEventTime(a))+'</span><span class="oc-popup-title">'+esc(a.title||a.client_name||"Appointment")+'</span><span class="oc-popup-status">'+esc(a.status||"Scheduled")+'</span></button>').join("");
+  body.innerHTML=items.map((a,i)=>'<button type="button" class="oc-popup-appointment '+s.id+'" data-popup-event="'+s.id+':'+i+'"><span class="oc-popup-time">'+esc(ocEventTime(a))+'</span><span class="oc-popup-title">'+esc(a.title||a.client_name||"Appointment")+'</span><span class="oc-popup-status">'+esc(ocStatusLabel(a.status))+'</span></button>').join("");
   body.querySelectorAll("[data-popup-event]").forEach(btn=>btn.onclick=()=>{
    const [who,pos]=btn.dataset.popupEvent.split(":");
    const event=dialog.__dayAppts?.[who]?.[Number(pos)]; if(event)ocDetails(event);
@@ -728,7 +788,7 @@ async function ocFetchSelectedCalendar(){
 let officeCalendarRefreshAt=0,officeCalendarRefreshing=false;
 async function refreshOpenArctosCalendar(){
  if(!access||tab!=='calendar'||document.hidden||calendarLoading||officeCalendarRefreshing||
-    document.querySelector('#dialog .modal-card')||Date.now()-officeCalendarRefreshAt<1500)return;
+    document.querySelector('#dialog .modal-card:not(.oc-detail):not(.oc-day-popup),#dialog [aria-busy=true]')||Date.now()-officeCalendarRefreshAt<1500)return;
  const person=ocSelectedCalendar();
  if(person.agency!=='arctos')return;
  const requestId=calendarRequestId,range=ocRange();
@@ -739,6 +799,13 @@ async function refreshOpenArctosCalendar(){
   const errors=[...calendarPeopleErrors];
   if(JSON.stringify(appointments)!==JSON.stringify(rows)||JSON.stringify(calendarErrors)!==JSON.stringify(errors)){
    appointments=rows;calendarErrors=errors;showCalendar();
+   const dialog=document.getElementById('dialog'),detail=dialog?.querySelector('[data-appointment-detail]');
+   if(detail&&!detail.hasAttribute('aria-busy')){
+    const current=rows.find(row=>row.id===detail.dataset.appointmentDetail);
+    if(current)ocDetails(current);else dialog.innerHTML='';
+   }else if(dialog?.querySelector('.oc-person-day-body') && dialog.dataset.dayPopup?.startsWith(person.key+'|')){
+    void ocOpenSelectedDay(dialog.dataset.dayPopup.split('|')[1]);
+   }
   }
  }catch(error){
   if(tab==='calendar'&&requestId===calendarRequestId&&calendarSelection===person.key){
@@ -761,7 +828,7 @@ async function ocOpenSelectedDay(date){
   const rows=(await ocReadPersonalAppointments(person,key,key)).sort((a,b)=>ocEventMinutes(a)-ocEventMinutes(b));
   if(!dialog.isConnected||dialog.dataset.dayPopup!==ticket||calendarSelection!==person.key)return;
   const body=dialog.querySelector('.oc-person-day-body');
-  body.innerHTML=rows.length?rows.map((a,i)=>'<button type="button" class="oc-popup-appointment '+esc(person.agency)+'" data-person-day-event="'+i+'"><span class="oc-popup-time">'+esc(ocEventTime(a))+'</span><span class="oc-popup-title">'+esc(a.title||a.client_name||'Appointment')+'</span><span class="oc-popup-status">'+esc(a.status||'Scheduled')+'</span></button>').join(''):'<p class="oc-empty">No appointments scheduled for this day.</p>';
+  body.innerHTML=rows.length?rows.map((a,i)=>'<button type="button" class="oc-popup-appointment '+esc(person.agency)+'" data-person-day-event="'+i+'"><span class="oc-popup-time">'+esc(ocEventTime(a))+'</span><span class="oc-popup-title">'+esc(a.title||a.client_name||'Appointment')+'</span><span class="oc-popup-status">'+esc(ocStatusLabel(a.status))+'</span></button>').join(''):'<p class="oc-empty">No appointments scheduled for this day.</p>';
   body.querySelectorAll('[data-person-day-event]').forEach(button=>button.onclick=()=>ocDetails(rows[Number(button.dataset.personDayEvent)]));
  }catch(error){if(dialog.isConnected&&dialog.dataset.dayPopup===ticket)dialog.querySelector('.oc-person-day-body').innerHTML='<p class="oc-popup-error">'+esc(error.message||'Appointments could not load.')+'</p>';}
 }

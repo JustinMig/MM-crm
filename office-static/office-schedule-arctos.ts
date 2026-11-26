@@ -1,3 +1,4 @@
+// @ts-nocheck -- This Supabase Edge Function runs on Deno.
 import {createClient} from "npm:@supabase/supabase-js@2.57.0";
 const SCOPE="arctos";
 const MM="https://aefdewkiqgiwkquklnvr.supabase.co";

@@ -11,7 +11,6 @@ const EVENT_FIELDS = 'id,assigned_agent_id,client_id,title,event_type,event_date
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/
 const TIME_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/
 const TYPES = new Set(['appointment', 'activity'])
-const STATUSES = new Set(['scheduled', 'completed', 'needs_reschedule'])
 
 function text(value: unknown, max = 5000) {
   return String(value || '').trim().slice(0, max)
@@ -192,6 +191,7 @@ export async function PATCH(request: Request) {
     const action = text(body.action, 30).toLowerCase()
     const now = new Date().toISOString()
     if (action === 'complete') {
+      if (existing.status === 'completed') return NextResponse.json({ event: outward(existing, ctx) })
       const { data, error } = await ctx.admin.from('workspace_calendar_events').update({ status: 'completed', completed_at: now, updated_at: now }).eq('id', id).select(EVENT_FIELDS).single()
       if (error || !data) throw new Error(error?.message || 'Unable to complete calendar item.')
       return NextResponse.json({ event: outward(data, ctx) })
@@ -211,10 +211,13 @@ export async function PATCH(request: Request) {
     const endTime = time(body.end_time)
     const notes = text(body.notes, 5000)
     if (!title || !TYPES.has(eventType) || !validDate(eventDate)) return NextResponse.json({ error: 'Enter a valid title, type, and date.' }, { status: 400 })
-    if (eventType === 'appointment') await assertAppointmentTimeAvailable(ctx.admin, ctx.agencyId, JUSTIN_CALENDAR_USER_ID, eventDate, startTime, endTime, id)
+    if (startTime && endTime && endTime < startTime) return NextResponse.json({ error: 'End time cannot be before start time.' }, { status: 400 })
+    const moved = eventDate !== existing.event_date || startTime !== time(existing.start_time)
+    const rescheduled = existing.status === 'needs_reschedule' && moved
+    if (eventType === 'appointment' && (existing.status === 'scheduled' || rescheduled)) {
+      await assertAppointmentTimeAvailable(ctx.admin, ctx.agencyId, JUSTIN_CALENDAR_USER_ID, eventDate, startTime, endTime, id)
+    }
     const clientId = await resolveMayerClient(body, ctx)
-    const requestedStatus = text(body.status, 40).toLowerCase()
-    const status = STATUSES.has(requestedStatus) ? requestedStatus : existing.status
     const { data, error } = await ctx.admin.from('workspace_calendar_events').update({
       client_id: clientId,
       title,
@@ -223,11 +226,12 @@ export async function PATCH(request: Request) {
       start_time: startTime || null,
       end_time: endTime || null,
       notes: notes || null,
-      status,
-      completed_at: status === 'completed' ? existing.completed_at || now : null,
+      ...(rescheduled ? {status:'scheduled', reschedule_requested_at:null, reschedule_note:null} : {}),
       updated_at: now
-    }).eq('id', id).select(EVENT_FIELDS).single()
-    if (error || !data) throw new Error(error?.message || 'Unable to update calendar item.')
+    }).eq('id', id).eq('agency_id', ctx.agencyId).eq('assigned_agent_id', JUSTIN_CALENDAR_USER_ID)
+      .eq('updated_at', existing.updated_at).select(EVENT_FIELDS).maybeSingle()
+    if (error) throw new Error(error.message)
+    if (!data) return NextResponse.json({error:'This calendar item changed. Refresh and retry.'},{status:409})
     return NextResponse.json({ event: outward(data, ctx) })
   } catch (error) {
     const status = Number((error as { status?: number })?.status) || 400
