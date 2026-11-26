@@ -54,6 +54,10 @@ export async function processBulkSmsJob(jobId: string) {
     }
     const recipients = ((clients || []) as ClientRow[]).flatMap((client) => {
       const phone = normalizeUsPhone(String(client.phone || ''))
+      if (phone === '+16627504626') {
+        failures.push(clientName(client)+': number reserved for Arctos')
+        return []
+      }
       if (!phone) {
         failures.push(`${clientName(client)}: invalid or missing U.S. mobile number`)
         return []

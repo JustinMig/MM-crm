@@ -326,7 +326,7 @@ async function perform(action:string,data:any,actor:{id:string;email:string;perm
    ["client_doctors","*"],["client_pharmacies","*"],["client_medications","*"]
   ] as const;
   const details:any={},detail_errors:Record<string,string>={};
-  await Promise.all(tables.map(async ([name,selection])=>{try{const selected=["medicare_details","health_plans","life_policies","hospital_indemnity_plans","retirement_accounts","client_doctors","client_medications","client_pharmacies"].includes(name)?recordSelection(SCOPE,name):selection;const v=await q(sb.from(name).select(selected).eq("client_id",id).limit(100));details[name]=v;}catch{details[name]=[];detail_errors[name]="This section could not load";}}));
+  await Promise.all(tables.map(async ([name,selection])=>{try{const selected=["medicare_details","health_plans","life_policies","hospital_indemnity_plans","retirement_accounts","client_doctors","client_medications","client_pharmacies"].includes(name)?recordSelection(SCOPE,name):selection;const v=await q(sb.from(name==="client_sms_messages"?"office_visible_client_sms":name).select(selected).eq("client_id",id).limit(100));details[name]=v;}catch{details[name]=[];detail_errors[name]="This section could not load";}}));
   return {client,details,detail_errors};
  }
  if(action==="appointments"){

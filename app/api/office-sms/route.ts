@@ -50,6 +50,7 @@ export async function POST(request:Request){
   }
   const client=remote.client
   if(!client||!uuid(client.id))throw Error('Client not found in this agency.')
+  if(smsPhone(client.phone)==='+16627504626')return NextResponse.json({error:'This number is reserved for Arctos.'},{status:403,headers:cors(request)})
   const phone=smsPhone(client.phone),existingThread=await checked(admin.from('office_sms_threads').select('id').eq('agency_id',profile.agency_id).eq('scope',scope).eq('remote_client_id',client.id).maybeSingle()),legacy=existingThread?null:legacyFor(client),name=[client.first_name,client.last_name].filter(Boolean).join(' ')
   if(!phone)return NextResponse.json({error:'This client needs a valid U.S. phone number.'},{status:400,headers:cors(request)})
   let thread:any=null

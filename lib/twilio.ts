@@ -23,6 +23,7 @@ export function twilioConfig() {
 }
 
 export async function sendTwilioSms(to: string, body: string, mediaUrls: string[] = []) {
+  if(normalizeUsPhone(to)==='+16627504626')throw Error('This number is reserved for Arctos.')
   const { accountSid, authToken, messagingServiceSid } = twilioConfig()
   const form = new URLSearchParams()
   form.set('To', normalizeUsPhone(to))

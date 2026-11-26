@@ -25,7 +25,7 @@ export async function backupAgency({sb,scope,actor,log,officeProtected},action,d
   const clients=await pages(()=>sb.from('clients').select('id,first_name,last_name,phone,assigned_agent_id').in('id',ids),'id');
   if(clients.length!==ids.length)throw Error('A client record is unavailable.');
   const agents=await pages(()=>sb.from('profiles').select('id,full_name'),'id');
-  const nativeAttachments=await pages(()=>sb.from('client_sms_messages').select('id,client_id,text_attachment').in('client_id',ids).not('text_attachment','is',null),'id');
+  const nativeAttachments=await pages(()=>sb.from(scope==='arctos'?'office_visible_client_sms':'client_sms_messages').select('id,client_id,text_attachment').in('client_id',ids).not('text_attachment','is',null),'id');
   return {clients:clients.map(c=>({...c,agent_name:agents.find(a=>a.id===c.assigned_agent_id)?.full_name})),nativeAttachments};
  }
  const clients=await pages(()=>sb.from('clients').select('*').in('id',ids),'id');
@@ -36,7 +36,7 @@ export async function backupAgency({sb,scope,actor,log,officeProtected},action,d
  for(let start=0;start<names.length;start+=6){
   await Promise.all(names.slice(start,start+6).map(async table=>{
    const key=table==='client_import_map'?'destination_client_id':'client_id';
-   const rows=await pages(()=>sb.from(table).select('*').in(key,ids),orders[table]||'id');
+   const rows=await pages(()=>sb.from(scope==='arctos'&&table==='client_sms_messages'?'office_visible_client_sms':table).select('*').in(key,ids),orders[table]||'id');
    for(const row of rows)(records[row[key]].related[table]??=[]).push(row);
   }));
  }

@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
   const to = normalizeUsPhone(params.get('To') || '')
   const body = String(params.get('Body') || '').trim()
   const sid = String(params.get('MessageSid') || params.get('SmsMessageSid') || '').trim()
-  if (!from || !sid) return new NextResponse('<Response></Response>', { status: 200, headers: { 'Content-Type': 'text/xml' } })
+  if (!from || !sid || from === '+16627504626' || to === '+16627504626') return new NextResponse('<Response></Response>', { status: 200, headers: { 'Content-Type': 'text/xml' } })
 
   const admin = createAdminClient()
   try {
